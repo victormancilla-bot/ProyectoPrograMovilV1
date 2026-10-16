@@ -1,3 +1,15 @@
-<resources>
-    <string name="app_name">ProyectoPrograMovil</string>
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Loco xml export: Android strings
+ Project: AppObjetosPerdidos
+ Locale: en-US, English (USA)
+ Exported by: Somebody
+ Exported at: Fri, 16 Oct 2026 08:35:48 -0400
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_title"></string>
+    <string name="btn_login"></string>
+    <string name="btn_report_lost"></string>
+    <string name="search_placeholder"></string>
+    <string name="empty_search_result"></string>
 </resources>

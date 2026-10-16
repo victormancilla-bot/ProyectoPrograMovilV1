@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Loco xml export: Android strings
+ Project: AppObjetosPerdidos
+ Locale: es-BO, Spanish (Bolivia)
+ Exported by: Somebody
+ Exported at: Fri, 16 Oct 2026 08:35:48 -0400
+-->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="app_title">Encuentra lo que perdiste</string>
+    <string name="btn_login">Iniciar Sesión</string>
+    <string name="btn_report_lost">Reportar Objeto Perdido</string>
+    <string name="search_placeholder">Buscar objetos o mascotas...</string>
+    <string name="empty_search_result">No se encontraron objetos cercanos</string>
+</resources>
