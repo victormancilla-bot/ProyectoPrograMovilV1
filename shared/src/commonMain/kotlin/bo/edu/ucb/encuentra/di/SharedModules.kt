@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.di
 
+import bo.edu.ucb.encuentra.core.di.coreModule
 import bo.edu.ucb.encuentra.feature.alerts.di.alertsModule
 import bo.edu.ucb.encuentra.feature.audit.di.auditModule
 import bo.edu.ucb.encuentra.feature.claims.di.claimsModule
@@ -20,6 +21,7 @@ import org.koin.core.module.Module
 
 // ⚠️ Archivo congelado desde F01: cada feature registra lo suyo en su propio XxxModule.kt.
 fun sharedModules(): List<Module> = listOf(
+    coreModule,
     // A · Plataforma, datos y panel admin
     dashboardModule,
     claimsModule,

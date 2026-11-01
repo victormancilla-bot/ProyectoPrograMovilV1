@@ -3,44 +3,44 @@
   <groupId>edu.ucb.ds</groupId>
   <artifactId>shared-iosarm64</artifactId>
   <versioning>
-    <lastUpdated>20261101175827</lastUpdated>
+    <lastUpdated>20261101214332</lastUpdated>
     <snapshot>
-      <timestamp>20261101.175827</timestamp>
-      <buildNumber>1</buildNumber>
+      <timestamp>20261101.214332</timestamp>
+      <buildNumber>2</buildNumber>
     </snapshot>
     <snapshotVersions>
       <snapshotVersion>
-        <classifier>kotlin_resources</classifier>
-        <extension>kotlin_resources.zip</extension>
-        <value>1.0.0-20261101.175827-1</value>
-        <updated>20261101175827</updated>
+        <extension>pom</extension>
+        <value>1.0.0-20261101.214332-2</value>
+        <updated>20261101214332</updated>
       </snapshotVersion>
       <snapshotVersion>
         <classifier>metadata</classifier>
         <extension>jar</extension>
-        <value>1.0.0-20261101.175827-1</value>
-        <updated>20261101175827</updated>
+        <value>1.0.0-20261101.214332-2</value>
+        <updated>20261101214332</updated>
       </snapshotVersion>
       <snapshotVersion>
-        <extension>pom</extension>
-        <value>1.0.0-20261101.175827-1</value>
-        <updated>20261101175827</updated>
-      </snapshotVersion>
-      <snapshotVersion>
-        <extension>klib</extension>
-        <value>1.0.0-20261101.175827-1</value>
-        <updated>20261101175827</updated>
-      </snapshotVersion>
-      <snapshotVersion>
-        <extension>module</extension>
-        <value>1.0.0-20261101.175827-1</value>
-        <updated>20261101175827</updated>
+        <classifier>kotlin_resources</classifier>
+        <extension>kotlin_resources.zip</extension>
+        <value>1.0.0-20261101.214332-2</value>
+        <updated>20261101214332</updated>
       </snapshotVersion>
       <snapshotVersion>
         <classifier>sources</classifier>
         <extension>jar</extension>
-        <value>1.0.0-20261101.175827-1</value>
-        <updated>20261101175827</updated>
+        <value>1.0.0-20261101.214332-2</value>
+        <updated>20261101214332</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>klib</extension>
+        <value>1.0.0-20261101.214332-2</value>
+        <updated>20261101214332</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>module</extension>
+        <value>1.0.0-20261101.214332-2</value>
+        <updated>20261101214332</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>

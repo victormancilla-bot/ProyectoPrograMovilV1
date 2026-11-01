@@ -33,7 +33,27 @@ Paquete: `bo.edu.ucb.encuentra` · Flavors: `dev` (`bo.edu.ucb.encuentra.dev`) y
   ```
 - **iOS:** abre `iosApp/` en Xcode y ejecuta.
 
-Usuario de prueba del login actual: `user@example.com` / `password`. Después del login aparece un *Menú de desarrollo* con todas las pantallas (stubs) hasta que F05 agregue la navegación por rol.
+Usuarios de prueba (contraseña `password`), hasta que S01/S02 conecten el login real:
+
+| Correo | Rol | Entra a |
+|---|---|---|
+| `estudiante@ucb.edu.bo` | ESTUDIANTE | Inicio · barra: Inicio, Buscar, Reportar, Alertas, Perfil |
+| `staff@ucb.edu.bo` | STAFF | Panel · barra: Panel, Inventario, Reclamos, Alertas, Perfil |
+| `admin@ucb.edu.bo` | ADMIN | Igual que staff |
+
+Las pantallas que no están en la barra se abren desde **Perfil → Menú de desarrollo** (solo mientras son stubs).
+
+## Navegación (F05)
+
+- Rutas `@Serializable` en `navigation/NavRoute.kt`; todas pasan por `RouteGuard`: sin sesión → Login, rol incorrecto → home de su rol.
+  Si agregas una ruta, `RouteGuard` no compila hasta que digas qué rol puede entrar.
+- Barra inferior por rol en `navigation/BottomNavItems.kt` + `MainScaffold.kt`.
+- Wizard de reporte: el borrador vive en `ReportWizardViewModel`; *Cancelar* saca el wizard del back stack y lo descarta.
+- Deep link para notificaciones: `DeepLinks.match(id)` → `ucbencuentra://match/{id}` abre `MatchDetail`. Probarlo:
+  ```bash
+  adb shell am start -a android.intent.action.VIEW -d "ucbencuentra://match/m42" bo.edu.ucb.encuentra.dev
+  ```
+  La sesión todavía vive en memoria: si la app estaba cerrada, el link lleva a Login (S01 la hará persistente).
 
 ## Tests y calidad
 

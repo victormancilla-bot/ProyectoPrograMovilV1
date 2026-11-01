@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.core.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -21,6 +22,8 @@ fun FeatureStub(
     owner: String,
     card: String,
     detail: String? = null,
+    actions: @Composable ColumnScope.() -> Unit = {},
+    backLabel: String = "Volver",
     onNavigateBack: () -> Unit
 ) {
     Column(
@@ -37,8 +40,9 @@ fun FeatureStub(
             Text(detail, style = MaterialTheme.typography.bodySmall)
         }
         Spacer(modifier = Modifier.height(16.dp))
+        actions()
         OutlinedButton(onClick = onNavigateBack) {
-            Text("Volver")
+            Text(backLabel)
         }
     }
 }
