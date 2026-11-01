@@ -77,6 +77,16 @@ fun AppNavHost() {
         composable<NavRoute.Audit> { AuditScreen(onNavigateBack = back) }
 
         composable<NavRoute.Alerts> { AlertsScreen(onNavigateBack = back) }
-        composable<NavRoute.Profile> { ProfileScreen(onNavigateBack = back) }
+        composable<NavRoute.Profile> {
+            ProfileScreen(
+                onNavigateToLogin = {
+                    navController.navigate(NavRoute.Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onOpenDevMenu = { navController.navigate(NavRoute.DevMenu) },
+                onNavigateBack = back
+            )
+        }
     }
 }
