@@ -14,7 +14,7 @@ class AuthenticateUseCase(
     private val session: SessionRepository
 ) {
     suspend operator fun invoke(email: Email, password: Password): Result<UserModel> {
-        delay(1000)
+        delay(FAKE_NETWORK_DELAY_MS)
         val user = DEMO_USERS[email.value]
         return if (user != null && password.value == DEMO_PASSWORD) {
             session.setCurrentUser(user)
@@ -26,6 +26,7 @@ class AuthenticateUseCase(
 
     companion object {
         const val DEMO_PASSWORD = "password"
+        private const val FAKE_NETWORK_DELAY_MS = 1000L
         val DEMO_USERS = listOf(
             UserModel("1", "Mateo Estudiante", "estudiante@ucb.edu.bo", Role.ESTUDIANTE),
             UserModel("2", "Ana Staff", "staff@ucb.edu.bo", Role.STAFF),
