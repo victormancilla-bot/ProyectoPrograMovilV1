@@ -1,6 +1,6 @@
 # ⚠️ Archivo congelado desde F01: cualquier cambio se avisa al equipo y va en su propio PR.
 [versions]
-agp = "9.4.1"
+agp = "9.3.3"
 android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "37"
