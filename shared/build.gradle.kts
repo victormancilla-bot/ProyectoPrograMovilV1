@@ -19,7 +19,7 @@ val secretKeys = listOf("MAPS_API_KEY", "SENTRY_DSN", "VISION_API_KEY", "GRPC_LO
 val localProperties = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
-val generateSecrets by tasks.registering {
+val generateSecrets = tasks.register("generateSecrets") {
     val values = secretKeys.associateWith { localProperties.getProperty(it, "") }
     val outputDir = layout.buildDirectory.dir("generated/secrets/kotlin")
     inputs.properties(values)
