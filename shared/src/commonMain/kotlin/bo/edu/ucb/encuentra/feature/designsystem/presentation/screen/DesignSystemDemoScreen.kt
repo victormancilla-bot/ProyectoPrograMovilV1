@@ -1,6 +1,7 @@
 package bo.edu.ucb.encuentra.feature.designsystem.presentation.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,11 +53,12 @@ fun DesignSystemDemoScreen(onNavigateBack: () -> Unit) {
                 .background(colors.background)
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(spacing.large),
+                .padding(spacing.screenPadding),
             verticalArrangement = Arrangement.spacedBy(spacing.large)
         ) {
             TextButton(onClick = onNavigateBack) { Text("← Volver") }
             Text("Design System UCB Encuentra", style = UcbEncuentraTheme.typography.heading, color = colors.onBackground)
+            Text("Valores del Figma", style = UcbEncuentraTheme.typography.body, color = colors.onSurfaceVariant)
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -91,12 +93,19 @@ private fun ColorsSection() {
             verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.medium)
         ) {
             listOf(
-                "primary" to c.primary, "secondary" to c.secondary, "background" to c.background,
-                "surface" to c.surface, "error" to c.error,
+                "primary" to c.primary, "secondary" to c.secondary, "onSecondary" to c.onSecondary,
+                "tertiary" to c.tertiary, "background" to c.background, "surface" to c.surface,
+                "surfaceContainer" to c.surfaceContainer, "surfaceVariant" to c.surfaceVariant,
+                "onSurface" to c.onSurface, "onSurfaceVariant" to c.onSurfaceVariant,
+                "outline" to c.outline, "outlineVariant" to c.outlineVariant, "error" to c.error,
                 "success" to c.success, "warning" to c.warning, "neutral" to c.neutral
             ).forEach { (name, color) ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(72.dp)) {
-                    Box(Modifier.size(48.dp).background(color, UcbEncuentraTheme.shapes.medium))
+                    Box(
+                        Modifier.size(48.dp)
+                            .background(color, UcbEncuentraTheme.shapes.medium)
+                            .border(1.dp, c.outlineVariant, UcbEncuentraTheme.shapes.medium)
+                    )
                     Text(name, style = UcbEncuentraTheme.typography.label, color = c.onBackground)
                 }
             }
@@ -126,10 +135,13 @@ private fun TypographySection() {
     val t = UcbEncuentraTheme.typography
     val color = UcbEncuentraTheme.colors.onBackground
     Column(verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.small)) {
-        SectionTitle("Typography · Inter")
-        Text("Heading · ¿Qué perdiste?", style = t.heading, color = color)
+        SectionTitle("Typography · Open Sans")
+        Text("Heading · ¿Perdiste algo?", style = t.heading, color = color)
+        Text("Title · 2 reportes activos", style = t.title, color = color)
+        Text("Body large · Mis reportes", style = t.bodyLarge, color = color)
         Text("Body · Ingresa con tu correo institucional @ucb.edu.bo", style = t.body, color = color)
-        Text("Label · CONTINUAR", style = t.label, color = color)
+        Text("Label · Continuar", style = t.label, color = color)
+        Text("OVERLINE · ACTIVIDAD", style = t.overline, color = UcbEncuentraTheme.colors.onSurfaceVariant)
     }
 }
 
@@ -138,7 +150,10 @@ private fun SpacingSection() {
     val s = UcbEncuentraTheme.spacing
     Column(verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.small)) {
         SectionTitle("Spacing")
-        listOf("small 4" to s.small, "medium 8" to s.medium, "large 16" to s.large).forEach { (name, size) ->
+        listOf(
+            "small 4" to s.small, "medium 8" to s.medium, "itemGap 12" to s.itemGap,
+            "large 16" to s.large, "screen 20" to s.screenPadding
+        ).forEach { (name, size) ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     name,
@@ -158,9 +173,12 @@ private fun ShapesSection() {
     Column(verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.medium)) {
         SectionTitle("Shapes")
         Row(horizontalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.medium)) {
-            listOf("small" to sh.small, "medium" to sh.medium, "large" to sh.large, "pill" to sh.pill).forEach { (name, shape) ->
+            listOf(
+                "small" to sh.small, "medium" to sh.medium, "large" to sh.large,
+                "xLarge" to sh.extraLarge, "pill" to sh.pill
+            ).forEach { (name, shape) ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(Modifier.size(56.dp).background(UcbEncuentraTheme.colors.surface, shape))
+                    Box(Modifier.size(56.dp).background(UcbEncuentraTheme.colors.surfaceContainer, shape))
                     Text(name, style = UcbEncuentraTheme.typography.label, color = UcbEncuentraTheme.colors.onBackground)
                 }
             }

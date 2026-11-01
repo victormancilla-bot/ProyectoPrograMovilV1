@@ -66,12 +66,15 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 
 Es un proyecto aparte: [UcbEncuentraDesignSystem](https://github.com/MaiteAraucoPorrez/UcbEncuentraDesignSystem) (clónalo al lado de esta carpeta como `design-system`). Se publica en `ds-repo/` de este repo y la app lo usa como `edu.ucb.ds:shared:1.0.0-SNAPSHOT`, así nadie necesita `publishToMavenLocal`.
 
+Valores tomados del [Figma](https://www.figma.com/design/A9UfzePVdhqPurX4X7luU7/Sin-t%C3%ADtulo) (fuente: **Open Sans**):
+
 ```kotlin
-UcbEncuentraTheme.colors.primary          // primary, secondary, background, surface, error (+ onX)
+UcbEncuentraTheme.colors.primary          // primary, secondary, tertiary, background, surface, surfaceContainer,
+                                          // surfaceVariant, onSurface, onSurfaceVariant, outline, outlineVariant, error…
 UcbEncuentraTheme.colors.scoreColor(92)   // success >= 80, warning 50-79, neutral < 50
-UcbEncuentraTheme.typography.heading      // heading, body, label (Inter)
-UcbEncuentraTheme.spacing.large           // small 4 · medium 8 · large 16
-UcbEncuentraTheme.shapes.pill             // small, medium, large, pill
+UcbEncuentraTheme.typography.heading      // heading, title, bodyLarge, body, label, overline
+UcbEncuentraTheme.spacing.screenPadding   // small 4 · medium 8 · itemGap 12 · large 16 · screenPadding 20
+UcbEncuentraTheme.shapes.extraLarge       // small 8 · medium 12 · large 16 · extraLarge 24 · pill
 UcbEncuentraTheme(darkTheme = isDark) { … }
 ```
 
