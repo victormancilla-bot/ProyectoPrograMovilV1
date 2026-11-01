@@ -23,3 +23,7 @@ node_modules/
 *.keystore
 # Generado desde local.properties por :shared:generateSecrets
 Secrets.kt
+
+# Contexto local de Claude Code
+CLAUDE.md
+.claude/
