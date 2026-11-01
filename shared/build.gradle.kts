@@ -123,6 +123,8 @@ kotlin {
             implementation(libs.firebase.messaging)
             implementation(libs.firebase.config)
 
+            implementation(libs.ucb.designsystem)
+
             implementation(libs.wire.runtime)
             implementation(libs.wire.grpc.client)
         }
