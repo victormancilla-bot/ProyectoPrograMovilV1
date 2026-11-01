@@ -11,6 +11,7 @@ import bo.edu.ucb.encuentra.feature.claims.presentation.screen.ClaimDetailScreen
 import bo.edu.ucb.encuentra.feature.claims.presentation.screen.ClaimsScreen
 import bo.edu.ucb.encuentra.feature.dashboard.presentation.screen.DashboardScreen
 import bo.edu.ucb.encuentra.feature.delivery.presentation.screen.DeliveryScreen
+import bo.edu.ucb.encuentra.feature.designsystem.presentation.screen.DesignSystemDemoScreen
 import bo.edu.ucb.encuentra.feature.foundcapture.presentation.screen.FoundCaptureScreen
 import bo.edu.ucb.encuentra.feature.foundcatalog.presentation.screen.FoundCatalogScreen
 import bo.edu.ucb.encuentra.feature.foundcatalog.presentation.screen.HowItWorksScreen
@@ -47,6 +48,7 @@ fun AppNavHost() {
         composable<NavRoute.DevMenu> {
             DevMenuScreen(onNavigate = { route -> navController.navigate(route) })
         }
+        composable<NavRoute.DesignSystemDemo> { DesignSystemDemoScreen(onNavigateBack = back) }
 
         composable<NavRoute.Home> { HomeScreen(onNavigateBack = back) }
         composable<NavRoute.ReportWizard> { ReportWizardScreen(onNavigateBack = back) }
