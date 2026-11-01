@@ -42,6 +42,22 @@ Usuario de prueba del login actual: `user@example.com` / `password`. Después de
 ./gradlew :shared:detekt                # análisis estático (reporte en shared/build/reports/detekt)
 ```
 
+## Design System
+
+Es un proyecto aparte: [UcbEncuentraDesignSystem](https://github.com/MaiteAraucoPorrez/UcbEncuentraDesignSystem) (clónalo al lado de esta carpeta como `design-system`). Se publica en `ds-repo/` de este repo y la app lo usa como `edu.ucb.ds:shared:1.0.0-SNAPSHOT`, así nadie necesita `publishToMavenLocal`.
+
+```kotlin
+UcbEncuentraTheme.colors.primary          // primary, secondary, background, surface, error (+ onX)
+UcbEncuentraTheme.colors.scoreColor(92)   // success >= 80, warning 50-79, neutral < 50
+UcbEncuentraTheme.typography.heading      // heading, body, label (Inter)
+UcbEncuentraTheme.spacing.large           // small 4 · medium 8 · large 16
+UcbEncuentraTheme.shapes.pill             // small, medium, large, pill
+UcbEncuentraTheme(darkTheme = isDark) { … }
+```
+
+Demo: menú de desarrollo → *Design System*. Para cambiar el DS ver `ds-repo/README.md`.
+En Windows las rutas de `ds-repo/` son largas: `git config --global core.longpaths true`.
+
 ## Estructura
 
 ```
@@ -51,6 +67,7 @@ shared/src/commonMain/kotlin/bo/edu/ucb/encuentra/
 ├── di/              # KoinInit + SharedModules (registra el módulo de cada feature)
 ├── navigation/      # NavRoute (@Serializable) + AppNavHost
 └── feature/<x>/     # data / domain / presentation/{screen,viewmodel} / di
+ds-repo/             # Design System publicado (no editar a mano)
 ```
 
 Dependencias disponibles (todas en `gradle/libs.versions.toml`): Navigation Compose, kotlinx.serialization, Ktor, Coil 3, Room 3 + KSP, Firebase GitLive (Auth, Firestore, Storage, Messaging, Remote Config), WorkManager (Android), Wire/gRPC (los `.proto` van en `shared/src/commonMain/proto`) y detekt.

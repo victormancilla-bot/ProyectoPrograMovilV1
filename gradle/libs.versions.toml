@@ -29,8 +29,13 @@ googleServices = "4.4.2"
 work = "2.11.0"
 wire = "7.1.0"
 detekt = "2.0.0-alpha.6"
+# Design System (proyecto design-system, publicado en ds-repo/)
+ucbDesignSystem = "1.0.0-SNAPSHOT"
 
 [libraries]
+# Design System
+ucb-designsystem = { module = "edu.ucb.ds:shared", version.ref = "ucbDesignSystem" }
+
 # Test
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

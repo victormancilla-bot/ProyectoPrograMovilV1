@@ -32,15 +32,15 @@ Hitos:
 
 ## Commits
 
-Formato `tipo(scope): mensaje en minúsculas`, donde `scope` es la feature o la tarjeta:
+Formato `tipo(scope): Verbo en pasado ...` (en inglés), donde `scope` es la feature o la tarjeta. Commits pequeños: uno por paso que compile.
 
 ```
-feat(reportwizard): paso 1 con grilla de categorías
-fix(login): rechazar correos que no son @ucb.edu.bo
-refactor(matching): extraer cálculo de score a use case
-test(foundform): casos de la máquina de estados
-docs(readme): cómo configurar Firebase
-chore(deps): subir ktor a 3.6.0
+feat(reportwizard): Added step 1 with category grid
+fix(login): Fixed validation to reject emails outside @ucb.edu.bo
+refactor(matching): Moved score calculation to a use case
+test(foundform): Added state machine test cases
+docs(readme): Added Firebase setup steps
+chore(deps): Updated ktor to 3.6.0
 ```
 
 Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `chore`, `build`, `ci`.

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 private val devRoutes: List<Pair<String, NavRoute>> = listOf(
+    "Design System (E)" to NavRoute.DesignSystemDemo,
     "Home (C)" to NavRoute.Home,
     "Reportar (C)" to NavRoute.ReportWizard,
     "Mis reportes (C)" to NavRoute.MyReports,

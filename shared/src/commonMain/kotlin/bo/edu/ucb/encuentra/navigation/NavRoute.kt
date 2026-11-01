@@ -8,6 +8,7 @@ sealed interface NavRoute {
 
     // Solo mientras existen stubs; F05 lo reemplaza por el Scaffold con bottom nav por rol.
     @Serializable data object DevMenu : NavRoute
+    @Serializable data object DesignSystemDemo : NavRoute
 
     // Estudiante
     @Serializable data object Home : NavRoute

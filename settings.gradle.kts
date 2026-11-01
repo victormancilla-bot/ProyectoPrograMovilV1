@@ -23,6 +23,11 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.google")
             }
         }
+        // Design System (edu.ucb.ds:shared) publicado dentro del repo; ver ds-repo/README.md
+        maven {
+            url = uri(settingsDir.resolve("ds-repo"))
+            mavenContent { includeGroup("edu.ucb.ds") }
+        }
         mavenCentral()
     }
 }
