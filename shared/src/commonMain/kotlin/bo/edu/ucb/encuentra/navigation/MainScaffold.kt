@@ -36,8 +36,10 @@ fun MainScaffold(
                             label = { Text(item.label, style = UcbEncuentraTheme.typography.label) },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = UcbEncuentraTheme.colors.onSecondary,
-                                selectedTextColor = UcbEncuentraTheme.colors.primary,
-                                indicatorColor = UcbEncuentraTheme.colors.secondary
+                                selectedTextColor = UcbEncuentraTheme.colors.onSecondary,
+                                indicatorColor = UcbEncuentraTheme.colors.secondary,
+                                unselectedIconColor = UcbEncuentraTheme.colors.onSurfaceVariant,
+                                unselectedTextColor = UcbEncuentraTheme.colors.onSurfaceVariant
                             )
                         )
                     }
