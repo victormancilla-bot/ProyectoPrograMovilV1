@@ -17,3 +17,13 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+
+# Secretos (ver local.properties.example)
+*.jks
+*.keystore
+# Generado desde local.properties por :shared:generateSecrets
+Secrets.kt
+
+# Contexto local de Claude Code
+CLAUDE.md
+.claude/

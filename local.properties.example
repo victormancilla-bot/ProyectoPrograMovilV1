@@ -1,0 +1,9 @@
+# Copia este archivo como local.properties (NUNCA lo subas a git).
+# Android Studio llena sdk.dir automáticamente.
+sdk.dir=C\:\Users\TU_USUARIO\AppData\Local\Android\Sdk
+
+# Claves usadas por Secrets.kt (shared) y el AndroidManifest. Pide los valores al Integrante A.
+MAPS_API_KEY=
+SENTRY_DSN=
+VISION_API_KEY=
+GRPC_LOGS_URL=

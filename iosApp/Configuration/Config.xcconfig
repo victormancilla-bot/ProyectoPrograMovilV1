@@ -1,7 +1,7 @@
 TEAM_ID=
 
-PRODUCT_NAME=ProyectoPrograMovil
-PRODUCT_BUNDLE_IDENTIFIER=org.example.project.ProyectoPrograMovil$(TEAM_ID)
+PRODUCT_NAME=UcbEncuentra
+PRODUCT_BUNDLE_IDENTIFIER=bo.edu.ucb.encuentra$(TEAM_ID)
 
 CURRENT_PROJECT_VERSION=1
 MARKETING_VERSION=1.0
