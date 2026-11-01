@@ -44,7 +44,7 @@ Usuario de prueba del login actual: `user@example.com` / `password`. Después de
 
 ## Design System
 
-Es un proyecto aparte: `design-system` (clónalo al lado de esta carpeta). Se publica en `ds-repo/` de este repo y la app lo usa como `edu.ucb.ds:shared:1.0.0-SNAPSHOT`, así nadie necesita `publishToMavenLocal`.
+Es un proyecto aparte: [UcbEncuentraDesignSystem](https://github.com/MaiteAraucoPorrez/UcbEncuentraDesignSystem) (clónalo al lado de esta carpeta como `design-system`). Se publica en `ds-repo/` de este repo y la app lo usa como `edu.ucb.ds:shared:1.0.0-SNAPSHOT`, así nadie necesita `publishToMavenLocal`.
 
 ```kotlin
 UcbEncuentraTheme.colors.primary          // primary, secondary, background, surface, error (+ onX)
