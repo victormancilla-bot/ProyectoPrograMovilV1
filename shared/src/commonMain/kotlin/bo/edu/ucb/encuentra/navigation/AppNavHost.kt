@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -9,10 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavUri
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.feature.alerts.presentation.screen.AlertsScreen
@@ -51,6 +54,12 @@ fun AppNavHost(
 
     // Con sesión se abre directo el home de su rol; sin sesión, Login.
     val startDestination = remember { getCurrentUser()?.let { RouteGuard.homeFor(it.role) } ?: NavRoute.Login }
+
+    // Deep links que llegan con la app abierta (notificaciones).
+    DisposableEffect(navController) {
+        ExternalUriHandler.listener = { uri -> navController.navigate(NavUri(uri)) }
+        onDispose { ExternalUriHandler.listener = null }
+    }
 
     // La barra solo se muestra en las pestañas del rol (no en Login, detalles ni el wizard).
     val tabs = user?.let { BottomNavItems.forRole(it.role) }.orEmpty()
@@ -96,7 +105,12 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
     guarded<NavRoute.FoundCatalog>(navController, getCurrentUser) { FoundCatalogScreen(onNavigateBack = back) }
     guarded<NavRoute.HowItWorks>(navController, getCurrentUser) { HowItWorksScreen(onNavigateBack = back) }
     guarded<NavRoute.MatchList>(navController, getCurrentUser) { MatchListScreen(onNavigateBack = back) }
-    guarded<NavRoute.MatchDetail>(navController, getCurrentUser) { route ->
+    // Se abre también desde una notificación: ucbencuentra://match/{matchId} (el guard sigue aplicando).
+    guarded<NavRoute.MatchDetail>(
+        navController,
+        getCurrentUser,
+        deepLinks = listOf(navDeepLink<NavRoute.MatchDetail>(basePath = DeepLinks.MATCH_BASE))
+    ) { route ->
         MatchDetailScreen(matchId = route.matchId, onNavigateBack = back)
     }
     guarded<NavRoute.Verify>(navController, getCurrentUser) { route ->
