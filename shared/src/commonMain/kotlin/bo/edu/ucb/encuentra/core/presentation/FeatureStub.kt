@@ -23,6 +23,7 @@ fun FeatureStub(
     card: String,
     detail: String? = null,
     actions: @Composable ColumnScope.() -> Unit = {},
+    backLabel: String = "Volver",
     onNavigateBack: () -> Unit
 ) {
     Column(
@@ -41,7 +42,7 @@ fun FeatureStub(
         Spacer(modifier = Modifier.height(16.dp))
         actions()
         OutlinedButton(onClick = onNavigateBack) {
-            Text("Volver")
+            Text(backLabel)
         }
     }
 }

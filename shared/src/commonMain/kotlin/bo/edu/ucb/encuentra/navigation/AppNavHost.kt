@@ -88,7 +88,10 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
 
     // Estudiante
     guarded<NavRoute.Home>(navController, getCurrentUser) { HomeScreen(onNavigateBack = back) }
-    guarded<NavRoute.ReportWizard>(navController, getCurrentUser) { ReportWizardScreen(onNavigateBack = back) }
+    guarded<NavRoute.ReportWizard>(navController, getCurrentUser) {
+        // Cancelar saca el wizard del back stack: su ViewModel (el borrador) se destruye.
+        ReportWizardScreen(onCancel = { navController.popBackStack(NavRoute.ReportWizard, inclusive = true) })
+    }
     guarded<NavRoute.MyReports>(navController, getCurrentUser) { MyReportsScreen(onNavigateBack = back) }
     guarded<NavRoute.FoundCatalog>(navController, getCurrentUser) { FoundCatalogScreen(onNavigateBack = back) }
     guarded<NavRoute.HowItWorks>(navController, getCurrentUser) { HowItWorksScreen(onNavigateBack = back) }
