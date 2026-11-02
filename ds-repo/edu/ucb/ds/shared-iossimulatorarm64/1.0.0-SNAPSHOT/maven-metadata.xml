@@ -3,44 +3,44 @@
   <groupId>edu.ucb.ds</groupId>
   <artifactId>shared-iossimulatorarm64</artifactId>
   <versioning>
-    <lastUpdated>20261101232420</lastUpdated>
+    <lastUpdated>20261101235509</lastUpdated>
     <snapshot>
-      <timestamp>20261101.232420</timestamp>
-      <buildNumber>3</buildNumber>
+      <timestamp>20261101.235509</timestamp>
+      <buildNumber>4</buildNumber>
     </snapshot>
     <snapshotVersions>
       <snapshotVersion>
         <extension>pom</extension>
-        <value>1.0.0-20261101.232420-3</value>
-        <updated>20261101232420</updated>
+        <value>1.0.0-20261101.235509-4</value>
+        <updated>20261101235509</updated>
       </snapshotVersion>
       <snapshotVersion>
         <classifier>kotlin_resources</classifier>
         <extension>kotlin_resources.zip</extension>
-        <value>1.0.0-20261101.232420-3</value>
-        <updated>20261101232420</updated>
+        <value>1.0.0-20261101.235509-4</value>
+        <updated>20261101235509</updated>
       </snapshotVersion>
       <snapshotVersion>
         <classifier>sources</classifier>
         <extension>jar</extension>
-        <value>1.0.0-20261101.232420-3</value>
-        <updated>20261101232420</updated>
+        <value>1.0.0-20261101.235509-4</value>
+        <updated>20261101235509</updated>
       </snapshotVersion>
       <snapshotVersion>
         <classifier>metadata</classifier>
         <extension>jar</extension>
-        <value>1.0.0-20261101.232420-3</value>
-        <updated>20261101232420</updated>
+        <value>1.0.0-20261101.235509-4</value>
+        <updated>20261101235509</updated>
       </snapshotVersion>
       <snapshotVersion>
         <extension>klib</extension>
-        <value>1.0.0-20261101.232420-3</value>
-        <updated>20261101232420</updated>
+        <value>1.0.0-20261101.235509-4</value>
+        <updated>20261101235509</updated>
       </snapshotVersion>
       <snapshotVersion>
         <extension>module</extension>
-        <value>1.0.0-20261101.232420-3</value>
-        <updated>20261101232420</updated>
+        <value>1.0.0-20261101.235509-4</value>
+        <updated>20261101235509</updated>
       </snapshotVersion>
     </snapshotVersions>
   </versioning>
