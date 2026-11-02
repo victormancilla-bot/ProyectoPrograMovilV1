@@ -4,11 +4,12 @@ import androidx.compose.runtime.Composable
 import bo.edu.ucb.encuentra.core.presentation.FeatureStub
 import bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel.MatchDetailViewModel
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun MatchDetailScreen(
     matchId: String,
-    viewModel: MatchDetailViewModel = koinViewModel(),
+    viewModel: MatchDetailViewModel = koinViewModel { parametersOf(matchId) },
     onNavigateBack: () -> Unit
 ) {
     FeatureStub(
