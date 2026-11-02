@@ -1,16 +1,18 @@
 package bo.edu.ucb.encuentra.navigation
 
+import bo.edu.ucb.encuentra.core.domain.model.Campus
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
+import bo.edu.ucb.encuentra.core.domain.vo.Email
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class RouteGuardTest {
 
-    private val student = UserModel("1", "Mateo", "estudiante@ucb.edu.bo", Role.ESTUDIANTE)
-    private val staff = UserModel("2", "Ana", "staff@ucb.edu.bo", Role.STAFF)
-    private val admin = UserModel("3", "Admin", "admin@ucb.edu.bo", Role.ADMIN)
+    private val student = UserModel("1", "Mateo", Email("estudiante@ucb.edu.bo"), Role.ESTUDIANTE, Campus.LA_PAZ)
+    private val staff = UserModel("2", "Ana", Email("staff@ucb.edu.bo"), Role.STAFF, Campus.LA_PAZ)
+    private val admin = UserModel("3", "Admin", Email("admin@ucb.edu.bo"), Role.ADMIN, Campus.LA_PAZ)
 
     @Test
     fun withoutSessionGoesToLogin() {

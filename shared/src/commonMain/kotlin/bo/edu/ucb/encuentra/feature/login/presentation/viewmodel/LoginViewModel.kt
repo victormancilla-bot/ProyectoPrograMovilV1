@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import bo.edu.ucb.encuentra.feature.login.domain.usecase.AuthenticateUseCase
-import bo.edu.ucb.encuentra.feature.login.domain.vo.Email
-import bo.edu.ucb.encuentra.feature.login.domain.vo.Password
+import bo.edu.ucb.encuentra.core.domain.vo.Email
+import bo.edu.ucb.encuentra.core.domain.vo.Password
 
 class LoginViewModel(
     private val authenticateUseCase: AuthenticateUseCase

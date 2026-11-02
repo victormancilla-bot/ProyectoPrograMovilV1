@@ -4,8 +4,8 @@ import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
 import bo.edu.ucb.encuentra.core.domain.repository.SessionRepository
 import bo.edu.ucb.encuentra.feature.login.domain.usecase.AuthenticateUseCase
-import bo.edu.ucb.encuentra.feature.login.domain.vo.Email
-import bo.edu.ucb.encuentra.feature.login.domain.vo.Password
+import bo.edu.ucb.encuentra.core.domain.vo.Email
+import bo.edu.ucb.encuentra.core.domain.vo.Password
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
