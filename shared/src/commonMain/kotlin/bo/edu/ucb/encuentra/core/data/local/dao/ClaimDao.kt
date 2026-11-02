@@ -22,6 +22,13 @@ interface ClaimDao {
     @Query("SELECT * FROM claims WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): ClaimEntity?
 
+    /** Todos los reclamos de un objeto (V02: varias personas pueden reclamarlo; el staff decide). */
+    @Query("SELECT * FROM claims WHERE found_item_id = :foundItemId ORDER BY created_at")
+    suspend fun getByFoundItem(foundItemId: String): List<ClaimEntity>
+
+    @Query("SELECT * FROM claims WHERE claimant_id = :claimantId")
+    suspend fun getByClaimant(claimantId: String): List<ClaimEntity>
+
     @Query("SELECT COALESCE(MAX(number), 1000) + 1 FROM claims")
     suspend fun nextNumber(): Int
 
