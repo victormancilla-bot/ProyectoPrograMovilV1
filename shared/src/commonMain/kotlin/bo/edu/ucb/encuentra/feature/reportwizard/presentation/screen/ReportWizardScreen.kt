@@ -41,7 +41,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ReportWizardScreen(
     viewModel: ReportWizardViewModel = koinViewModel(),
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onGoToMyReports: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -49,6 +50,7 @@ fun ReportWizardScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 ReportWizardEffect.Cancel -> onCancel()
+                ReportWizardEffect.GoToMyReports -> onGoToMyReports()
             }
         }
     }

@@ -29,6 +29,16 @@ sealed class ReportWizardEvent {
     data object OnPhotoRemoved : ReportWizardEvent()
     data class OnPhoneChanged(val phone: String) : ReportWizardEvent()
 
+    // Paso 4 · Confirmación y envío
+    /** "Editar" de una sección del resumen: vuelve a ese paso (1-3). */
+    data class OnEditStep(val step: Int) : ReportWizardEvent()
+    data object OnSubmit : ReportWizardEvent()
+    data object OnDismissSubmitError : ReportWizardEvent()
+
+    // Pantalla de éxito
+    data object OnGoToMyReports : ReportWizardEvent()
+    data object OnFinish : ReportWizardEvent()
+
     // Navegación entre pasos
     data object OnNext : ReportWizardEvent()
 

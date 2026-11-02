@@ -110,7 +110,13 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
     }
     guarded<NavRoute.ReportWizard>(navController, getCurrentUser) {
         // Cancelar saca el wizard del back stack: su ViewModel (el borrador) se destruye.
-        ReportWizardScreen(onCancel = { navController.popBackStack(NavRoute.ReportWizard, inclusive = true) })
+        ReportWizardScreen(
+            onCancel = { navController.popBackStack(NavRoute.ReportWizard, inclusive = true) },
+            // Después de enviar: Mis reportes reemplaza al wizard (atrás no vuelve al formulario enviado).
+            onGoToMyReports = {
+                navController.navigate(NavRoute.MyReports) { popUpTo<NavRoute.ReportWizard> { inclusive = true } }
+            }
+        )
     }
     guarded<NavRoute.MyReports>(navController, getCurrentUser) { MyReportsScreen(onNavigateBack = back) }
     guarded<NavRoute.FoundCatalog>(navController, getCurrentUser) { FoundCatalogScreen(onNavigateBack = back) }
