@@ -18,7 +18,7 @@ import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMyMatchesUseC
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,9 +39,15 @@ internal class SeedMatchRepository : MatchRepository {
 
     override fun observeForOwner(ownerId: String): Flow<List<ReportMatches>> = groups
 
-    override fun observeMatch(matchId: ItemId): Flow<MatchPair?> = groups.map { all ->
+    /** Reclamos guardados (V02); el detalle solo ve el del dueño del reporte. */
+    val claims = MutableStateFlow(SeedData.claims)
+
+    override fun observeMatch(matchId: ItemId): Flow<MatchPair?> = combine(groups, claims) { all, claims ->
         all.firstNotNullOfOrNull { group ->
-            group.candidates.firstOrNull { it.match.id == matchId }?.let { MatchPair(it.match, group.report, it.item) }
+            group.candidates.firstOrNull { it.match.id == matchId }?.let { candidate ->
+                val own = claims.firstOrNull { it.foundItemId == candidate.item.id && it.claimantId == group.report.ownerId }
+                MatchPair(candidate.match, group.report, candidate.item, own)
+            }
         }
     }
 

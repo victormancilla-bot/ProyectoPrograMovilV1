@@ -27,7 +27,7 @@ val matchingModule = module {
     single<MatchingStore> { RoomMatchingStore(get(), get(), get(), get()) }
     single<MatchingTrigger> { RunMatchingUseCase(get(), get(), get()) }
     singleOf(::RejectMatchUseCase)
-    single<MatchRepository> { MatchRepositoryImpl(get(), get(), get()) }
+    single<MatchRepository> { MatchRepositoryImpl(get(), get(), get(), get()) }
     singleOf(::ObserveMyMatchesUseCase)
     singleOf(::ObserveMatchDetailUseCase)
     singleOf(::ClaimMatchUseCase)

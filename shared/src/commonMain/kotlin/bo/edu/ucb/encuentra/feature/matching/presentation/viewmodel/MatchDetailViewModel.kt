@@ -2,7 +2,7 @@ package bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import bo.edu.ucb.encuentra.core.domain.repository.ClaimsNotAvailableException
+import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequestException
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ClaimMatchUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMatchDetailUseCase
@@ -68,7 +68,8 @@ class MatchDetailViewModel(
             claimMatch(matchId)
                 .onSuccess { number -> _state.value = state.value.copy(working = false, claimNumber = number) }
                 .onFailure { error ->
-                    val message = if (error is ClaimsNotAvailableException) error.message else CLAIM_ERROR
+                    // Los errores de V02 ("Ya reclamaste este objeto...") se muestran tal cual; el resto, genérico.
+                    val message = if (error is ClaimRequestException) error.message else CLAIM_ERROR
                     _state.value = state.value.copy(working = false, actionError = message)
                 }
         }

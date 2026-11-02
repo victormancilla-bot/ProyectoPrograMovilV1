@@ -1,9 +1,8 @@
 package bo.edu.ucb.encuentra.feature.matching
 
-import bo.edu.ucb.encuentra.core.domain.repository.ClaimsNotAvailableException
+import bo.edu.ucb.encuentra.core.domain.repository.DuplicateClaimException
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
-import bo.edu.ucb.encuentra.feature.claims.data.PendingClaimRequester
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequester
 import bo.edu.ucb.encuentra.feature.foundform.FakeSession
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ClaimMatchUseCase
@@ -92,14 +91,14 @@ class MatchDetailViewModelTest {
     }
 
     @Test
-    fun claimWhileV02IsPendingShowsAMessage() = runTest(dispatcher) {
-        val vm = viewModel("m-termo", PendingClaimRequester())
+    fun claimRefusedByV02ShowsItsMessage() = runTest(dispatcher) {
+        val vm = viewModel("m-termo", FailingClaimRequester())
         advanceUntilIdle()
 
         vm.handleEvent(MatchDetailEvent.OnClaim)
         advanceUntilIdle()
 
-        assertEquals(ClaimsNotAvailableException().message, vm.state.value.actionError)
+        assertEquals(DuplicateClaimException(1025).message, vm.state.value.actionError)
         assertNull(vm.state.value.claimNumber)
         assertFalse(vm.state.value.working)
     }
@@ -134,5 +133,16 @@ class MatchDetailViewModelTest {
         vm.handleEvent(MatchDetailEvent.OnClaim)
         advanceUntilIdle()
         assertNull(vm.state.value.claimNumber)
+    }
+
+    @Test
+    fun unexpectedClaimErrorShowsAGenericMessage() = runTest(dispatcher) {
+        val vm = viewModel("m-termo", FailingClaimRequester(IllegalStateException("SQLite busy")))
+        advanceUntilIdle()
+
+        vm.handleEvent(MatchDetailEvent.OnClaim)
+        advanceUntilIdle()
+
+        assertEquals(MatchDetailViewModel.CLAIM_ERROR, vm.state.value.actionError)
     }
 }

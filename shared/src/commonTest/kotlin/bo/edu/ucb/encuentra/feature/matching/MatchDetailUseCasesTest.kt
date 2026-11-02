@@ -1,18 +1,20 @@
 package bo.edu.ucb.encuentra.feature.matching
 
+import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
 import bo.edu.ucb.encuentra.core.domain.model.CampusZone
+import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequester
-import bo.edu.ucb.encuentra.core.domain.repository.ClaimsNotAvailableException
+import bo.edu.ucb.encuentra.core.domain.repository.DuplicateClaimException
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
-import bo.edu.ucb.encuentra.feature.claims.data.PendingClaimRequester
 import bo.edu.ucb.encuentra.feature.foundform.FakeSession
 import bo.edu.ucb.encuentra.feature.foundform.demoUser
 import bo.edu.ucb.encuentra.feature.matching.domain.model.ComparisonVerdict.COINCIDE
 import bo.edu.ucb.encuentra.feature.matching.domain.model.ComparisonVerdict.POR_VERIFICAR
+import bo.edu.ucb.encuentra.feature.matching.domain.model.ExistingClaim
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ClaimMatchUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMatchDetailUseCase
 import bo.edu.ucb.encuentra.feature.myreports.mateo
@@ -33,6 +35,11 @@ internal class RecordingClaimRequester(private val number: Int = 1026) : ClaimRe
         requests += matchId to claimantId
         return number
     }
+}
+
+/** V02 responde con un error (p. ej. doble reclamo). */
+internal class FailingClaimRequester(private val error: Throwable = DuplicateClaimException(1025)) : ClaimRequester {
+    override suspend fun requestClaim(matchId: ItemId, claimantId: String): Int = throw error
 }
 
 class MatchDetailUseCasesTest {
@@ -88,6 +95,28 @@ class MatchDetailUseCasesTest {
     }
 
     @Test
+    fun anExistingClaimReplacesTheActions() = runTest {
+        val claim = SeedData.claims.first().copy(
+            id = ItemId("c-1027"), number = 1027, foundItemId = ItemId("fi-termo"), claimantId = "u-mateo",
+            status = ClaimStatus.EN_VERIFICACION
+        )
+        repository.claims.value = SeedData.claims + claim
+
+        val detail = assertNotNull(observe(ItemId("m-termo")).first())
+
+        assertEquals(ExistingClaim(1027, ClaimStatus.EN_VERIFICACION), detail.existingClaim)
+        assertFalse(detail.canAct)
+        // El #1025 de Luis sobre la calculadora no es de Mateo: no aparece en su detalle.
+        assertNull(assertNotNull(observe(ItemId("m-calculadora")).first()).existingClaim)
+    }
+
+    @Test
+    fun anItemFoundBeforeTheLossIsNotADateMatch() = runTest {
+        // El llavero se encontró el 8 de agosto y el reporte es de octubre.
+        assertEquals(POR_VERIFICAR, assertNotNull(observe(ItemId("m-llavero")).first()).comparison.date)
+    }
+
+    @Test
     fun claimAsksV02ForTheCurrentUser() = runTest {
         val requester = RecordingClaimRequester()
         val result = ClaimMatchUseCase(requester, GetCurrentUserUseCase(FakeSession(mateo)))(ItemId("m-termo"))
@@ -97,11 +126,11 @@ class MatchDetailUseCasesTest {
     }
 
     @Test
-    fun claimFailsWithoutSessionOrWhileV02IsPending() = runTest {
+    fun claimFailsWithoutSessionOrWhenV02Refuses() = runTest {
         val noSession = ClaimMatchUseCase(RecordingClaimRequester(), GetCurrentUserUseCase(FakeSession(null)))
         assertTrue(noSession(ItemId("m-termo")).isFailure)
 
-        val pending = ClaimMatchUseCase(PendingClaimRequester(), GetCurrentUserUseCase(FakeSession(mateo)))
-        assertIs<ClaimsNotAvailableException>(pending(ItemId("m-termo")).exceptionOrNull())
+        val refused = ClaimMatchUseCase(FailingClaimRequester(), GetCurrentUserUseCase(FakeSession(mateo)))
+        assertIs<DuplicateClaimException>(refused(ItemId("m-termo")).exceptionOrNull())
     }
 }

@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.feature.matching.data
 
+import bo.edu.ucb.encuentra.core.data.local.dao.ClaimDao
 import bo.edu.ucb.encuentra.core.data.local.dao.FoundItemDao
 import bo.edu.ucb.encuentra.core.data.local.dao.LostReportDao
 import bo.edu.ucb.encuentra.core.data.local.dao.MatchDao
@@ -21,7 +22,8 @@ import kotlinx.coroutines.flow.flowOf
 class MatchRepositoryImpl(
     private val matchDao: MatchDao,
     private val lostReportDao: LostReportDao,
-    private val foundItemDao: FoundItemDao
+    private val foundItemDao: FoundItemDao,
+    private val claimDao: ClaimDao
 ) : MatchRepository {
 
     override fun observeForOwner(ownerId: String): Flow<List<ReportMatches>> = combine(
@@ -41,7 +43,7 @@ class MatchRepositoryImpl(
         }
     }
 
-    /** Si cambia el match, su reporte o su objeto (p. ej. otro lo reclamó), el detalle se actualiza solo. */
+    /** Si cambia el match, su reporte, su objeto o el reclamo del dueño (V02), el detalle se actualiza solo. */
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeMatch(matchId: ItemId): Flow<MatchPair?> =
         matchDao.observeById(matchId.value).flatMapLatest { match ->
@@ -50,9 +52,16 @@ class MatchRepositoryImpl(
             } else {
                 combine(
                     lostReportDao.observeById(match.lostReportId),
-                    foundItemDao.observeById(match.foundItemId)
-                ) { report, item ->
-                    if (report == null || item == null) null else MatchPair(match.toModel(), report.toModel(), item.toModel())
+                    foundItemDao.observeById(match.foundItemId),
+                    claimDao.observeByFoundItem(match.foundItemId)
+                ) { report, item, claims ->
+                    if (report == null || item == null) {
+                        null
+                    } else {
+                        // Solo el reclamo del dueño del reporte: los de otras personas no se muestran.
+                        val ownClaim = claims.firstOrNull { it.claimantId == report.ownerId }?.toModel()
+                        MatchPair(match.toModel(), report.toModel(), item.toModel(), ownClaim)
+                    }
                 }
             }
         }

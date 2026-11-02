@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.presentation.formatShortRange
 import bo.edu.ucb.encuentra.core.presentation.formatHm
@@ -349,11 +350,13 @@ private fun ProtectedInfoNote() {
 private fun Actions(detail: MatchDetail, state: MatchDetailState, onEvent: (MatchDetailEvent) -> Unit) {
     val colors = UcbEncuentraTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.itemGap)) {
-        val claimNumber = state.claimNumber
+        val claimNumber = state.shownClaimNumber
+        val existing = detail.existingClaim
         when {
-            claimNumber != null -> InfoBox(
+            claimNumber != null && (existing == null || existing.status == ClaimStatus.PENDIENTE) -> InfoBox(
                 "Reclamo #$claimNumber enviado. El staff revisará tus respuestas y te avisará cuándo recoger el objeto."
             )
+            existing != null -> InfoBox("Tu reclamo #${existing.number} está: ${existing.status.label}.")
             state.canAct -> {
                 PrimaryButton(
                     text = "Esto es mío — verificar",
