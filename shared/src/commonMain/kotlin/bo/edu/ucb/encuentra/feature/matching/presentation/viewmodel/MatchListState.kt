@@ -10,7 +10,11 @@ data class MatchListState(
     /** Reportes del usuario con candidatos (ya ordenados). */
     val groups: List<ReportMatches> = emptyList(),
     /** Reporte cuyos candidatos se muestran (chip seleccionado). */
-    val selectedReportId: ItemId? = null
+    val selectedReportId: ItemId? = null,
+    /** "No es mío" tocado: se pide confirmación porque no se puede deshacer. */
+    val pendingReject: ItemId? = null,
+    /** Error al marcar "No es mío" (la lista sigue visible). */
+    val rejectError: String? = null
 ) {
     val isEmpty: Boolean get() = !loading && error == null && groups.isEmpty()
 

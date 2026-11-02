@@ -10,4 +10,9 @@ sealed class MatchListEvent {
     /** Estado vacío: todavía no reportó nada → wizard. */
     data object OnReportLost : MatchListEvent()
     data object OnRetry : MatchListEvent()
+
+    /** "No es mío" (M02): pide confirmación; al confirmar no vuelve a aparecer. */
+    data class OnRejectMatch(val matchId: ItemId) : MatchListEvent()
+    data object OnConfirmReject : MatchListEvent()
+    data object OnDismissReject : MatchListEvent()
 }

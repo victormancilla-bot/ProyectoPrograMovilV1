@@ -8,9 +8,11 @@ import bo.edu.ucb.encuentra.feature.foundform.demoUser
 import bo.edu.ucb.encuentra.feature.matching.domain.model.ReportMatches
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMyMatchesUseCase
+import bo.edu.ucb.encuentra.feature.matching.domain.usecase.RejectMatchUseCase
 import bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel.MatchListEffect
 import bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel.MatchListEvent
 import bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel.MatchListViewModel
+import bo.edu.ucb.encuentra.feature.reportwizard.FakeMatchingTrigger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -39,6 +41,8 @@ private class FlakyMatchRepository : MatchRepository {
         if (calls == 1) error("Room no disponible")
         emit(seed.groups.value)
     }
+
+    override suspend fun reject(matchId: ItemId) = null
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -52,8 +56,12 @@ class MatchListViewModelTest {
     @AfterTest
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun viewModel(repository: MatchRepository) =
-        MatchListViewModel(ObserveMyMatchesUseCase(repository, GetCurrentUserUseCase(FakeSession(demoUser(Role.ESTUDIANTE)))))
+    private val matching = FakeMatchingTrigger()
+
+    private fun viewModel(repository: MatchRepository) = MatchListViewModel(
+        ObserveMyMatchesUseCase(repository, GetCurrentUserUseCase(FakeSession(demoUser(Role.ESTUDIANTE)))),
+        RejectMatchUseCase(repository, matching)
+    )
 
     @Test
     fun startsLoadingAndShowsTheBestReportFirst() = runTest(dispatcher) {
@@ -95,6 +103,26 @@ class MatchListViewModelTest {
         advanceUntilIdle()
         assertNull(vm.state.value.error)
         assertEquals(2, vm.state.value.groups.size)
+    }
+
+    @Test
+    fun noEsMioAsksForConfirmationThenRejectsAndReRanks() = runTest(dispatcher) {
+        val repository = SeedMatchRepository()
+        val vm = viewModel(repository)
+        advanceUntilIdle()
+
+        vm.handleEvent(MatchListEvent.OnRejectMatch(ItemId("m-termo")))
+        assertEquals(ItemId("m-termo"), vm.state.value.pendingReject)
+        vm.handleEvent(MatchListEvent.OnDismissReject)
+        advanceUntilIdle()
+        assertTrue(repository.rejected.isEmpty())
+
+        vm.handleEvent(MatchListEvent.OnRejectMatch(ItemId("m-termo")))
+        vm.handleEvent(MatchListEvent.OnConfirmReject)
+        advanceUntilIdle()
+        assertEquals(listOf(ItemId("m-termo")), repository.rejected)
+        assertEquals(1, matching.triggered.size)
+        assertNull(vm.state.value.pendingReject)
     }
 
     @Test

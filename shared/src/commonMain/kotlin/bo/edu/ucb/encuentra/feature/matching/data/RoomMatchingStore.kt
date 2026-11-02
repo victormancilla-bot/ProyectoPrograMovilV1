@@ -12,6 +12,7 @@ import bo.edu.ucb.encuentra.core.domain.model.ItemStatus
 import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
+import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingStore
 
 class RoomMatchingStore(
@@ -27,12 +28,18 @@ class RoomMatchingStore(
     override suspend fun searchingReports(): List<LostReport> =
         lostReportDao.getByStatus(ReportStatus.BUSCANDO).map { it.toModel() }
 
-    override suspend fun saveNewMatches(matches: List<Match>): List<Match> {
-        val new = matches.filter { matchDao.getByPair(it.lostReportId.value, it.foundItemId.value) == null }
-        matchDao.upsertAll(new.map { it.toEntity() })
-        return new
+    override suspend fun matchesForReport(reportId: ItemId): List<Match> =
+        matchDao.getByLostReport(reportId.value).map { it.toModel() }
+
+    override suspend fun saveMatches(matches: List<Match>) {
+        if (matches.isNotEmpty()) matchDao.upsertAll(matches.map { it.toEntity() })
     }
 
-    override suspend fun notify(notifications: List<AppNotification>) =
-        notificationDao.upsertAll(notifications.map { it.toEntity() })
+    override suspend fun deleteMatches(ids: List<ItemId>) {
+        if (ids.isNotEmpty()) matchDao.deleteByIds(ids.map { it.value })
+    }
+
+    override suspend fun notify(notifications: List<AppNotification>) {
+        if (notifications.isNotEmpty()) notificationDao.upsertAll(notifications.map { it.toEntity() })
+    }
 }

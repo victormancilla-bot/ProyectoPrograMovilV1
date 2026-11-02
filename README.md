@@ -77,6 +77,28 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - `RunMatchingUseCase` implementa el hook `MatchingTrigger`: corre **al enviar un reporte (L04)** contra los objetos DISPONIBLES y **al registrar un hallazgo (H03)** contra los reportes BUSCANDO. Por cada reporte con coincidencias nuevas crea una notificación **NEW_MATCH** al dueño (la cuenta el Home y abre la mejor por deep link). Si el matching falla, el reporte o el objeto igual quedan guardados.
 - Tests: `MatchEngineTest` (8, casos borde de fechas, textos, datos desconocidos), `RunMatchingUseCaseTest` (4).
 
+## Matching fase 2 (M02): score ponderado y ranking
+
+- **Score ponderado 0–100** en `MatchEngine`: color, marca, zona, fecha y **texto** (palabras clave del título + descripción, sin tildes ni palabras vacías). Cada criterio da una similitud 0–1 que se multiplica por su peso; los pesos son relativos (no tienen que sumar 100).
+- **Pesos y umbrales desde Remote Config** (`RemoteConfigMatchingConfigRepository`, mismo patrón que ucbp1: valores por defecto + `fetchAndActivate` + `safeCall`). Parámetros para crear en la consola de Firebase (F08):
+
+| Parámetro | Por defecto | Qué hace |
+|---|---|---|
+| `matching_weight_color` | 30 | Peso del color |
+| `matching_weight_brand` | 20 | Peso de la marca |
+| `matching_weight_zone` | 20 | Peso de la zona |
+| `matching_weight_date` | 10 | Peso de la fecha |
+| `matching_weight_text` | 20 | Peso del texto |
+| `matching_min_score` | 30 | Umbral mínimo para proponer |
+| `matching_top_n` | 5 | Máximo de candidatos por reporte |
+| `matching_max_days_to_find` | 30 | Días después de la pérdida en que puede aparecer |
+
+  Mientras no exista `google-services.json`, Firebase no está inicializado y se usan los valores por defecto (sin romper nada). Valores inválidos (pesos negativos o todos en 0) vuelven a los por defecto.
+- **Top-N con umbral**: por reporte se proponen los N mejores sobre el mínimo.
+- **"No es mío"**: botón en cada tarjeta de Posibles coincidencias (con confirmación). La coincidencia pasa a **DESCARTADO** y el matching nunca la vuelve a proponer; el ranking se re-calcula para que entre el siguiente candidato.
+- **Re-matching** (`RunMatchingUseCase`): al crear un reporte, al llegar un hallazgo (para cada reporte afectado) y al editar un reporte (`MatchingTrigger.onReportUpdated`, lo llamará L05). Solo toca reportes **BUSCANDO**; respeta DESCARTADO y CONFIRMADO; actualiza el score de las propuestas que siguen, borra las que quedaron fuera del Top-N y avisa solo por las nuevas.
+- Tests: `MatchRankingTest` (7), `RunMatchingUseCaseTest` (9), `MatchEngineTest` (8, con los pesos de la fase 1), `MatchListViewModelTest` (6).
+
 ## Posibles coincidencias (M04)
 
 - Pantalla del Figma "Resultados de Matching" (se abre desde "N coincidencias nuevas" del Home): candidatos con `ItemCard` + `ScoreBadge` de color (verde ≥ 80, naranja 50-79, gris < 50) y ranking `#1, #2...` del más al menos parecido. **Nunca un "es / no es"**: siempre un porcentaje.
