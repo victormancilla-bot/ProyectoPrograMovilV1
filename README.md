@@ -52,6 +52,13 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - Para empezar de cero (borra sesión y base): *Ajustes → Apps → UCB Encuentra (dev) → Borrar datos*, o `adb shell pm clear bo.edu.ucb.encuentra.dev`.
 - ⚠️ El enlace a Sistemas UCB abre `mailto:sistemas@ucb.edu.bo` (`LoginViewModel.SUPPORT_URI`): **es de prueba**, falta confirmar el contacto real (o leerlo de Remote Config, F08).
 
+## Home del estudiante (L01)
+
+- Pantalla del Figma "Home Estudiante": header con "¡Hola, {nombre}!" y "{carrera} • {sede}" tomados del usuario (no fijo), tarjeta "¿Perdiste algo?" → wizard, **Actividad** y **Accesos rápidos** (Mis reportes, Objetos encontrados, Cómo funciona).
+- Actividad en vivo desde Room (`HomeActivityRepository`, `combine` de dos `Flow`): **reportes activos** = Buscando, En verificación o Match confirmado; **coincidencias nuevas** = notificaciones `NEW_MATCH` sin leer (punto rojo si hay). Con el seed: 4 y 1.
+- MVI: `HomeState` / `HomeEvent` / `HomeEffect`; tests en `HomeViewModelTest`.
+- Pendiente de otras tarjetas: el menú (☰) y la luna de modo oscuro del header (S07).
+
 ## Navegación (F05)
 
 - Rutas `@Serializable` en `navigation/NavRoute.kt`; todas pasan por `RouteGuard`: sin sesión → Login, rol incorrecto → home de su rol.
