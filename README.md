@@ -86,14 +86,20 @@ DISPONIBLE ──donar──────▶ DONADO       (retención vencida, D0
 - Los errores se muestran al intentar registrar (formulario largo: el botón siempre indica qué falta).
 - Tests: `ValidateFoundItemUseCaseTest`, `RegisterFoundItemUseCaseTest`, `FoundFormViewModelTest` (reloj fijo inyectado: `Clock` y `TimeZone` vienen de `coreModule`).
 
-## Wizard de reporte (L02)
+## Wizard de reporte (L02-L03)
 
 - Un solo `ReportWizardViewModel` para los 4 pasos con el borrador (`ReportDraftState` + `ReportDraft`); cancelar lo descarta (F05).
 - **Paso 1 · Categoría** (Figma "Reportar - Categoría"): grilla de 6 categorías y, al elegir una, sus subcategorías en chips (obligatoria: la confirmación muestra "Electrónica / Laptops").
 - **Paso 2 · Atributos** (Figma "Reportar - Atributos"): ¿qué es? (nombre, obligatorio), color principal (obligatorio; "+" muestra 13 colores), marca (opcional), características distintivas (opcional).
 - Validación por paso en `ValidateReportStepUseCase`: **Siguiente** queda deshabilitado hasta que el paso es válido. La flecha atrás vuelve al paso anterior sin perder datos (en el paso 1 cancela).
-- Pasos 3 y 4: L03 (dónde y cuándo, foto, contacto) y L04 (confirmación y envío).
-- Tests: `ValidateReportStepUseCaseTest`, `ReportWizardViewModelTest`.
+- **Paso 3 · Dónde y cuándo** (Figma "Reportar - Ubicación y Foto", con las correcciones de L03):
+  - Zona del campus (obligatoria) + detalle aula/piso (opcional).
+  - **Rango** desde/hasta en **dd/mm/aaaa** (no una sola fecha mm/dd/yyyy) con calendario que no deja elegir días futuros; máximo 30 días. Si "Desde" pasa a "Hasta", "Hasta" se mueve con él.
+  - **Franja horaria** obligatoria: Mañana, Tarde, Noche o No sé. `ValidateReportStepUseCase.lostRange()` convierte rango + franja en `lostFrom`/`lostTo` (lo usa L04).
+  - **Foto de referencia opcional** desde la galería con el Photo Picker del sistema (`core/presentation/PhotoPicker`): **no pide permisos** de almacenamiento; la foto se copia a `filesDir/report_photos`. En iOS el botón se oculta (pendiente). La cámara llega con H01.
+  - **Contacto**: correo prellenado desde el perfil (no editable) + teléfono/WhatsApp opcional (Bolivia, 8 dígitos, `+591` opcional).
+- Paso 4: L04 (confirmación y envío).
+- Tests: `ValidateReportStepUseCaseTest` (9), `ReportWizardViewModelTest` (7). Reloj fijo inyectado (`Clock`/`TimeZone` de `coreModule`).
 
 ## Navegación (F05)
 
