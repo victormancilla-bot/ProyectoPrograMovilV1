@@ -3,19 +3,12 @@ package bo.edu.ucb.encuentra.feature.reportwizard.presentation.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Checkroom
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import bo.edu.ucb.encuentra.core.domain.model.Category
+import bo.edu.ucb.encuentra.core.presentation.icon
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportDraftState
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWizardEvent
 import edu.ucb.ds.components.cards.CategoryGrid
@@ -25,16 +18,6 @@ import edu.ucb.ds.components.label.AppBody
 import edu.ucb.ds.components.label.AppHeading
 import edu.ucb.ds.components.label.AppOverline
 import edu.ucb.ds.theme.UcbEncuentraTheme
-
-/** Ícono de cada categoría en la grilla (Figma "Reportar - Categoría"). */
-internal fun Category.icon(): ImageVector = when (this) {
-    Category.ELECTRONICA -> Icons.Filled.Devices
-    Category.ROPA_ACCESORIOS -> Icons.Filled.Checkroom
-    Category.DOCUMENTOS -> Icons.Filled.Description
-    Category.LIBROS_CUADERNOS -> Icons.Filled.MenuBook
-    Category.LLAVES -> Icons.Filled.Key
-    Category.OTROS -> Icons.Filled.MoreHoriz
-}
 
 /** Paso 1: grilla de categorías y, al elegir una, sus subcategorías (la confirmación muestra "Electrónica / Laptops"). */
 @Composable

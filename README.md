@@ -59,6 +59,15 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - MVI: `HomeState` / `HomeEvent` / `HomeEffect`; tests en `HomeViewModelTest`.
 - Pendiente de otras tarjetas: el menú (☰) y la luna de modo oscuro del header (S07).
 
+## Registrar objeto encontrado (H03)
+
+- Pantalla del mockup "Registrar - Formulario de Objeto" para el staff (por ahora se abre desde **Inventario → Registrar objeto encontrado**; H01 la abrirá después de la foto).
+- **Datos detectados** (categoría/subcategoría y color) editables tocando cada fila. En R3 se eligen a mano (chip "Ingreso manual"); con H02 la IA los precarga y el chip pasa a "Sugerido por IA".
+- Nombre (obligatorio), marca (opcional), características, **ubicación del hallazgo**, **ubicación de custodia actual (obligatoria)** + detalle opcional, **fecha y hora** (arrancan en "ahora", no pueden ser futuras) y **1-3 preguntas de control** para el dueño (las usa V01).
+- `RegisterFoundItemUseCase` valida (`ValidateFoundItemUseCase`) y guarda en Room con estado **DISPONIBLE**, retención de 90 días, sede y staff de la sesión. `FoundItemRepositoryImpl` escribe en una sola transacción el objeto, su primer evento de custodia y el registro de auditoría `ITEM_REGISTERED`.
+- Los errores se muestran al intentar registrar (formulario largo: el botón siempre indica qué falta).
+- Tests: `ValidateFoundItemUseCaseTest`, `RegisterFoundItemUseCaseTest`, `FoundFormViewModelTest` (reloj fijo inyectado: `Clock` y `TimeZone` vienen de `coreModule`).
+
 ## Wizard de reporte (L02)
 
 - Un solo `ReportWizardViewModel` para los 4 pasos con el borrador (`ReportDraftState` + `ReportDraft`); cancelar lo descarta (F05).
