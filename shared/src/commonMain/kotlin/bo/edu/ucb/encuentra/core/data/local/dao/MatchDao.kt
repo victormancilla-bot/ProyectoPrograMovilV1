@@ -1,0 +1,32 @@
+package bo.edu.ucb.encuentra.core.data.local.dao
+
+import androidx.room3.Dao
+import androidx.room3.Query
+import androidx.room3.Upsert
+import bo.edu.ucb.encuentra.core.data.local.entity.MatchEntity
+import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface MatchDao {
+    /** Coincidencias de un reporte, mejor score primero, sin las descartadas ("No es mío", M02). */
+    @Query(
+        "SELECT * FROM matches WHERE lost_report_id = :lostReportId AND status != 'DESCARTADO' ORDER BY score DESC"
+    )
+    fun observeActiveByLostReport(lostReportId: String): Flow<List<MatchEntity>>
+
+    @Query("SELECT * FROM matches WHERE id = :id LIMIT 1")
+    fun observeById(id: String): Flow<MatchEntity?>
+
+    @Query("SELECT * FROM matches WHERE found_item_id = :foundItemId ORDER BY score DESC")
+    suspend fun getByFoundItem(foundItemId: String): List<MatchEntity>
+
+    @Upsert
+    suspend fun upsert(match: MatchEntity)
+
+    @Upsert
+    suspend fun upsertAll(matches: List<MatchEntity>)
+
+    @Query("UPDATE matches SET status = :status WHERE id = :id")
+    suspend fun updateStatus(id: String, status: MatchStatus)
+}
