@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel
 
+import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.model.ReportDraft
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.ReportFieldError
 
@@ -14,9 +15,17 @@ data class ReportDraftState(
     /** Errores del paso actual; Siguiente queda deshabilitado mientras haya alguno. */
     val errors: Set<ReportFieldError> = emptySet(),
     /** "+" del selector de color: muestra la paleta completa. */
-    val showAllColors: Boolean = false
+    val showAllColors: Boolean = false,
+    /** Se entró al paso con "Editar" desde la confirmación: Siguiente vuelve directo al resumen. */
+    val editingFromSummary: Boolean = false,
+    val submitting: Boolean = false,
+    val submitError: String? = null,
+    /** Reporte guardado: la pantalla muestra el éxito en lugar del wizard. */
+    val submitted: LostReport? = null
 ) {
     val canContinue: Boolean get() = errors.isEmpty()
+
+    val isConfirmation: Boolean get() = step == TOTAL_STEPS
 
     val stepName: String get() = STEP_NAMES.getOrElse(step - 1) { "" }
 

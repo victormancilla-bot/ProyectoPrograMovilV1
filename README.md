@@ -86,7 +86,7 @@ DISPONIBLE ──donar──────▶ DONADO       (retención vencida, D0
 - Los errores se muestran al intentar registrar (formulario largo: el botón siempre indica qué falta).
 - Tests: `ValidateFoundItemUseCaseTest`, `RegisterFoundItemUseCaseTest`, `FoundFormViewModelTest` (reloj fijo inyectado: `Clock` y `TimeZone` vienen de `coreModule`).
 
-## Wizard de reporte (L02-L03)
+## Wizard de reporte (L02-L04)
 
 - Un solo `ReportWizardViewModel` para los 4 pasos con el borrador (`ReportDraftState` + `ReportDraft`); cancelar lo descarta (F05).
 - **Paso 1 · Categoría** (Figma "Reportar - Categoría"): grilla de 6 categorías y, al elegir una, sus subcategorías en chips (obligatoria: la confirmación muestra "Electrónica / Laptops").
@@ -98,8 +98,11 @@ DISPONIBLE ──donar──────▶ DONADO       (retención vencida, D0
   - **Franja horaria** obligatoria: Mañana, Tarde, Noche o No sé. `ValidateReportStepUseCase.lostRange()` convierte rango + franja en `lostFrom`/`lostTo` (lo usa L04).
   - **Foto de referencia opcional** desde la galería con el Photo Picker del sistema (`core/presentation/PhotoPicker`): **no pide permisos** de almacenamiento; la foto se copia a `filesDir/report_photos`. En iOS el botón se oculta (pendiente). La cámara llega con H01.
   - **Contacto**: correo prellenado desde el perfil (no editable) + teléfono/WhatsApp opcional (Bolivia, 8 dígitos, `+591` opcional).
-- Paso 4: L04 (confirmación y envío).
-- Tests: `ValidateReportStepUseCaseTest` (9), `ReportWizardViewModelTest` (7). Reloj fijo inyectado (`Clock`/`TimeZone` de `coreModule`).
+- **Paso 4 · Confirmación** (Figma "Reportar - Confirmación"): resumen con **Editar** por sección (Detalles → paso 1, Atributos → paso 2, Cuándo y dónde / Contacto → paso 3). Editando desde el resumen, el botón dice "Volver al resumen" y regresa directo a la confirmación si todo sigue válido.
+- **Enviar reporte**: `SubmitLostReportUseCase` revisa los pasos 1-3 (`upTo`), guarda el `LostReport` en Room con estado **BUSCANDO** (sede y dueño de la sesión, rango + franja → `lostFrom`/`lostTo`) y llama al hook `MatchingTrigger` (M01). Si el matching falla, el reporte igual queda guardado. Firestore llega con L06.
+- **Pantalla de éxito** (no existe en el PDF; hecha con el DS): "¡Reporte enviado!", resumen, "te avisaremos si hay coincidencias", **Ver mis reportes** (reemplaza al wizard en el back stack) y **Volver al inicio**.
+- `MatchingTrigger` (`core/domain/repository`) hoy es `PendingMatchingTrigger` (no hace nada) en `matchingModule`; M01 cambia solo esa implementación.
+- Tests: `ValidateReportStepUseCaseTest` (9), `ReportWizardViewModelTest` (11), `SubmitLostReportUseCaseTest` (4). Reloj fijo inyectado (`Clock`/`TimeZone` de `coreModule`).
 
 ## Navegación (F05)
 

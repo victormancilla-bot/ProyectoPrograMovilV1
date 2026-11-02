@@ -11,6 +11,7 @@ import bo.edu.ucb.encuentra.feature.foundform.FixedClock
 import bo.edu.ucb.encuentra.feature.foundform.demoUser
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.model.TimeSlot
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.ReportFieldError
+import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.SubmitLostReportUseCase
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.ValidateReportStepUseCase
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWizardEffect
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWizardEvent
@@ -30,6 +31,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -37,14 +39,19 @@ import kotlin.test.assertTrue
 class ReportWizardViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
+    private val repository = FakeLostReportRepository()
+    private val matching = FakeMatchingTrigger()
     private lateinit var viewModel: ReportWizardViewModel
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(dispatcher)
+        val validate = ValidateReportStepUseCase(FixedClock, BoliviaTime)
+        val session = GetCurrentUserUseCase(FakeSession(demoUser(Role.ESTUDIANTE)))
         viewModel = ReportWizardViewModel(
-            ValidateReportStepUseCase(FixedClock, BoliviaTime),
-            GetCurrentUserUseCase(FakeSession(demoUser(Role.ESTUDIANTE)))
+            validate,
+            SubmitLostReportUseCase(validate, repository, matching, session, FixedClock),
+            session
         )
     }
 
@@ -137,6 +144,75 @@ class ReportWizardViewModelTest {
         assertEquals(LocalDate(2026, 10, 28), state.draft.lostTo)
         send(ReportWizardEvent.OnPhotoPicked("file:///a.jpg"), ReportWizardEvent.OnPhotoRemoved)
         assertNull(state.draft.photoUri)
+    }
+
+    private fun goToConfirmation() {
+        goToStep3()
+        send(
+            ReportWizardEvent.OnZoneSelected(CampusZone.BIBLIOTECA_CENTRAL),
+            ReportWizardEvent.OnTimeSlotSelected(TimeSlot.MANANA),
+            ReportWizardEvent.OnNext
+        )
+        assertEquals(4, state.step)
+    }
+
+    @Test
+    fun editFromTheSummaryReturnsStraightToConfirmation() {
+        goToConfirmation()
+        send(ReportWizardEvent.OnEditStep(1))
+        assertEquals(1, state.step)
+        assertTrue(state.editingFromSummary)
+
+        send(ReportWizardEvent.OnSubcategorySelected(Subcategory.TABLET), ReportWizardEvent.OnNext)
+        assertEquals(4, state.step)
+        assertFalse(state.editingFromSummary)
+        assertEquals(Subcategory.TABLET, state.draft.subcategory)
+
+        // Atrás desde un paso editado también vuelve al resumen.
+        send(ReportWizardEvent.OnEditStep(3), ReportWizardEvent.OnBack)
+        assertEquals(4, state.step)
+    }
+
+    @Test
+    fun editThatBreaksAnotherStepWalksThroughTheSteps() {
+        goToConfirmation()
+        // Otra categoría borra la subcategoría: hay que pasar de nuevo por los pasos.
+        send(ReportWizardEvent.OnEditStep(1), ReportWizardEvent.OnCategorySelected(Category.LLAVES))
+        assertFalse(state.canContinue)
+        send(ReportWizardEvent.OnSubcategorySelected(Subcategory.LLAVERO), ReportWizardEvent.OnNext)
+        assertEquals(4, state.step)
+    }
+
+    @Test
+    fun submitSavesTheReportTriggersMatchingAndShowsSuccess() = runTest(dispatcher) {
+        goToConfirmation()
+        send(ReportWizardEvent.OnSubmit)
+        advanceUntilIdle()
+
+        val report = assertNotNull(state.submitted)
+        assertEquals(listOf(report), repository.saved)
+        assertEquals(listOf(report), matching.triggered)
+        assertFalse(state.submitting)
+
+        // Un segundo toque no duplica el reporte.
+        send(ReportWizardEvent.OnSubmit)
+        advanceUntilIdle()
+        assertEquals(1, repository.saved.size)
+
+        val effect = async { viewModel.effects.first() }
+        advanceUntilIdle()
+        send(ReportWizardEvent.OnGoToMyReports)
+        advanceUntilIdle()
+        assertEquals(ReportWizardEffect.GoToMyReports, effect.await())
+    }
+
+    @Test
+    fun submitIsOnlyAllowedOnTheConfirmationStep() = runTest(dispatcher) {
+        goToStep3()
+        send(ReportWizardEvent.OnSubmit, ReportWizardEvent.OnEditStep(1))
+        advanceUntilIdle()
+        assertTrue(repository.saved.isEmpty())
+        assertEquals(3, state.step)
     }
 
     @Test

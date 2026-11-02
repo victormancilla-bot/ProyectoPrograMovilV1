@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.model.ReportDraft
+import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.SubmitLostReportUseCase
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.ValidateReportStepUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,21 +17,20 @@ import kotlinx.coroutines.launch
 /** ViewModel compartido por los 4 pasos del wizard (L02-L04). Cada cambio revalida el paso actual. */
 class ReportWizardViewModel(
     private val validateStep: ValidateReportStepUseCase,
+    private val submitReport: SubmitLostReportUseCase,
     getCurrentUser: GetCurrentUserUseCase
 ) : ViewModel() {
 
     // Fechas en "hoy" y contacto prellenado con el correo del perfil (L03).
     private val _state = MutableStateFlow(
-        stateFor(
-            step = 1,
-            draft = validateStep.today().let { today ->
-                ReportDraft(
-                    lostFrom = today,
-                    lostTo = today,
-                    contactEmail = getCurrentUser()?.email?.value.orEmpty()
-                )
-            }
-        )
+        validateStep.today().let { today ->
+            val draft = ReportDraft(
+                lostFrom = today,
+                lostTo = today,
+                contactEmail = getCurrentUser()?.email?.value.orEmpty()
+            )
+            ReportDraftState(draft = draft, errors = validateStep(1, draft))
+        }
     )
     val state: StateFlow<ReportDraftState> = _state.asStateFlow()
 
@@ -64,30 +64,74 @@ class ReportWizardViewModel(
             is ReportWizardEvent.OnPhotoPicked -> updateDraft(draft.copy(photoUri = event.uri))
             ReportWizardEvent.OnPhotoRemoved -> updateDraft(draft.copy(photoUri = null))
             is ReportWizardEvent.OnPhoneChanged -> updateDraft(draft.copy(contactPhone = event.phone))
-            ReportWizardEvent.OnNext -> goToStep(state.value.step + 1)
-            ReportWizardEvent.OnBack -> if (state.value.step == 1) {
-                viewModelScope.launch { _effects.emit(ReportWizardEffect.Cancel) }
-            } else {
-                goToStep(state.value.step - 1)
+
+            is ReportWizardEvent.OnEditStep -> if (state.value.isConfirmation && event.step in 1 until ReportDraftState.TOTAL_STEPS) {
+                showStep(event.step, editingFromSummary = true)
             }
+            ReportWizardEvent.OnSubmit -> submit()
+            ReportWizardEvent.OnDismissSubmitError -> _state.value = state.value.copy(submitError = null)
+            ReportWizardEvent.OnGoToMyReports -> emit(ReportWizardEffect.GoToMyReports)
+            ReportWizardEvent.OnFinish -> emit(ReportWizardEffect.Cancel)
+
+            ReportWizardEvent.OnNext -> next()
+            ReportWizardEvent.OnBack -> back()
         }
     }
 
-    private fun updateDraft(draft: ReportDraft) {
-        _state.value = stateFor(state.value.step, draft).copy(showAllColors = state.value.showAllColors)
-    }
-
-    private fun goToStep(step: Int) {
+    private fun next() {
         val current = state.value
-        // Solo se avanza si el paso actual es válido; retroceder siempre se puede.
-        if (step > current.step && !current.canContinue) return
-        if (step !in 1..current.totalSteps) return
-        _state.value = stateFor(step, current.draft).copy(showAllColors = current.showAllColors)
+        if (!current.canContinue || current.isConfirmation) return
+        // Editando desde el resumen: si todo sigue válido, vuelve directo a la confirmación.
+        val target = if (current.editingFromSummary && allStepsValid(current.draft)) ReportDraftState.TOTAL_STEPS else current.step + 1
+        showStep(target, editingFromSummary = current.editingFromSummary && target != ReportDraftState.TOTAL_STEPS)
     }
 
-    private fun stateFor(step: Int, draft: ReportDraft) = ReportDraftState(
-        step = step,
-        draft = draft,
-        errors = validateStep(step, draft)
-    )
+    private fun back() {
+        val current = state.value
+        when {
+            // Después de enviar, atrás sale del wizard (el reporte ya está guardado).
+            current.submitted != null -> emit(ReportWizardEffect.Cancel)
+            current.submitting -> Unit
+            current.editingFromSummary && allStepsValid(current.draft) -> showStep(ReportDraftState.TOTAL_STEPS, editingFromSummary = false)
+            current.step == 1 -> emit(ReportWizardEffect.Cancel)
+            else -> showStep(current.step - 1, editingFromSummary = current.editingFromSummary)
+        }
+    }
+
+    private fun submit() {
+        val current = state.value
+        if (!current.isConfirmation || current.submitting || current.submitted != null) return
+        _state.value = current.copy(submitting = true, submitError = null)
+        viewModelScope.launch {
+            submitReport(current.draft)
+                .onSuccess { report -> _state.value = state.value.copy(submitting = false, submitted = report) }
+                .onFailure { e ->
+                    _state.value = state.value.copy(submitting = false, submitError = e.message ?: SUBMIT_ERROR)
+                }
+        }
+    }
+
+    private fun allStepsValid(draft: ReportDraft) =
+        validateStep.upTo(ValidateReportStepUseCase.STEP_WHERE_WHEN, draft).isEmpty()
+
+    private fun updateDraft(draft: ReportDraft) {
+        _state.value = state.value.copy(draft = draft, errors = validateStep(state.value.step, draft))
+    }
+
+    private fun showStep(step: Int, editingFromSummary: Boolean) {
+        val current = state.value
+        _state.value = current.copy(
+            step = step,
+            errors = validateStep(step, current.draft),
+            editingFromSummary = editingFromSummary
+        )
+    }
+
+    private fun emit(effect: ReportWizardEffect) {
+        viewModelScope.launch { _effects.emit(effect) }
+    }
+
+    companion object {
+        const val SUBMIT_ERROR = "No se pudo enviar el reporte, intenta de nuevo"
+    }
 }

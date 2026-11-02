@@ -12,13 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportDraftState
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWizardEffect
@@ -27,7 +28,6 @@ import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWi
 import edu.ucb.ds.components.buttons.AppButtonSize
 import edu.ucb.ds.components.buttons.PrimaryButton
 import edu.ucb.ds.components.header.CurvedHeader
-import edu.ucb.ds.components.label.AppBody
 import edu.ucb.ds.components.progress.StepProgressBar
 import edu.ucb.ds.components.surfaces.AppSurface
 import edu.ucb.ds.icons.DsIcons
@@ -41,7 +41,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun ReportWizardScreen(
     viewModel: ReportWizardViewModel = koinViewModel(),
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onGoToMyReports: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -49,6 +50,7 @@ fun ReportWizardScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 ReportWizardEffect.Cancel -> onCancel()
+                ReportWizardEffect.GoToMyReports -> onGoToMyReports()
             }
         }
     }
@@ -59,6 +61,17 @@ fun ReportWizardScreen(
 @Composable
 private fun ReportWizardContent(state: ReportDraftState, onEvent: (ReportWizardEvent) -> Unit) {
     val spacing = UcbEncuentraTheme.spacing
+    val submitted = state.submitted
+    if (submitted != null) {
+        AppSurface(Modifier.fillMaxSize()) {
+            ReportSuccessContent(
+                report = submitted,
+                onGoToMyReports = { onEvent(ReportWizardEvent.OnGoToMyReports) },
+                onFinish = { onEvent(ReportWizardEvent.OnFinish) }
+            )
+        }
+        return
+    }
     AppSurface(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().imePadding()) {
             CurvedHeader(
@@ -88,15 +101,12 @@ private fun ReportWizardContent(state: ReportDraftState, onEvent: (ReportWizardE
                     1 -> CategoryStep(state = state, onEvent = onEvent)
                     2 -> AttributesStep(state = state, onEvent = onEvent)
                     3 -> WhereWhenStep(state = state, onEvent = onEvent)
-                    else -> AppBody(
-                        "Paso ${state.step} · ${state.stepName}: llega con L03/L04.",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    else -> ConfirmationStep(state = state, onEvent = onEvent)
                 }
             }
 
-            // Barra inferior fija del Figma: Siguiente deshabilitado (al 50 %) hasta que el paso sea válido.
+            // Barra inferior fija del Figma: Siguiente deshabilitado (al 50 %) hasta que el paso sea válido;
+            // en la confirmación pasa a "Enviar reporte".
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -105,14 +115,24 @@ private fun ReportWizardContent(state: ReportDraftState, onEvent: (ReportWizardE
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(spacing.screenPadding)
             ) {
-                PrimaryButton(
-                    text = "Siguiente",
-                    onClick = { onEvent(ReportWizardEvent.OnNext) },
-                    enabled = state.canContinue,
-                    size = AppButtonSize.Large,
-                    trailingIcon = DsIcons.ArrowForward,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                when {
+                    state.isConfirmation -> PrimaryButton(
+                        text = if (state.submitting) "Enviando..." else "Enviar reporte",
+                        onClick = { onEvent(ReportWizardEvent.OnSubmit) },
+                        enabled = !state.submitting,
+                        size = AppButtonSize.Large,
+                        leadingIcon = Icons.AutoMirrored.Filled.Send,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    else -> PrimaryButton(
+                        text = if (state.editingFromSummary) "Volver al resumen" else "Siguiente",
+                        onClick = { onEvent(ReportWizardEvent.OnNext) },
+                        enabled = state.canContinue,
+                        size = AppButtonSize.Large,
+                        trailingIcon = DsIcons.ArrowForward,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }

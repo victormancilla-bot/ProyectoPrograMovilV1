@@ -98,4 +98,19 @@ fun LocalDate.formatDmy() = "${day.pad()}/${month.number.pad()}/$year"
 
 fun LocalTime.formatHm() = "${hour.pad()}:${minute.pad()}"
 
+private val MONTHS = listOf(
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+)
+
+/** "2 de noviembre de 2026" (resúmenes y detalle). */
+fun LocalDate.formatLong() = "$day de ${MONTHS[month.number - 1]} de $year"
+
+/** Rango legible: "2 de noviembre de 2026" si es un día, "30 de octubre al 2 de noviembre de 2026" si son varios. */
+fun formatDateRange(from: LocalDate, to: LocalDate): String = when {
+    from == to -> from.formatLong()
+    from.year == to.year -> "${from.day} de ${MONTHS[from.month.number - 1]} al ${to.formatLong()}"
+    else -> "${from.formatLong()} al ${to.formatLong()}"
+}
+
 private fun LocalDate.toUtcMillis() = atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
