@@ -115,6 +115,7 @@ kotlin {
             implementation(libs.coil.network.ktor3)
 
             implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.datastore.preferences)
             implementation(libs.androidx.sqlite.bundled)
 
             implementation(libs.firebase.auth)
@@ -149,6 +150,10 @@ dependencies {
 
 room3 {
     schemaDirectory("$projectDir/schemas")
+}
+
+compose.resources {
+    packageOfResClass = "bo.edu.ucb.encuentra.resources"
 }
 
 // Los .proto van en src/commonMain/proto (G01: logs remotos por gRPC)

@@ -1,17 +1,22 @@
 package bo.edu.ucb.encuentra.core.di
 
 import bo.edu.ucb.encuentra.core.data.SessionRepositoryImpl
+import bo.edu.ucb.encuentra.core.data.UserRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.local.AppDatabase
 import bo.edu.ucb.encuentra.core.data.local.seed.DatabaseSeeder
 import bo.edu.ucb.encuentra.core.domain.repository.SessionRepository
+import bo.edu.ucb.encuentra.core.domain.repository.UserRepository
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.RestoreSessionUseCase
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
-// Lo que comparten todas las features: sesión del usuario y los DAOs de Room (AppDatabase viene de platformModule).
+// Lo que comparten todas las features: sesión persistente del usuario y los DAOs de Room (AppDatabase viene de platformModule).
 val coreModule = module {
-    single<SessionRepository> { SessionRepositoryImpl() }
+    single<SessionRepository> { SessionRepositoryImpl(get(), get()) }
+    single<UserRepository> { UserRepositoryImpl(get()) }
     singleOf(::GetCurrentUserUseCase)
+    singleOf(::RestoreSessionUseCase)
 
     single { get<AppDatabase>().userDao() }
     single { get<AppDatabase>().lostReportDao() }

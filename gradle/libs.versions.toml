@@ -26,6 +26,7 @@ room3 = "3.0.3"
 sqlite = "2.7.1"
 firebaseGitlive = "2.7.0"
 googleServices = "4.5.0"
+datastore = "1.1.7"
 work = "2.12.0"
 wire = "7.1.2"
 detekt = "2.0.0-alpha.6"
@@ -94,6 +95,9 @@ firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = 
 firebase-storage = { module = "dev.gitlive:firebase-storage", version.ref = "firebaseGitlive" }
 firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = "firebaseGitlive" }
 firebase-config = { module = "dev.gitlive:firebase-config", version.ref = "firebaseGitlive" }
+
+# Sesión persistente (S01)
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 # Trabajo en segundo plano (solo Android)
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }

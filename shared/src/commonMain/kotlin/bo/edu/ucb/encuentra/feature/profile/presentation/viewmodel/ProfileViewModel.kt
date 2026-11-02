@@ -24,9 +24,9 @@ class ProfileViewModel(
 
     fun handleEvent(event: ProfileEvent) {
         when (event) {
-            ProfileEvent.OnLogout -> {
+            ProfileEvent.OnLogout -> viewModelScope.launch {
                 logoutUseCase()
-                viewModelScope.launch { _effects.emit(ProfileEffect.NavigateToLogin) }
+                _effects.emit(ProfileEffect.NavigateToLogin)
             }
         }
     }

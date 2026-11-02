@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation.NavDeepLink
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -85,6 +86,7 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
     val back: () -> Unit = { navController.popBackStack() }
 
     guarded<NavRoute.Login>(navController, getCurrentUser) {
+        val uriHandler = LocalUriHandler.current
         LoginScreen(
             onNavigateToHome = {
                 val home = getCurrentUser()?.let { RouteGuard.homeFor(it.role) } ?: NavRoute.Login
@@ -92,7 +94,7 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
                     popUpTo<NavRoute.Login> { inclusive = true }
                 }
             },
-            onShowToast = { message -> println("Toast: $message") }
+            onOpenSupport = { uri -> uriHandler.openUri(uri) }
         )
     }
 
