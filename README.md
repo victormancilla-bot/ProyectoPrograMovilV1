@@ -129,6 +129,31 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - Los botones solo aparecen en coincidencias **propuestas** de un reporte abierto; si ya está confirmada o el reporte se cerró se muestra un aviso.
 - Tests: `MatchDetailUseCasesTest` (8, con el seed), `MatchDetailViewModelTest` (7).
 
+## Dashboard Administrador (D01)
+
+Pantalla del Figma "Dashboard Admin" (pestaña **Panel** del staff): "Panel — {sede}", 4 contadores, "Registrar objeto encontrado" (abre H03) y "Últimos reclamos pendientes" (los 3 más recientes, con "Hace 2 horas") + **Ver todos** (lista de reclamos). Tocar un reclamo abre su detalle; tocar un contador lleva a Inventario o Reclamos.
+
+| Contador | Qué cuenta |
+|---|---|
+| Objetos en custodia | objetos DISPONIBLE o RECLAMADO |
+| Pendientes de entrega | reclamos APROBADO (el dueño todavía no lo recogió) |
+| En verificación | reclamos EN_VERIFICACION (respondieron las preguntas; decide el staff) |
+| Por vencer (en rojo) | objetos DISPONIBLE cuya retención vence en los próximos 7 días |
+
+**En tiempo real, sin refrescar** (tema "Base de datos en tiempo real" del plan, como la feature `realtimedatabase` del docente):
+
+- `RealtimeStatsDataSource` escucha el nodo `stats/` de **Firebase Realtime Database** con `reference("stats").valueEvents` (GitLive `firebase-database`).
+- Mientras no llega (o si Firebase no está configurado: todavía no hay `google-services.json`, o falta algún contador), se usan los mismos contadores calculados con `COUNT` de **Room**, que también son `Flow` y se actualizan solos. La pantalla indica la fuente: "En vivo · Firebase Realtime Database" o "En vivo · datos del dispositivo".
+- "Por vencer" depende de la hora: se recalcula cada 30 minutos aunque la base no cambie.
+
+Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 desde el servidor:
+
+```json
+{ "stats": { "en_custodia": 142, "pendientes_entrega": 18, "en_verificacion": 5, "por_vencer": 3 } }
+```
+
+- Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
+
 ## Preguntas de control (V01)
 
 "No se entrega por hacer match": quien reclama responde las preguntas que definió el staff y el staff decide.
