@@ -7,12 +7,16 @@ import bo.edu.ucb.encuentra.feature.matching.data.RoomMatchingStore
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingConfigRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingStore
+import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ClaimMatchUseCase
+import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMatchDetailUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMyMatchesUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.RejectMatchUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.RunMatchingUseCase
 import bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel.MatchDetailViewModel
 import bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel.MatchListViewModel
+import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -25,6 +29,9 @@ val matchingModule = module {
     singleOf(::RejectMatchUseCase)
     single<MatchRepository> { MatchRepositoryImpl(get(), get(), get()) }
     singleOf(::ObserveMyMatchesUseCase)
+    singleOf(::ObserveMatchDetailUseCase)
+    singleOf(::ClaimMatchUseCase)
     viewModelOf(::MatchListViewModel)
-    viewModelOf(::MatchDetailViewModel)
+    // El id llega desde la ruta (o el deep link): koinViewModel { parametersOf(matchId) }.
+    viewModel { (matchId: String) -> MatchDetailViewModel(ItemId(matchId), get(), get(), get()) }
 }

@@ -119,4 +119,15 @@ fun formatDateRange(from: LocalDate, to: LocalDate): String = when {
     else -> "${from.formatLong()} al ${to.formatLong()}"
 }
 
+/** Rango compacto para columnas angostas: "12 oct 2026", "10–11 oct 2026", "30 oct – 2 nov 2026". */
+fun formatShortRange(from: LocalDate, to: LocalDate): String {
+    val fromMonth = MONTHS[from.month.number - 1].take(3)
+    return when {
+        from == to -> to.formatShort()
+        from.year == to.year && from.month == to.month -> "${from.day}–${to.formatShort()}"
+        from.year == to.year -> "${from.day} $fromMonth – ${to.formatShort()}"
+        else -> "${from.formatShort()} – ${to.formatShort()}"
+    }
+}
+
 private fun LocalDate.toUtcMillis() = atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()

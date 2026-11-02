@@ -42,6 +42,8 @@ private class FlakyMatchRepository : MatchRepository {
         emit(seed.groups.value)
     }
 
+    override fun observeMatch(matchId: ItemId) = seed.observeMatch(matchId)
+
     override suspend fun reject(matchId: ItemId) = null
 }
 

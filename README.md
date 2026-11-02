@@ -117,6 +117,17 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - Datos: `MatchRepositoryImpl` combina `lost_reports`, `matches` (nueva consulta `observeActiveByOwner`) y `found_items` de Room, así la lista se actualiza sola cuando M01 agregue matches. Con el seed 2026: Calculadora científica → 92 / 65 / 30 (igual que el mockup) y Cuaderno de Cálculo → 92 confirmado.
 - Tests: `ObserveMyMatchesUseCaseTest` (con el seed), `MatchListViewModelTest`.
 
+## Detalle de match (M05)
+
+- Pantalla del PDF "Detalle de Match" (desde una tarjeta de Posibles coincidencias, del detalle de Mis reportes o por deep link `ucbencuentra://match/{id}`): foto del objeto (o el ícono de su categoría si no tiene) con el **% de parecido**, nombre y fecha en que se encontró.
+- **Análisis de coincidencia**: "Lo que reportaste" vs "Lo que se encontró" fila por fila (tipo, marca, color con su muestra, lugar y fecha) con **✔ coincide** o **? por verificar**. Usa las mismas similitudes del score (`MatchEngine`, M02): ✔ solo si el dato coincide del todo; distinto o desconocido = ?.
+- **Vista limitada del hallazgo** (`FoundItemPreview`): no incluye la descripción del staff, el lugar exacto, la custodia ni las preguntas de control, porque podrían darle las respuestas a quien no es el dueño. La pantalla lo explica en "Información protegida".
+- Solo el dueño del reporte ve la coincidencia: con otra sesión, o si ya se descartó, aparece "Coincidencia no disponible".
+- **Esto es mío — verificar** → `ClaimMatchUseCase` llama al hook `ClaimRequester` (core). V02 lo implementa creando el reclamo; mientras tanto `PendingClaimRequester` (en `feature/claims/data`) avisa "La verificación de reclamos todavía no está disponible". Si el reclamo se crea, los botones se reemplazan por "Reclamo #N enviado".
+- **No es lo mío, seguir buscando** → confirmación y `RejectMatchUseCase` (M02): la coincidencia se descarta, se re-calcula el ranking y se vuelve a la lista.
+- Los botones solo aparecen en coincidencias **propuestas** de un reporte abierto; si ya está confirmada o el reporte se cerró se muestra un aviso.
+- Tests: `MatchDetailUseCasesTest` (6, con el seed), `MatchDetailViewModelTest` (6).
+
 ## Estados y custodia del objeto (H05)
 
 Máquina de estados en `core/domain/model/ItemStateMachine.kt`:
