@@ -7,6 +7,7 @@ import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.foundform.domain.model.FoundItemDraft
 import bo.edu.ucb.encuentra.feature.foundform.domain.repository.FoundItemRepository
+import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 
@@ -19,7 +20,9 @@ class RegisterFoundItemUseCase(
     private val repository: FoundItemRepository,
     private val matching: MatchingTrigger,
     private val getCurrentUser: GetCurrentUserUseCase,
-    private val clock: Clock
+    private val clock: Clock,
+    /** F08: los días de retención los define la oficina en Remote Config (`retention_days`). */
+    private val getAppConfig: GetAppConfigUseCase
 ) {
     suspend operator fun invoke(draft: FoundItemDraft): Result<FoundItem> {
         val user = getCurrentUser() ?: return Result.failure(IllegalStateException(NO_SESSION))
@@ -47,7 +50,7 @@ class RegisterFoundItemUseCase(
             controlQuestions = draft.questionsWithAnswers.map { it.first },
             expectedAnswers = draft.questionsWithAnswers.map { it.second },
             registeredBy = user.id,
-            retentionUntil = now + RETENTION,
+            retentionUntil = now + getAppConfig().retentionDays.days,
             createdAt = now
         )
         return runCatching { repository.register(item) }.map {
@@ -58,8 +61,6 @@ class RegisterFoundItemUseCase(
     }
 
     companion object {
-        /** Días que el objeto queda en custodia antes de pasar a donación/descarte (D04). */
-        val RETENTION = 90.days
         const val NO_SESSION = "Tu sesión expiró, vuelve a ingresar"
         const val NOT_STAFF = "Solo el staff puede registrar objetos encontrados"
     }

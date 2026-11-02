@@ -13,11 +13,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val validateEmail: ValidateInstitutionalEmailUseCase,
-    private val authenticate: AuthenticateUseCase
+    private val authenticate: AuthenticateUseCase,
+    /** F08: el correo de soporte lo define la oficina en Remote Config (`support_contact`). */
+    private val getAppConfig: GetAppConfigUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginState())
@@ -37,7 +40,9 @@ class LoginViewModel(
             LoginEvent.OnChangeEmail -> _state.update {
                 it.copy(step = LoginStep.EMAIL, password = "", passwordError = null)
             }
-            LoginEvent.OnContactSupport -> viewModelScope.launch { _effects.emit(LoginEffect.OpenSupport(SUPPORT_URI)) }
+            LoginEvent.OnContactSupport -> viewModelScope.launch {
+                _effects.emit(LoginEffect.OpenSupport(supportUri(getAppConfig().supportContact)))
+            }
         }
     }
 
@@ -70,7 +75,7 @@ class LoginViewModel(
     companion object {
         const val EMPTY_PASSWORD = "Ingresa tu contraseña"
 
-        // ⚠️ Contacto de prueba: confirmar el correo/página real de Sistemas UCB (o leerlo de Remote Config, F08).
-        const val SUPPORT_URI = "mailto:sistemas@ucb.edu.bo?subject=Problemas%20para%20ingresar%20a%20UCB%20Encuentra"
+        /** "Contacta a Sistemas UCB": correo de `support_contact` (F08) con el asunto ya escrito. */
+        fun supportUri(contact: String) = "mailto:$contact?subject=Problemas%20para%20ingresar%20a%20UCB%20Encuentra"
     }
 }

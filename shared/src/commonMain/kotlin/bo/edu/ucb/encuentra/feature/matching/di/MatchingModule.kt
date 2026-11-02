@@ -24,7 +24,7 @@ import org.koin.dsl.module
 // Dueño: Integrante E. Aquí van los repositorios, use cases y ViewModels de esta feature.
 val matchingModule = module {
     // Matching (M01-M02): lo llaman el envío del reporte (L04), el registro de hallazgos (H03) y "No es mío".
-    single<MatchingConfigRepository> { RemoteConfigMatchingConfigRepository() }
+    single<MatchingConfigRepository> { RemoteConfigMatchingConfigRepository(get()) }
     single<MatchingStore> { RoomMatchingStore(get(), get(), get(), get()) }
     single<MatchingTrigger> { RunMatchingUseCase(get(), get(), get()) }
     singleOf(::RejectMatchUseCase)

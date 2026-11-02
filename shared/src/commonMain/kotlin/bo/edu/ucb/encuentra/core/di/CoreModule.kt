@@ -6,6 +6,13 @@ import bo.edu.ucb.encuentra.core.data.RoomTransactionRunner
 import bo.edu.ucb.encuentra.core.data.SessionRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.UserRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.local.AppDatabase
+import bo.edu.ucb.encuentra.core.data.remoteconfig.AppConfigRepositoryImpl
+import bo.edu.ucb.encuentra.core.data.remoteconfig.FirebaseRemoteConfigDataSource
+import bo.edu.ucb.encuentra.core.data.remoteconfig.RemoteConfigDataSource
+import bo.edu.ucb.encuentra.core.domain.repository.AppConfigRepository
+import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.ObserveAppConfigUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.RefreshAppConfigUseCase
 import bo.edu.ucb.encuentra.core.data.local.seed.DatabaseSeeder
 import bo.edu.ucb.encuentra.core.domain.repository.AuditRecorder
 import bo.edu.ucb.encuentra.core.domain.repository.FoundItemLifecycleRepository
@@ -33,6 +40,13 @@ val coreModule = module {
     single<UserRepository> { UserRepositoryImpl(get()) }
     singleOf(::GetCurrentUserUseCase)
     singleOf(::RestoreSessionUseCase)
+
+    // Configuración remota (F08): un solo data source de Remote Config para toda la app (también el matching).
+    single<RemoteConfigDataSource> { FirebaseRemoteConfigDataSource() }
+    single<AppConfigRepository> { AppConfigRepositoryImpl(get()) }
+    singleOf(::GetAppConfigUseCase)
+    singleOf(::ObserveAppConfigUseCase)
+    singleOf(::RefreshAppConfigUseCase)
 
     // Reloj y zona horaria inyectables: los tests usan un reloj fijo.
     single<Clock> { Clock.System }
