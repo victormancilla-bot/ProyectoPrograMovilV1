@@ -47,7 +47,7 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 
 - Rutas `@Serializable` en `navigation/NavRoute.kt`; todas pasan por `RouteGuard`: sin sesión → Login, rol incorrecto → home de su rol.
   Si agregas una ruta, `RouteGuard` no compila hasta que digas qué rol puede entrar.
-- Barra inferior por rol en `navigation/BottomNavItems.kt` + `MainScaffold.kt`.
+- Barra inferior por rol: pestañas en `navigation/RoleTabs.kt`, dibujadas con la `BottomNavBar` del Design System en `MainScaffold.kt` (estudiante con FAB central "+" para Reportar; staff con 5 pestañas).
 - Wizard de reporte: el borrador vive en `ReportWizardViewModel`; *Cancelar* saca el wizard del back stack y lo descarta.
 - Deep link para notificaciones: `DeepLinks.match(id)` → `ucbencuentra://match/{id}` abre `MatchDetail`. Probarlo:
   ```bash
@@ -78,7 +78,7 @@ UcbEncuentraTheme.shapes.extraLarge       // small 8 · medium 12 · large 16 ·
 UcbEncuentraTheme(darkTheme = isDark) { … }
 ```
 
-Demo: menú de desarrollo → *Design System*. Para cambiar el DS ver `ds-repo/README.md`.
+Demo: Perfil → Menú de desarrollo → *Design System* (tokens, componentes F03 y componentes de dominio F04: CurvedHeader, BottomNavBar, ScoreBadge, StatusChip, CategoryTile, StatCard, ItemCard y estados). Para cambiar el DS ver `ds-repo/README.md`.
 En Windows las rutas de `ds-repo/` son largas: `git config --global core.longpaths true`.
 
 ## Estructura
