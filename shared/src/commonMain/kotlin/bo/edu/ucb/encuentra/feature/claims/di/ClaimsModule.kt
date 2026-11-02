@@ -40,5 +40,5 @@ val claimsModule = module {
     singleOf(::ObserveOpenClaimsUseCase)
     viewModelOf(::ClaimsViewModel)
     // El id llega desde la ruta: koinViewModel { parametersOf(claimId) }.
-    viewModel { (claimId: String) -> ClaimDetailViewModel(ItemId(claimId), get(), get(), get()) }
+    viewModel { (claimId: String) -> ClaimDetailViewModel(ItemId(claimId), get(), get(), get(), get()) }
 }

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 /**
  * Detalle de reclamo para el staff (V01; V03 le pone el diseño final). La app sugiere "coincide / no coincide"
@@ -25,7 +26,8 @@ class ClaimDetailViewModel(
     private val claimId: ItemId,
     private val observeReview: ObserveClaimReviewUseCase,
     private val approve: ApproveClaimUseCase,
-    private val reject: RejectClaimUseCase
+    private val reject: RejectClaimUseCase,
+    private val clock: Clock
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ClaimDetailState())
@@ -47,9 +49,11 @@ class ClaimDetailViewModel(
             is ClaimDetailEvent.OnDecide -> {
                 val review = state.value.review ?: return
                 val allowed = if (event.decision == ClaimDecision.APPROVE) review.canApprove else review.canReject
-                if (allowed) _state.value = state.value.copy(confirming = event.decision, note = "", actionError = null)
+                if (allowed) {
+                    _state.value = state.value.copy(confirming = event.decision, note = "", reasonMissing = false, actionError = null)
+                }
             }
-            is ClaimDetailEvent.OnNoteChanged -> _state.value = state.value.copy(note = event.note)
+            is ClaimDetailEvent.OnNoteChanged -> _state.value = state.value.copy(note = event.note, reasonMissing = false)
             ClaimDetailEvent.OnDismiss -> _state.value = state.value.copy(confirming = null)
             ClaimDetailEvent.OnConfirm -> confirm()
         }
@@ -61,7 +65,7 @@ class ClaimDetailViewModel(
         loadJob = viewModelScope.launch {
             observeReview(claimId)
                 .catch { _state.value = state.value.copy(loading = false, error = LOAD_ERROR) }
-                .collect { review -> _state.value = state.value.copy(loading = false, review = review) }
+                .collect { review -> _state.value = state.value.copy(loading = false, review = review, now = clock.now()) }
         }
     }
 
@@ -69,6 +73,11 @@ class ClaimDetailViewModel(
         val current = state.value
         val decision = current.confirming ?: return
         if (current.working) return
+        // El diálogo queda abierto hasta que haya un motivo (también lo exige el dominio).
+        if (current.note.isBlank()) {
+            _state.value = current.copy(reasonMissing = true)
+            return
+        }
         _state.value = current.copy(confirming = null, working = true)
         viewModelScope.launch {
             val note = current.note.trim()
