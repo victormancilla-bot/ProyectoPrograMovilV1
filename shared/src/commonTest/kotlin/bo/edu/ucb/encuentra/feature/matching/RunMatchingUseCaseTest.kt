@@ -7,7 +7,10 @@ import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.NotificationType
 import bo.edu.ucb.encuentra.core.domain.model.Subcategory
+import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.foundform.FixedClock
+import bo.edu.ucb.encuentra.feature.matching.domain.model.MatchingConfig
+import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingConfigRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingStore
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.RunMatchingUseCase
 import kotlinx.coroutines.test.runTest
@@ -15,23 +18,27 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-private class FakeMatchingStore(
-    val items: List<FoundItem> = emptyList(),
-    val reports: List<LostReport> = emptyList()
+internal class FakeMatchingStore(
+    var items: List<FoundItem> = emptyList(),
+    var reports: List<LostReport> = emptyList()
 ) : MatchingStore {
-    val matches = mutableListOf<Match>()
+    val matches = mutableMapOf<ItemId, Match>()
     val notifications = mutableListOf<AppNotification>()
 
     override suspend fun availableFoundItems() = items
     override suspend fun searchingReports() = reports
-    override suspend fun saveNewMatches(matches: List<Match>): List<Match> {
-        val new = matches.filter { m -> this.matches.none { it.lostReportId == m.lostReportId && it.foundItemId == m.foundItemId } }
-        this.matches += new
-        return new
-    }
+    override suspend fun matchesForReport(reportId: ItemId) = matches.values.filter { it.lostReportId == reportId }
+    override suspend fun saveMatches(matches: List<Match>) = matches.forEach { this.matches[it.id] = it }
+    override suspend fun deleteMatches(ids: List<ItemId>) = ids.forEach { matches.remove(it) }
     override suspend fun notify(notifications: List<AppNotification>) {
         this.notifications += notifications
     }
+
+    fun scores() = matches.values.sortedByDescending { it.score }.map { it.foundItemId.value to it.score }
+}
+
+internal class FixedConfig(var config: MatchingConfig = PHASE1) : MatchingConfigRepository {
+    override suspend fun get() = config
 }
 
 class RunMatchingUseCaseTest {
@@ -39,10 +46,10 @@ class RunMatchingUseCaseTest {
     @Test
     fun newReportIsMatchedAgainstAvailableItemsAndTheOwnerIsNotified() = runTest {
         val store = FakeMatchingStore(items = listOf(foundItem(id = "fi-igual"), foundItem(id = "fi-rojo", color = "Rojo")))
-        RunMatchingUseCase(store, FixedClock).onReportCreated(lostReport(id = "lr-nuevo"))
+        RunMatchingUseCase(store, FixedConfig(), FixedClock).onReportCreated(lostReport(id = "lr-nuevo"))
 
-        assertEquals(listOf("fi-igual" to 100, "fi-rojo" to 60), store.matches.map { it.foundItemId.value to it.score })
-        assertTrue(store.matches.all { it.status == MatchStatus.PROPUESTO })
+        assertEquals(listOf("fi-igual" to 100, "fi-rojo" to 60), store.scores())
+        assertTrue(store.matches.values.all { it.status == MatchStatus.PROPUESTO })
 
         val notification = store.notifications.single()
         assertEquals(NotificationType.NEW_MATCH, notification.type)
@@ -52,30 +59,71 @@ class RunMatchingUseCaseTest {
     }
 
     @Test
-    fun newFoundItemIsMatchedAgainstSearchingReports() = runTest {
+    fun newFoundItemReRanksEveryAffectedReport() = runTest {
         val store = FakeMatchingStore(reports = listOf(lostReport(id = "lr-a"), lostReport(id = "lr-b", brand = "HP")))
-        RunMatchingUseCase(store, FixedClock).onFoundItemRegistered(foundItem(id = "fi-nuevo"))
+        store.items = listOf(foundItem(id = "fi-nuevo"))
+        RunMatchingUseCase(store, FixedConfig(), FixedClock).onFoundItemRegistered(foundItem(id = "fi-nuevo"))
 
-        assertEquals(listOf("lr-a" to 100, "lr-b" to 75), store.matches.map { it.lostReportId.value to it.score })
+        assertEquals(setOf("lr-a" to 100, "lr-b" to 75), store.matches.values.map { it.lostReportId.value to it.score }.toSet())
         // Un aviso por reporte afectado.
         assertEquals(2, store.notifications.size)
-        assertTrue(store.notifications.all { it.title == "1 coincidencia nueva" })
     }
 
     @Test
     fun runningTwiceDoesNotDuplicateMatchesNorNotifications() = runTest {
         val store = FakeMatchingStore(items = listOf(foundItem()))
-        val matching = RunMatchingUseCase(store, FixedClock)
+        val matching = RunMatchingUseCase(store, FixedConfig(), FixedClock)
         matching.onReportCreated(lostReport())
-        matching.onReportCreated(lostReport())
+        matching.onReportUpdated(lostReport())
         assertEquals(1, store.matches.size)
         assertEquals(1, store.notifications.size)
     }
 
     @Test
+    fun rejectedMatchIsNeverProposedAgain() = runTest {
+        val store = FakeMatchingStore(items = listOf(foundItem(id = "fi-1")))
+        val matching = RunMatchingUseCase(store, FixedConfig(), FixedClock)
+        matching.onReportCreated(lostReport())
+        val match = store.matches.values.single()
+        store.matches[match.id] = Match(match.id, match.lostReportId, match.foundItemId, match.score, MatchStatus.DESCARTADO, match.createdAt)
+
+        matching.onReportUpdated(lostReport())
+        assertEquals(MatchStatus.DESCARTADO, store.matches.values.single().status)
+        assertEquals(1, store.notifications.size)
+    }
+
+    @Test
+    fun editedReportDropsStaleProposalsAndKeepsConfirmedOnes() = runTest {
+        val store = FakeMatchingStore(items = listOf(foundItem(id = "fi-calc"), foundItem(id = "fi-laptop", subcategory = Subcategory.LAPTOP)))
+        val matching = RunMatchingUseCase(store, FixedConfig(), FixedClock)
+        matching.onReportCreated(lostReport())
+        assertEquals(listOf("fi-calc"), store.matches.values.map { it.foundItemId.value })
+
+        // El dueño corrige: no era una calculadora sino una laptop.
+        matching.onReportUpdated(lostReport(subcategory = Subcategory.LAPTOP))
+        assertEquals(listOf("fi-laptop"), store.matches.values.map { it.foundItemId.value })
+    }
+
+    @Test
+    fun topNAndNewWeightsComeFromTheConfig() = runTest {
+        val items = (1..6).map { foundItem(id = "fi-$it") }
+        val store = FakeMatchingStore(items = items)
+        val config = FixedConfig(PHASE1.copy(topN = 2))
+        val matching = RunMatchingUseCase(store, config, FixedClock)
+        matching.onReportCreated(lostReport())
+        assertEquals(2, store.matches.size)
+
+        // Un cambio de pesos en Remote Config actualiza el score de lo ya propuesto.
+        store.items = listOf(foundItem(id = "fi-6", color = "Rojo"), foundItem(id = "fi-5", color = "Rojo"))
+        config.config = PHASE1.copy(topN = 2, colorWeight = 10.0)
+        matching.onReportUpdated(lostReport())
+        assertEquals(listOf("fi-6" to 85, "fi-5" to 85), store.scores())
+    }
+
+    @Test
     fun noCandidatesMeansNoMatchesAndNoNotification() = runTest {
         val store = FakeMatchingStore(items = listOf(foundItem(subcategory = Subcategory.LAPTOP)))
-        RunMatchingUseCase(store, FixedClock).onReportCreated(lostReport())
+        RunMatchingUseCase(store, FixedConfig(), FixedClock).onReportCreated(lostReport())
         assertTrue(store.matches.isEmpty())
         assertTrue(store.notifications.isEmpty())
     }

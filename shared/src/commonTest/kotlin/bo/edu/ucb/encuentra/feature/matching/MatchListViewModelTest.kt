@@ -39,6 +39,8 @@ private class FlakyMatchRepository : MatchRepository {
         if (calls == 1) error("Room no disponible")
         emit(seed.groups.value)
     }
+
+    override suspend fun reject(matchId: ItemId) = null
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

@@ -4,6 +4,9 @@ import bo.edu.ucb.encuentra.core.data.local.dao.FoundItemDao
 import bo.edu.ucb.encuentra.core.data.local.dao.LostReportDao
 import bo.edu.ucb.encuentra.core.data.local.dao.MatchDao
 import bo.edu.ucb.encuentra.core.data.local.mapper.toModel
+import bo.edu.ucb.encuentra.core.domain.model.LostReport
+import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
+import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.matching.domain.model.MatchCandidate
 import bo.edu.ucb.encuentra.feature.matching.domain.model.ReportMatches
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchRepository
@@ -32,5 +35,11 @@ class MatchRepositoryImpl(
                 }
             )
         }
+    }
+
+    override suspend fun reject(matchId: ItemId): LostReport? {
+        val match = matchDao.getById(matchId.value) ?: return null
+        matchDao.updateStatus(match.id, MatchStatus.DESCARTADO)
+        return lostReportDao.getById(match.lostReportId)?.toModel()
     }
 }

@@ -41,6 +41,9 @@ internal class FakeMatchingTrigger(private val fail: Boolean = false) : Matching
         triggered += report
         if (fail) error("matching caído")
     }
+    override suspend fun onReportUpdated(report: LostReport) {
+        triggered += report
+    }
     override suspend fun onFoundItemRegistered(item: FoundItem) {
         registered += item
         if (fail) error("matching caído")

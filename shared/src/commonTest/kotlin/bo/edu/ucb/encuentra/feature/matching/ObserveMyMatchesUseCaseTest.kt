@@ -1,10 +1,12 @@
 package bo.edu.ucb.encuentra.feature.matching
 
 import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
+import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
+import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.foundform.FakeSession
 import bo.edu.ucb.encuentra.feature.foundform.demoUser
 import bo.edu.ucb.encuentra.feature.matching.domain.model.MatchCandidate
@@ -33,6 +35,8 @@ internal class SeedMatchRepository : MatchRepository {
     )
 
     override fun observeForOwner(ownerId: String): Flow<List<ReportMatches>> = groups
+
+    override suspend fun reject(matchId: ItemId): LostReport? = null
 }
 
 class ObserveMyMatchesUseCaseTest {

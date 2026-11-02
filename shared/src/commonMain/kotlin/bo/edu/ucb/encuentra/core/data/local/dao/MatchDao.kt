@@ -22,9 +22,16 @@ interface MatchDao {
     )
     fun observeActiveByOwner(ownerId: String): Flow<List<MatchEntity>>
 
-    /** El matching (M01) no vuelve a crear ni pisa un par que ya existe (p. ej. uno descartado con "No es mío"). */
-    @Query("SELECT * FROM matches WHERE lost_report_id = :lostReportId AND found_item_id = :foundItemId LIMIT 1")
-    suspend fun getByPair(lostReportId: String, foundItemId: String): MatchEntity?
+    /** Todas las de un reporte, en cualquier estado (el re-matching respeta las descartadas y confirmadas). */
+    @Query("SELECT * FROM matches WHERE lost_report_id = :lostReportId")
+    suspend fun getByLostReport(lostReportId: String): List<MatchEntity>
+
+    @Query("SELECT * FROM matches WHERE id = :id LIMIT 1")
+    suspend fun getById(id: String): MatchEntity?
+
+    /** Propuestas que quedaron fuera del Top-N al re-calcular. */
+    @Query("DELETE FROM matches WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<String>)
 
     @Query("SELECT * FROM matches WHERE id = :id LIMIT 1")
     fun observeById(id: String): Flow<MatchEntity?>
