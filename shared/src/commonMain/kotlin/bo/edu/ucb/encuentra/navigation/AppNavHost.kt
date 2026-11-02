@@ -62,13 +62,14 @@ fun AppNavHost(
     }
 
     // La barra solo se muestra en las pestañas del rol (no en Login, detalles ni el wizard).
-    val tabs = user?.let { BottomNavItems.forRole(it.role) }.orEmpty()
-    val showBottomBar = tabs.any { it.route != NavRoute.ReportWizard && currentDestination.isOn(it.route) }
+    val tabs = user?.let { RoleTabs.forRole(it.role) }.orEmpty()
+    val showBottomBar = tabs.any { currentDestination.isOn(it.route) }
 
     MainScaffold(
-        items = if (showBottomBar) tabs else emptyList(),
+        tabs = if (showBottomBar) tabs else emptyList(),
+        centerAction = user?.let { RoleTabs.centerActionFor(it.role) },
         currentDestination = currentDestination,
-        onItemClick = { route -> navController.navigateToTab(route, user?.role?.let(RouteGuard::homeFor)) }
+        onTabClick = { route -> navController.navigateToTab(route, user?.role?.let(RouteGuard::homeFor)) }
     ) { innerPadding ->
         NavHost(
             navController = navController,
