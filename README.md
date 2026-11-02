@@ -55,6 +55,42 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
   ```
   La sesión todavía vive en memoria: si la app estaba cerrada, el link lleva a Login (S01 la hará persistente).
 
+## Base de datos (Room 3, F06)
+
+`core/data/local/AppDatabase.kt` (versión **1**), dueño único: **Integrante A**. Se crea por plataforma (`Database.android.kt` / `Database.ios.kt`) y Koin la entrega con `platformModule()`.
+
+| Tabla | Entidad | Modelo de dominio | Notas |
+|---|---|---|---|
+| `users` | `UserEntity` | `UserModel` (rol, sede, carrera) | email único |
+| `lost_reports` | `LostReportEntity` | `LostReport` | estado `ReportStatus` |
+| `found_items` | `FoundItemEntity` | `FoundItem` | estado `ItemStatus`, custodia, preguntas de control, `retention_until` |
+| `custody_events` | `CustodyEventEntity` | `CustodyEvent` | historial, solo se agrega |
+| `matches` | `MatchEntity` | `Match` | score 0–100, único por (reporte, objeto) |
+| `claims` | `ClaimEntity` | `Claim` | número único (#1024); único por (objeto, reclamante) → bloquea doble reclamo |
+| `audit_logs` | `AuditLogEntity` | `AuditLog` | **append-only**: el DAO no tiene update ni delete |
+| `notifications` | `AppNotificationEntity` | `AppNotification` | deep link al tocarla |
+
+- **Dominio** (`core/domain`): enums `Campus`, `CampusZone`, `Category`/`Subcategory`, `ItemStatus`, `ReportStatus`, `ClaimStatus`, `MatchStatus`, `CustodyPlace`, `AuditAction`, `NotificationType`; VOs `Email` (@ucb.edu.bo), `Password`, `ItemId`.
+- **Convenciones**: ids de texto (los mismos en Firestore, L06) · fechas en epoch millis en Room y `kotlin.time.Instant` en dominio · enums guardados por nombre · listas como JSON (`ListConverters`, kotlinx.serialization) · sin foreign keys (con sincronización los datos pueden llegar en cualquier orden).
+- **Mappers** entity ↔ dominio en `core/data/local/mapper/EntityMappers.kt`. Los repositorios de cada feature usan los DAOs y estos mappers; ningún ViewModel toca un DAO.
+- **Seed**: `SeedData` (datos 2026 del mockup) se carga una vez al abrir la app si la base está vacía. Para recargarlo: desinstalar la app o *Ajustes → Apps → UCB Encuentra (dev) → Borrar datos*.
+- **room3** cambió nombres: los conversores son `@ColumnTypeConverter` / `@ColumnTypeConverters` (no `@TypeConverter`).
+
+### Agregar consultas o tablas
+
+- **Nueva consulta**: agrégala al DAO existente en tu PR (no cambia el esquema).
+- **Nueva tabla o columna**: avisa al Integrante A; cambia el esquema y necesita migración.
+
+### Estrategia de migraciones
+
+Room exporta el esquema de cada versión en `shared/schemas/bo.edu.ucb.encuentra.core.data.local.AppDatabase/<versión>.json` al compilar. **Esos JSON se commitean**: sirven para las migraciones automáticas y para revisar el cambio en el PR.
+
+1. Cambia la entidad y sube `version` en `@Database` (1 → 2).
+2. **Cambio simple** (tabla nueva, columna nueva con valor por defecto): agrega `autoMigrations = [AutoMigration(from = 1, to = 2)]` en `@Database`.
+3. **Cambio complejo** (renombrar o borrar columna, cambiar tipo): `AutoMigration` con una spec (`@RenameColumn`, `@DeleteColumn`…) o una `Migration(1, 2)` con SQL, registrada en `getRoomDatabase()` con `.addMigrations(...)`.
+4. Compila: se genera `2.json`. Commitea el JSON junto con el cambio.
+5. **Nunca** `fallbackToDestructiveMigration()` en `prod`: borraría los reportes del usuario. En desarrollo, si la base local quedó inconsistente, desinstala la app.
+
 ## Tests y calidad
 
 ```bash
@@ -89,8 +125,10 @@ shared/src/commonMain/kotlin/bo/edu/ucb/encuentra/
 ├── core/            # código común (config, data, presentation)
 ├── di/              # KoinInit + SharedModules (registra el módulo de cada feature)
 ├── navigation/      # NavRoute (@Serializable) + AppNavHost
+├── core/data/local/ # AppDatabase, entidades, DAOs, mappers y seed (F06)
 └── feature/<x>/     # data / domain / presentation/{screen,viewmodel} / di
 ds-repo/             # Design System publicado (no editar a mano)
+shared/schemas/      # esquemas de Room por versión (generados, se commitean)
 ```
 
 Dependencias disponibles (todas en `gradle/libs.versions.toml`): Navigation Compose, kotlinx.serialization, Ktor, Coil 3, Room 3 + KSP, Firebase GitLive (Auth, Firestore, Storage, Messaging, Remote Config), WorkManager (Android), Wire/gRPC (los `.proto` van en `shared/src/commonMain/proto`) y detekt.
