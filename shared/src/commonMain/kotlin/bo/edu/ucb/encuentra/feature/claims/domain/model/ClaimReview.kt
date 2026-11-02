@@ -3,9 +3,18 @@ package bo.edu.ucb.encuentra.feature.claims.domain.model
 import bo.edu.ucb.encuentra.core.domain.model.Claim
 import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.FoundItem
+import bo.edu.ucb.encuentra.core.domain.model.LostReport
 
 /** Un reclamo con su objeto y el nombre de quien reclama, tal como sale de Room. */
-data class ClaimWithItem(val claim: Claim, val item: FoundItem, val claimantName: String?)
+data class ClaimWithItem(
+    val claim: Claim,
+    val item: FoundItem,
+    val claimantName: String?,
+    /** Reporte de quien reclama (V03), solo si la coincidencia es de su propio reporte. */
+    val report: LostReport? = null,
+    /** % de parecido de la coincidencia (M02). */
+    val matchScore: Int? = null
+)
 
 /** Una pregunta de control con lo que respondió el estudiante, lo esperado y la sugerencia de la app (V01). */
 data class AnswerReview(
@@ -26,7 +35,10 @@ data class ClaimReview(
     val claim: Claim,
     val item: FoundItem,
     val claimantName: String?,
-    val answers: List<AnswerReview>
+    val answers: List<AnswerReview>,
+    val report: LostReport? = null,
+    /** % de parecido de la coincidencia (M02); null si el reclamo no viene de un reporte propio. */
+    val matchScore: Int? = null
 ) {
     val matchingAnswers: Int get() = answers.count { it.verdict == AnswerVerdict.COINCIDE }
 

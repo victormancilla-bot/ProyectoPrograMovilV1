@@ -57,7 +57,19 @@ class ClaimRepositoryImpl(
                 flowOf(null)
             } else {
                 foundItemDao.observeById(claim.foundItemId).map { item ->
-                    item?.let { ClaimWithItem(claim.toModel(), it.toModel(), userDao.getById(claim.claimantId)?.fullName) }
+                    item?.let {
+                        val match = claim.matchId?.let { id -> matchDao.getById(id) }
+                        // El reporte solo si es de quien reclama (V02: un reclamo nunca muestra datos de otro).
+                        val report = match?.let { m -> lostReportDao.getById(m.lostReportId) }
+                            ?.takeIf { r -> r.ownerId == claim.claimantId }
+                        ClaimWithItem(
+                            claim = claim.toModel(),
+                            item = it.toModel(),
+                            claimantName = userDao.getById(claim.claimantId)?.fullName,
+                            report = report?.toModel(),
+                            matchScore = match?.takeIf { report != null }?.score
+                        )
+                    }
                 }
             }
         }

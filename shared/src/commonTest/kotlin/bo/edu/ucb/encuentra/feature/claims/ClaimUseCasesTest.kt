@@ -72,7 +72,16 @@ internal class SeedClaimStore : ClaimRepository {
     }
 
     override fun observeWithItem(claimId: ItemId) = flow {
-        emit(claims[claimId]?.let { ClaimWithItem(it, items.getValue(it.foundItemId), NAMES[it.claimantId]) })
+        emit(
+            claims[claimId]?.let { claim ->
+                val match = claim.matchId?.let { matches[it] }
+                val report = match?.let { reports[it.lostReportId] }?.takeIf { it.ownerId == claim.claimantId }
+                ClaimWithItem(
+                    claim, items.getValue(claim.foundItemId), NAMES[claim.claimantId], report,
+                    match?.takeIf { report != null }?.score
+                )
+            }
+        )
     }
 
     override fun observeOpen() = flow {
