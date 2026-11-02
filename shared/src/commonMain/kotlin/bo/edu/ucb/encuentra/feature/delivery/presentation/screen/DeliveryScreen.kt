@@ -219,7 +219,8 @@ private fun ScheduleCard(state: DeliveryState, onEvent: (DeliveryEvent) -> Unit)
                 label = "Fecha",
                 onClick = { picker = "date" },
                 icon = DsIcons.Calendar,
-                modifier = Modifier.weight(1f)
+                // Más ancho que la hora: "12 nov 2026" no entra en la mitad.
+                modifier = Modifier.weight(1.5f)
             )
             ClickableField(
                 value = state.time?.formatHm().orEmpty(),
