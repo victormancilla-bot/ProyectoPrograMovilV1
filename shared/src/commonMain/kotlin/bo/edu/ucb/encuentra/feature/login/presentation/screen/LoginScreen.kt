@@ -29,7 +29,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun LoginScreen(
     viewModel: LoginViewModel = koinViewModel(),
     onNavigateToHome: () -> Unit,
-    onShowToast: (String) -> Unit
+    onOpenSupport: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -37,7 +37,7 @@ fun LoginScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 is LoginEffect.NavigateToHome -> onNavigateToHome()
-                is LoginEffect.ShowToast -> onShowToast(effect.message)
+                is LoginEffect.OpenSupport -> onOpenSupport(effect.uri)
             }
         }
     }
@@ -71,8 +71,9 @@ fun LoginScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (state.error != null) {
-            Text(text = state.error!!, color = MaterialTheme.colorScheme.error)
+        val error = state.emailError ?: state.passwordError
+        if (error != null) {
+            Text(text = error, color = MaterialTheme.colorScheme.error)
             Spacer(modifier = Modifier.height(8.dp))
         }
 
@@ -80,7 +81,7 @@ fun LoginScreen(
             CircularProgressIndicator()
         } else {
             Button(
-                onClick = { viewModel.handleEvent(LoginEvent.OnSubmit) },
+                onClick = { viewModel.handleEvent(LoginEvent.OnContinue) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Login")
