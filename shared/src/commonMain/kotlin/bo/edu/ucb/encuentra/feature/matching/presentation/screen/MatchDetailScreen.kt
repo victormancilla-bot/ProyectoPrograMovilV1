@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -43,7 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
-import bo.edu.ucb.encuentra.core.presentation.formatDateRange
+import bo.edu.ucb.encuentra.core.presentation.formatShortRange
 import bo.edu.ucb.encuentra.core.presentation.formatHm
 import bo.edu.ucb.encuentra.core.presentation.formatShort
 import bo.edu.ucb.encuentra.core.presentation.icon
@@ -106,7 +107,16 @@ private fun MatchDetailContent(state: MatchDetailState, onEvent: (MatchDetailEve
     AppSurface(Modifier.fillMaxSize()) {
         val detail = state.detail
         when {
-            detail != null -> DetailBody(detail, state, onEvent)
+            detail != null -> Box(Modifier.fillMaxSize()) {
+                DetailBody(detail, state, onEvent)
+                // Franja fija detrás de la barra de estado: al hacer scroll sus íconos claros siguen legibles.
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .windowInsetsTopHeight(WindowInsets.statusBars)
+                        .background(UcbEncuentraTheme.colors.primary)
+                )
+            }
             else -> Column(Modifier.fillMaxSize()) {
                 CurvedHeader(
                     title = "Detalle de hallazgo",
@@ -252,16 +262,17 @@ private fun ComparisonCard(detail: MatchDetail) {
     val item = detail.item
     val c = detail.comparison
     val rows = listOf(
+        // Etiquetas cortas: en 390 dp de ancho "Marca observada" o "Lugar encontrado" se parten en dos líneas.
         Row3("Tipo", report.subcategory.label, "Tipo", item.subcategory.label, c.type),
-        Row3("Marca", report.brand ?: NOT_GIVEN, "Marca observada", item.brand ?: NOT_GIVEN, c.brand),
+        Row3("Marca", report.brand ?: NOT_GIVEN, "Marca", item.brand ?: NOT_GIVEN, c.brand),
         Row3(
-            "Color principal", report.color ?: NOT_GIVEN, "Color visible", item.color ?: NOT_GIVEN, c.color,
+            "Color", report.color ?: NOT_GIVEN, "Color", item.color ?: NOT_GIVEN, c.color,
             reportedColor = report.color, foundColor = item.color
         ),
-        Row3("Lugar de pérdida", report.zone.label, "Lugar encontrado", item.zone.label, c.zone),
+        Row3("Lo perdiste en", report.zone.label, "Se encontró en", item.zone.label, c.zone),
         Row3(
-            "Fecha de pérdida", formatDateRange(report.lostFrom.toLocalDate(), report.lostTo.toLocalDate()),
-            "Fecha encontrado", item.foundAt.toLocalDate().formatShort(), c.date
+            "Lo perdiste", formatShortRange(report.lostFrom.toLocalDate(), report.lostTo.toLocalDate()),
+            "Se encontró", item.foundAt.toLocalDate().formatShort(), c.date
         )
     )
     AppCard(Modifier.fillMaxWidth()) {
