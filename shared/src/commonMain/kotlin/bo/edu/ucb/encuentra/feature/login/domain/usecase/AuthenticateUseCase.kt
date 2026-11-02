@@ -1,38 +1,38 @@
 package bo.edu.ucb.encuentra.feature.login.domain.usecase
 
-import bo.edu.ucb.encuentra.core.domain.model.Campus
-import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
 import bo.edu.ucb.encuentra.core.domain.repository.SessionRepository
+import bo.edu.ucb.encuentra.core.domain.repository.UserRepository
 import bo.edu.ucb.encuentra.core.domain.vo.Email
 import bo.edu.ucb.encuentra.core.domain.vo.Password
 import kotlinx.coroutines.delay
 
 /**
- * Login de prueba hasta S01/S02 (Firebase Auth). Si las credenciales son correctas guarda la sesión.
+ * Login institucional (S01): solo @ucb.edu.bo y solo usuarios registrados (seed de Room).
+ * La contraseña es la de prueba [DEMO_PASSWORD] hasta que S02 ingrese con Google UCB (Firebase Auth).
+ * Si todo es correcto guarda la sesión persistente.
  */
 class AuthenticateUseCase(
+    private val users: UserRepository,
     private val session: SessionRepository
 ) {
     suspend operator fun invoke(email: Email, password: Password): Result<UserModel> {
-        delay(FAKE_NETWORK_DELAY_MS)
-        val user = DEMO_USERS[email.value.trim().lowercase()]
-        return if (user != null && password.value == DEMO_PASSWORD) {
-            session.setCurrentUser(user)
-            Result.success(user)
-        } else {
-            Result.failure(Exception("Credenciales incorrectas"))
+        if (!email.isInstitutional()) {
+            return Result.failure(IllegalArgumentException(ValidateInstitutionalEmailUseCase.NOT_INSTITUTIONAL))
         }
+        delay(FAKE_NETWORK_DELAY_MS)
+        val user = users.findByEmail(email)
+        // Mismo mensaje para "no existe" y "contraseña incorrecta": no revela qué correos están registrados.
+        if (user == null || password.value != DEMO_PASSWORD) {
+            return Result.failure(IllegalArgumentException(WRONG_CREDENTIALS))
+        }
+        session.setCurrentUser(user)
+        return Result.success(user)
     }
 
     companion object {
         const val DEMO_PASSWORD = "password"
-        private const val FAKE_NETWORK_DELAY_MS = 1000L
-        // Mismos ids que el seed de Room (SeedData), así el estudiante logueado es dueño de los reportes de prueba.
-        val DEMO_USERS = listOf(
-            UserModel("u-mateo", "Mateo Quispe", Email("estudiante@ucb.edu.bo"), Role.ESTUDIANTE, Campus.LA_PAZ, "Ingeniería"),
-            UserModel("u-ana-staff", "Ana Staff", Email("staff@ucb.edu.bo"), Role.STAFF, Campus.LA_PAZ, "Objetos Perdidos"),
-            UserModel("u-admin", "Admin UCB", Email("admin@ucb.edu.bo"), Role.ADMIN, Campus.LA_PAZ, "Administración")
-        ).associateBy { it.email.value }
+        const val WRONG_CREDENTIALS = "Correo o contraseña incorrectos"
+        private const val FAKE_NETWORK_DELAY_MS = 800L
     }
 }
