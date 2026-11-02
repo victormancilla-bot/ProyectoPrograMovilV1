@@ -59,6 +59,15 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - MVI: `HomeState` / `HomeEvent` / `HomeEffect`; tests en `HomeViewModelTest`.
 - Pendiente de otras tarjetas: el menú (☰) y la luna de modo oscuro del header (S07).
 
+## Posibles coincidencias (M04)
+
+- Pantalla del Figma "Resultados de Matching" (se abre desde "N coincidencias nuevas" del Home): candidatos con `ItemCard` + `ScoreBadge` de color (verde ≥ 80, naranja 50-79, gris < 50) y ranking `#1, #2...` del más al menos parecido. **Nunca un "es / no es"**: siempre un porcentaje.
+- Chips por reporte cuando el usuario tiene más de uno con candidatos (primero los que tienen coincidencias por revisar). Los matches descartados ("No es mío", M02) no aparecen; los confirmados dicen "Confirmado".
+- **Modificar criterios** vuelve al reporte (Mis reportes, L05). Tocar una tarjeta abre el detalle (M02).
+- Estados: cargando, vacío ("Aún no hay coincidencias" → Reportar objeto perdido) y error con **Reintentar**.
+- Datos: `MatchRepositoryImpl` combina `lost_reports`, `matches` (nueva consulta `observeActiveByOwner`) y `found_items` de Room, así la lista se actualiza sola cuando M01 agregue matches. Con el seed 2026: Calculadora científica → 92 / 65 / 30 (igual que el mockup) y Cuaderno de Cálculo → 92 confirmado.
+- Tests: `ObserveMyMatchesUseCaseTest` (con el seed), `MatchListViewModelTest`.
+
 ## Estados y custodia del objeto (H05)
 
 Máquina de estados en `core/domain/model/ItemStateMachine.kt`:
