@@ -154,6 +154,19 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Inventario de objetos (H07)
+
+Pantalla del Figma "Inventario" (pestaña **Inventario** del staff), en vivo desde Room:
+
+- **Búsqueda por texto o código**: ignora mayúsculas y tildes y busca en nombre, código, marca, color, descripción, categoría y lugar ("casio", "#CALCULAD", "bloque c"). Con varias palabras tienen que estar todas.
+- **Código del objeto** (`FoundItem.code`): `#` + los primeros 8 caracteres del id, para buscar y para la etiqueta física.
+- **Chips Todos / Disponible / Reclamado / Vencido**. "Disponible" = espera a su dueño y no venció.
+- **Por vencer y Vencido** (`RetentionState`, `FoundItem.retentionState(now)`): no se guardan, se calculan con la fecha de retención (`retention_days` de F08) y solo para objetos disponibles. Por vencer = dentro de 7 días (igual que el Dashboard). Se resaltan con un chip naranja/rojo en la tarjeta y una franja en el detalle; en la lista van primero.
+- **Detalle** (en la misma pantalla, el atrás del teléfono vuelve a la lista): fotos, datos completos (incluida la descripción privada), quién lo registró, retención, **custodia actual** e **historial de custodia** (lugar, fecha, quién y nota).
+- **Editar custodia**: Oficina / Locker / Bodega + detalle + nota. Usa `MoveCustodyUseCase` de H05: solo staff, solo objetos en custodia, audita (`CUSTODY_CHANGED`) y agrega el movimiento al historial.
+- "Registrar objeto encontrado" abre H03 (hasta que H01 agregue la captura de foto).
+- Tests: `InventoryUseCasesTest` (retención, chips, orden, búsqueda, detalle) y `InventoryViewModelTest` (filtros, detalle, editar custodia de punta a punta, mismo lugar, navegación).
+
 ## Remote Config: parámetros y flags (F08)
 
 Parámetros que la oficina puede cambiar en la consola de Firebase **sin publicar una versión** (mismo patrón que la feature remoteconfig de ucbp1: valores por defecto + `fetchAndActivate` + `safeCall`):
