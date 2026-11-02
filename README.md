@@ -50,7 +50,7 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - Dos pasos en la misma tarjeta: (1) el correo debe ser **@ucb.edu.bo** (`ValidateInstitutionalEmailUseCase`); (2) contraseña. `AuthenticateUseCase` busca el usuario en Room (`UserRepository`) y responde "Correo o contraseña incorrectos" sin revelar qué correos existen.
 - **Sesión persistente** con DataStore (`SessionRepositoryImpl`): guarda solo el id del usuario; al abrir la app se restaura desde Room y se entra directo al home del rol. **Perfil → Cerrar sesión** la borra.
 - Para empezar de cero (borra sesión y base): *Ajustes → Apps → UCB Encuentra (dev) → Borrar datos*, o `adb shell pm clear bo.edu.ucb.encuentra.dev`.
-- ⚠️ El enlace a Sistemas UCB abre `mailto:sistemas@ucb.edu.bo` (`LoginViewModel.SUPPORT_URI`): **es de prueba**, falta confirmar el contacto real (o leerlo de Remote Config, F08).
+- El enlace a Sistemas UCB abre un `mailto:` al correo del parámetro `support_contact` de Remote Config (F08); por defecto `sistemas@ucb.edu.bo`, que es **de prueba** hasta confirmar el contacto real.
 
 ## Home del estudiante (L01)
 
@@ -89,7 +89,7 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 ## Matching fase 2 (M02): score ponderado y ranking
 
 - **Score ponderado 0–100** en `MatchEngine`: color, marca, zona, fecha y **texto** (palabras clave del título + descripción, sin tildes ni palabras vacías). Cada criterio da una similitud 0–1 que se multiplica por su peso; los pesos son relativos (no tienen que sumar 100).
-- **Pesos y umbrales desde Remote Config** (`RemoteConfigMatchingConfigRepository`, mismo patrón que ucbp1: valores por defecto + `fetchAndActivate` + `safeCall`). Parámetros para crear en la consola de Firebase (F08):
+- **Pesos y umbrales desde Remote Config** (`RemoteConfigMatchingConfigRepository`, con el mismo data source que F08). Parámetros para crear en la consola de Firebase:
 
 | Parámetro | Por defecto | Qué hace |
 |---|---|---|
@@ -98,7 +98,7 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 | `matching_weight_zone` | 20 | Peso de la zona |
 | `matching_weight_date` | 10 | Peso de la fecha |
 | `matching_weight_text` | 20 | Peso del texto |
-| `matching_min_score` | 30 | Umbral mínimo para proponer |
+| `match_threshold` | 30 | Umbral mínimo para proponer (parámetro de F08; antes `matching_min_score`) |
 | `matching_top_n` | 5 | Máximo de candidatos por reporte |
 | `matching_max_days_to_find` | 30 | Días después de la pérdida en que puede aparecer |
 
@@ -153,6 +153,23 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 ```
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
+
+## Remote Config: parámetros y flags (F08)
+
+Parámetros que la oficina puede cambiar en la consola de Firebase **sin publicar una versión** (mismo patrón que la feature remoteconfig de ucbp1: valores por defecto + `fetchAndActivate` + `safeCall`):
+
+| Parámetro | Tipo | Por defecto (offline) | Para qué |
+|---|---|---|---|
+| `retention_days` | número | 90 | Días de custodia de un objeto nuevo (H03 → "Por vencer" de D01, D04). Fuera de 7–365 se usa 90 |
+| `match_threshold` | número | 30 | Score mínimo para proponer una coincidencia (M01/M02). Se limita a 0–100 |
+| `ai_suggestions_enabled` | booleano | false | Sugerencias de atributos con IA al registrar (H02, cuando exista) |
+| `support_contact` | texto | sistemas@ucb.edu.bo | Correo de "Contacta a Sistemas UCB" en el login |
+| `maintenance_mode` | booleano | false | Muestra "Estamos en mantenimiento" (con el contacto y **Reintentar**) en lugar de la app |
+
+- **Fetch al abrir la app** (`App.kt`, en paralelo al seed y la sesión: no retrasa el arranque). La configuración es un `StateFlow` (`AppConfigRepository`): las pantallas reaccionan cuando llega.
+- **Valores por defecto offline**: sin internet, sin `google-services.json` o si el fetch falla, la app sigue con los últimos valores guardados o los por defecto; el error vuelve como `Result` (no rompe nada). Valores fuera de rango se corrigen (`AppConfig.sanitized()`).
+- **Un solo `RemoteConfigDataSource`** (core) para toda la app: Firebase `setDefaults` reemplaza el mapa completo, así que los defaults de F08 y del matching (M02) se registran juntos (`RemoteConfigKeys.DEFAULTS`) y se descarga una vez por sesión. "Reintentar" del mantenimiento fuerza una descarga nueva. `minimumFetchInterval = 0` para que cada apertura traiga los cambios.
+- Tests: `RemoteConfigTest` (defaults offline = defaults de la app y del matching, valores de la consola aplicados, fetch fallido, valores fuera de rango, reintento forzado), más retención configurable en H03 y contacto de soporte en el login.
 
 ## Confirmación de entrega (V04)
 
