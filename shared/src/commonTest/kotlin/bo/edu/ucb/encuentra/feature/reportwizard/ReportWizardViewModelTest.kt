@@ -2,6 +2,8 @@ package bo.edu.ucb.encuentra.feature.reportwizard
 
 import bo.edu.ucb.encuentra.core.domain.model.Category
 import bo.edu.ucb.encuentra.core.domain.model.Subcategory
+import bo.edu.ucb.encuentra.feature.foundform.BoliviaTime
+import bo.edu.ucb.encuentra.feature.foundform.FixedClock
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.ReportFieldError
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.ValidateReportStepUseCase
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWizardEffect
@@ -33,7 +35,7 @@ class ReportWizardViewModelTest {
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        viewModel = ReportWizardViewModel(ValidateReportStepUseCase())
+        viewModel = ReportWizardViewModel(ValidateReportStepUseCase(FixedClock, BoliviaTime))
     }
 
     @AfterTest
