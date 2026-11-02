@@ -22,6 +22,10 @@ interface FoundItemDao {
     @Query("SELECT * FROM found_items WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): FoundItemEntity?
 
+    /** Para el matching (M01): objetos con los que comparar un reporte nuevo. */
+    @Query("SELECT * FROM found_items WHERE status = :status")
+    suspend fun getByStatus(status: ItemStatus): List<FoundItemEntity>
+
     /** Para el dashboard (D01) y la retención (D04): objetos en custodia que vencen antes de [until]. */
     @Query("SELECT * FROM found_items WHERE status = 'DISPONIBLE' AND retention_until <= :until ORDER BY retention_until")
     suspend fun getAvailableExpiringBefore(until: Long): List<FoundItemEntity>

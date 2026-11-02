@@ -22,6 +22,10 @@ interface MatchDao {
     )
     fun observeActiveByOwner(ownerId: String): Flow<List<MatchEntity>>
 
+    /** El matching (M01) no vuelve a crear ni pisa un par que ya existe (p. ej. uno descartado con "No es mío"). */
+    @Query("SELECT * FROM matches WHERE lost_report_id = :lostReportId AND found_item_id = :foundItemId LIMIT 1")
+    suspend fun getByPair(lostReportId: String, foundItemId: String): MatchEntity?
+
     @Query("SELECT * FROM matches WHERE id = :id LIMIT 1")
     fun observeById(id: String): Flow<MatchEntity?>
 

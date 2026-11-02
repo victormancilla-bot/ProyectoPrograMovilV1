@@ -10,6 +10,7 @@ import bo.edu.ucb.encuentra.core.domain.repository.SessionRepository
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.Email
 import bo.edu.ucb.encuentra.feature.foundform.domain.repository.FoundItemRepository
+import bo.edu.ucb.encuentra.feature.reportwizard.FakeMatchingTrigger
 import bo.edu.ucb.encuentra.feature.foundform.domain.usecase.RegisterFoundItemUseCase
 import bo.edu.ucb.encuentra.feature.foundform.domain.usecase.ValidateFoundItemUseCase
 import kotlinx.coroutines.test.runTest
@@ -48,10 +49,12 @@ internal fun demoUser(role: Role) = UserModel(
 class RegisterFoundItemUseCaseTest {
 
     private val repository = FakeFoundItemRepository()
+    private val matching = FakeMatchingTrigger()
 
-    private fun register(user: UserModel?) = RegisterFoundItemUseCase(
+    private fun register(user: UserModel?, trigger: FakeMatchingTrigger = matching) = RegisterFoundItemUseCase(
         ValidateFoundItemUseCase(FixedClock, BoliviaTime),
         repository,
+        trigger,
         GetCurrentUserUseCase(FakeSession(user)),
         FixedClock
     )
@@ -67,6 +70,7 @@ class RegisterFoundItemUseCaseTest {
         val item = register(demoUser(Role.STAFF))(draft).getOrThrow()
 
         assertEquals(listOf(item), repository.saved)
+        assertEquals(listOf(item), matching.registered)
         assertEquals(ItemStatus.DISPONIBLE, item.status)
         assertEquals("Smartphone Negro", item.title)
         assertNull(item.brand)
@@ -75,6 +79,13 @@ class RegisterFoundItemUseCaseTest {
         assertEquals("u-ana-staff", item.registeredBy)
         assertEquals(Campus.LA_PAZ, item.campus)
         assertEquals(FixedClock.now() + RegisterFoundItemUseCase.RETENTION, item.retentionUntil)
+    }
+
+    @Test
+    fun matchingFailureDoesNotLoseTheItem() = runTest {
+        val result = register(demoUser(Role.STAFF), FakeMatchingTrigger(fail = true))(validFoundDraft)
+        assertTrue(result.isSuccess)
+        assertEquals(1, repository.saved.size)
     }
 
     @Test

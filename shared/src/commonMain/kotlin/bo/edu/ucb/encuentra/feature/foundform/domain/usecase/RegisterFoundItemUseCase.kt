@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.feature.foundform.domain.usecase
 
 import bo.edu.ucb.encuentra.core.domain.model.FoundItem
 import bo.edu.ucb.encuentra.core.domain.model.ItemStatus
+import bo.edu.ucb.encuentra.core.domain.repository.MatchingTrigger
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.foundform.domain.model.FoundItemDraft
@@ -11,11 +12,12 @@ import kotlin.time.Duration.Companion.days
 
 /**
  * Registra un objeto encontrado (H03): valida el borrador y lo guarda en Room con estado DISPONIBLE.
- * La sede y quién lo registró salen de la sesión del staff.
+ * La sede y quién lo registró salen de la sesión del staff. Después dispara el matching (M01).
  */
 class RegisterFoundItemUseCase(
     private val validate: ValidateFoundItemUseCase,
     private val repository: FoundItemRepository,
+    private val matching: MatchingTrigger,
     private val getCurrentUser: GetCurrentUserUseCase,
     private val clock: Clock
 ) {
@@ -47,7 +49,11 @@ class RegisterFoundItemUseCase(
             retentionUntil = now + RETENTION,
             createdAt = now
         )
-        return runCatching { repository.register(item) }.map { item }
+        return runCatching { repository.register(item) }.map {
+            // Busca reportes de perdido que coincidan (M01); si falla, el objeto igual queda registrado.
+            runCatching { matching.onFoundItemRegistered(item) }
+            item
+        }
     }
 
     companion object {

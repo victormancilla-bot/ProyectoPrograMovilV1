@@ -13,6 +13,7 @@ import bo.edu.ucb.encuentra.feature.foundform.domain.usecase.ValidateFoundItemUs
 import bo.edu.ucb.encuentra.feature.foundform.presentation.viewmodel.FoundFormEffect
 import bo.edu.ucb.encuentra.feature.foundform.presentation.viewmodel.FoundFormEvent
 import bo.edu.ucb.encuentra.feature.foundform.presentation.viewmodel.FoundFormViewModel
+import bo.edu.ucb.encuentra.feature.reportwizard.FakeMatchingTrigger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -44,7 +45,7 @@ class FoundFormViewModelTest {
         Dispatchers.setMain(dispatcher)
         val validate = ValidateFoundItemUseCase(FixedClock, BoliviaTime)
         val register = RegisterFoundItemUseCase(
-            validate, repository, GetCurrentUserUseCase(FakeSession(demoUser(Role.STAFF))), FixedClock
+            validate, repository, FakeMatchingTrigger(), GetCurrentUserUseCase(FakeSession(demoUser(Role.STAFF))), FixedClock
         )
         viewModel = FoundFormViewModel(validate, register, FixedClock, BoliviaTime)
     }
