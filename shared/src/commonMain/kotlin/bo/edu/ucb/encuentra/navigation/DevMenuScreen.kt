@@ -3,6 +3,7 @@ package bo.edu.ucb.encuentra.navigation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +38,7 @@ private val devRoutes: List<Pair<String, NavRoute>> = listOf(
 /** Menú temporal para abrir cualquier stub. Se elimina cuando F05 agregue la navegación por rol. */
 @Composable
 fun DevMenuScreen(onNavigate: (NavRoute) -> Unit) {
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    LazyColumn(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(16.dp)) {
         item {
             Text("Menú de desarrollo", style = MaterialTheme.typography.headlineSmall)
         }

@@ -1,49 +1,47 @@
 package bo.edu.ucb.encuentra.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
-import edu.ucb.ds.theme.UcbEncuentraTheme
+import edu.ucb.ds.components.navigation.BottomNavBar
+import edu.ucb.ds.components.navigation.BottomNavCenterAction
+import edu.ucb.ds.components.navigation.BottomNavItem
 
 /**
- * Scaffold con la barra inferior del rol. F04 puede reemplazar la NavigationBar por su BottomNavBar con FAB.
- * Si [items] está vacío (Login, wizard, detalles) no se muestra la barra.
+ * Scaffold con la barra inferior del rol (BottomNavBar del Design System, F04).
+ * Si [tabs] está vacío (Login, wizard, detalles) no se muestra la barra.
  */
 @Composable
 fun MainScaffold(
-    items: List<BottomNavItem>,
+    tabs: List<RoleTab>,
+    centerAction: RoleTab?,
     currentDestination: NavDestination?,
-    onItemClick: (NavRoute) -> Unit,
+    onTabClick: (NavRoute) -> Unit,
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
+        // Sin insets del sistema: el CurvedHeader se pinta detrás de la barra de estado y la BottomNavBar
+        // ya respeta la barra de navegación. Cada pantalla maneja su propio espacio arriba.
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
-            if (items.isNotEmpty()) {
-                NavigationBar(containerColor = UcbEncuentraTheme.colors.background) {
-                    items.forEach { item ->
-                        NavigationBarItem(
-                            selected = currentDestination.isOn(item.route),
-                            onClick = { onItemClick(item.route) },
-                            icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(item.label, style = UcbEncuentraTheme.typography.label) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = UcbEncuentraTheme.colors.onSecondary,
-                                selectedTextColor = UcbEncuentraTheme.colors.onSecondary,
-                                indicatorColor = UcbEncuentraTheme.colors.secondary,
-                                unselectedIconColor = UcbEncuentraTheme.colors.onSurfaceVariant,
-                                unselectedTextColor = UcbEncuentraTheme.colors.onSurfaceVariant
-                            )
+            if (tabs.isNotEmpty()) {
+                BottomNavBar(
+                    items = tabs.map { tab ->
+                        BottomNavItem(
+                            label = tab.label,
+                            icon = tab.icon,
+                            selected = currentDestination.isOn(tab.route),
+                            onClick = { onTabClick(tab.route) }
                         )
+                    },
+                    centerAction = centerAction?.let { action ->
+                        BottomNavCenterAction(action.icon, action.label) { onTabClick(action.route) }
                     }
-                }
+                )
             }
         },
         content = content

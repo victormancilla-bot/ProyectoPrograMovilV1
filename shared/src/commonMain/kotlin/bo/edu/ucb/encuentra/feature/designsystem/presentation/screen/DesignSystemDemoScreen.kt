@@ -74,6 +74,7 @@ fun DesignSystemDemoScreen(onNavigateBack: () -> Unit) {
             SpacingSection()
             ShapesSection()
             ComponentsSection()
+            DomainComponentsSection()
         }
     }
 }
