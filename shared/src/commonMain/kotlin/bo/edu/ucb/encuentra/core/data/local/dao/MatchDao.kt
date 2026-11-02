@@ -15,6 +15,13 @@ interface MatchDao {
     )
     fun observeActiveByLostReport(lostReportId: String): Flow<List<MatchEntity>>
 
+    /** Coincidencias no descartadas de todos los reportes de un usuario (Posibles coincidencias, M04). */
+    @Query(
+        "SELECT m.* FROM matches m JOIN lost_reports r ON m.lost_report_id = r.id " +
+            "WHERE r.owner_id = :ownerId AND m.status != 'DESCARTADO' ORDER BY m.score DESC"
+    )
+    fun observeActiveByOwner(ownerId: String): Flow<List<MatchEntity>>
+
     @Query("SELECT * FROM matches WHERE id = :id LIMIT 1")
     fun observeById(id: String): Flow<MatchEntity?>
 
