@@ -129,6 +129,19 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - Los botones solo aparecen en coincidencias **propuestas** de un reporte abierto; si ya está confirmada o el reporte se cerró se muestra un aviso.
 - Tests: `MatchDetailUseCasesTest` (8, con el seed), `MatchDetailViewModelTest` (7).
 
+## Preguntas de control (V01)
+
+"No se entrega por hacer match": quien reclama responde las preguntas que definió el staff y el staff decide.
+
+- **H03** pide ahora, junto a cada pregunta, la **respuesta esperada (privada)**, obligatoria. Se guarda en `FoundItem.expectedAnswers` (Room v2).
+- **Pantalla del estudiante** (no estaba en el PDF), dentro del Detalle de match: después de "Esto es mío — verificar" aparece "Verifica que es tuyo" con un campo por pregunta y los intentos que quedan. Después muestra en qué quedó el reclamo (en verificación, aprobado, rechazado, bloqueado o entregado).
+- **Comparación asistida** (`AnswerComparator`): sin mayúsculas, tildes, signos ni palabras de relleno. Coincide si la respuesta contiene la esperada, o al revés, o si comparte al menos la mitad de sus palabras clave ("uno de la UCB" ≈ "Escudo de la UCB"). Un objeto sin respuesta esperada (registrado antes de V01) va directo al staff.
+- **Intentos y bloqueo**: si alguna respuesta no coincide, el reclamo sigue PENDIENTE y se descuenta un intento, **sin decir cuál falló ni cuál era la respuesta**. Al 3er intento fallido (`Claim.MAX_ANSWER_ATTEMPTS`) el reclamo queda **bloqueado** (RECHAZADO), la coincidencia se descarta, el objeto vuelve a DISPONIBLE si nadie más lo reclama y todo se audita.
+- **Respuestas privadas**: solo `ObserveClaimReviewUseCase` / `ObserveOpenClaimsUseCase` las devuelven, y solo al staff. El estudiante nunca ve las respuestas esperadas, ni siquiera las suyas después de enviarlas.
+- **Decisión humana**: el detalle del reclamo para el staff (pestaña Reclamos → reclamo) muestra cada pregunta con lo que respondió el estudiante, la esperada y la sugerencia "Coincide / No coincide", más los intentos usados. Aprobar o rechazar pide confirmación y un motivo opcional que queda en la auditoría. La lista y el detalle son **mínimos**: V03 les pone el diseño del mockup "Verificación de Reclamos".
+- Para que `matching` no dependa de `claims`, el hook de core `ClaimRequester` ahora también tiene `answerQuestions` (lo implementa `ClaimRequesterImpl`).
+- Tests: `AnswerComparatorTest` (3), `ControlQuestionsTest` (7: coincide, intento fallido, bloqueo al 3er intento, preguntas incompletas, sin respuesta esperada, revisión del staff, privacidad), `ClaimDetailViewModelTest` (5), más los de H03 y M05 actualizados.
+
 ## Reclamos: flujo y estados (V02)
 
 Estados del reclamo con su máquina de estados (`ClaimStateMachine`, igual que H05 para el objeto):
@@ -213,7 +226,7 @@ DISPONIBLE ──donar──────▶ DONADO       (retención vencida, D0
 
 ## Base de datos (Room 3, F06)
 
-`core/data/local/AppDatabase.kt` (versión **1**), dueño único: **Integrante A**. Se crea por plataforma (`Database.android.kt` / `Database.ios.kt`) y Koin la entrega con `platformModule()`.
+`core/data/local/AppDatabase.kt` (versión **2**), dueño único: **Integrante A**. Se crea por plataforma (`Database.android.kt` / `Database.ios.kt`) y Koin la entrega con `platformModule()`.
 
 | Tabla | Entidad | Modelo de dominio | Notas |
 |---|---|---|---|
@@ -246,6 +259,11 @@ Room exporta el esquema de cada versión en `shared/schemas/bo.edu.ucb.encuentra
 3. **Cambio complejo** (renombrar o borrar columna, cambiar tipo): `AutoMigration` con una spec (`@RenameColumn`, `@DeleteColumn`…) o una `Migration(1, 2)` con SQL, registrada en `getRoomDatabase()` con `.addMigrations(...)`.
 4. Compila: se genera `2.json`. Commitea el JSON junto con el cambio.
 5. **Nunca** `fallbackToDestructiveMigration()` en `prod`: borraría los reportes del usuario. En desarrollo, si la base local quedó inconsistente, desinstala la app.
+
+| Versión | Cambio | Migración |
+|---|---|---|
+| 1 | Esquema inicial (F06) | — |
+| 2 | `found_items.expected_answers` (respuestas esperadas, `'[]'` por defecto) y `claims.failed_attempts` (`0`) para V01 | `AutoMigration(1, 2)`, probada en el emulador sobre una base v1 con datos |
 
 ## Tests y calidad
 
