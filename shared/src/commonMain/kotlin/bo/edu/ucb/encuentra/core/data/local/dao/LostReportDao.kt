@@ -24,6 +24,13 @@ interface LostReportDao {
     @Query("SELECT * FROM lost_reports WHERE status = :status")
     suspend fun getByStatus(status: ReportStatus): List<LostReportEntity>
 
+    /** Reportes "activos" del Home (L01): los que siguen en curso (no recuperados, cerrados ni vencidos). */
+    @Query(
+        "SELECT COUNT(*) FROM lost_reports WHERE owner_id = :ownerId " +
+            "AND status IN ('BUSCANDO', 'EN_VERIFICACION', 'MATCH_CONFIRMADO')"
+    )
+    fun observeActiveCountByOwner(ownerId: String): Flow<Int>
+
     @Upsert
     suspend fun upsert(report: LostReportEntity)
 
