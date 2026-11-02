@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- H01: carpeta temporal donde la cámara del sistema escribe la foto (ver CameraCapture.android.kt). -->
+<paths>
+    <cache-path name="camera" path="camera/" />
+</paths>
