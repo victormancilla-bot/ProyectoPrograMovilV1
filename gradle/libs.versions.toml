@@ -17,6 +17,7 @@ kotlin = "2.4.21"
 material3 = "1.12.0-alpha03"
 koinBom = "4.2.2"
 kotlinxCoroutines = "1.11.0"
+kotlinxDatetime = "0.7.1"
 kotlinxSerializationJson = "1.12.0"
 navigationCompose = "2.10.0"
 ktor = "3.6.1"
@@ -63,6 +64,7 @@ compose-components-resources = { module = "org.jetbrains.compose.components:comp
 # Navegación + serialización
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 
 # Koin (versiones las fija el BOM)
