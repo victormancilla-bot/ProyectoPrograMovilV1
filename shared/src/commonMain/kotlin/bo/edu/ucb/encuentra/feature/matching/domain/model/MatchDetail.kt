@@ -15,8 +15,22 @@ import kotlin.time.Instant
 /** Una coincidencia completa, tal como sale de Room (solo la usa el dominio para armar [MatchDetail]). */
 data class MatchPair(val match: Match, val report: LostReport, val item: FoundItem, val ownClaim: Claim? = null)
 
-/** El reclamo que el dueño ya hizo sobre este objeto (V02): se muestra en vez de los botones. */
-data class ExistingClaim(val number: Int, val status: ClaimStatus)
+/**
+ * El reclamo que el dueño ya hizo sobre este objeto (V02): se muestra en vez de los botones.
+ * Mientras está PENDIENTE trae las preguntas de control para responderlas (V01); nunca las respuestas esperadas.
+ */
+data class ExistingClaim(
+    val id: ItemId,
+    val number: Int,
+    val status: ClaimStatus,
+    val failedAttempts: Int = 0,
+    val questions: List<String> = emptyList()
+) {
+    val attemptsLeft: Int get() = (Claim.MAX_ANSWER_ATTEMPTS - failedAttempts).coerceAtLeast(0)
+
+    /** Rechazado por agotar los intentos (no por decisión del staff). */
+    val blocked: Boolean get() = status == ClaimStatus.RECHAZADO && attemptsLeft == 0
+}
 
 /**
  * Vista LIMITADA del objeto encontrado (M05): lo justo para reconocerlo. NO incluye la custodia, las preguntas

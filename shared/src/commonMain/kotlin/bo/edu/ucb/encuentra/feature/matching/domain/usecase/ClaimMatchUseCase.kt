@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.feature.matching.domain.usecase
 
+import bo.edu.ucb.encuentra.core.domain.model.Claim
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequester
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
@@ -12,5 +13,12 @@ class ClaimMatchUseCase(
     suspend operator fun invoke(matchId: ItemId): Result<Int> = runCatching {
         val user = getCurrentUser() ?: throw IllegalStateException("No hay sesión iniciada")
         requester.requestClaim(matchId, user.id)
+    }
+}
+
+/** Respuestas a las preguntas de control del reclamo (V01). Devuelve el reclamo actualizado. */
+class AnswerControlQuestionsUseCase(private val requester: ClaimRequester) {
+    suspend operator fun invoke(claimId: ItemId, answers: List<String>): Result<Claim> = runCatching {
+        requester.answerQuestions(claimId, answers)
     }
 }

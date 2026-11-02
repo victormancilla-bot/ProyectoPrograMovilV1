@@ -5,6 +5,7 @@ import bo.edu.ucb.encuentra.feature.claims.data.ClaimRepositoryImpl
 import bo.edu.ucb.encuentra.feature.claims.domain.repository.ClaimRepository
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ApproveClaimUseCase
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ChangeClaimStatusUseCase
+import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ClaimRequesterImpl
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.CreateClaimUseCase
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.DeliverClaimUseCase
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ObserveClaimReviewUseCase
@@ -22,7 +23,7 @@ val claimsModule = module {
     // Reclamos (V02): crear desde "Esto es mío — verificar" (M05) y transiciones PENDIENTE → ... → ENTREGADO.
     single<ClaimRepository> { ClaimRepositoryImpl(get(), get(), get(), get(), get()) }
     singleOf(::CreateClaimUseCase)
-    single<ClaimRequester> { get<CreateClaimUseCase>() }
+    single<ClaimRequester> { ClaimRequesterImpl(get(), get()) }
     singleOf(::ChangeClaimStatusUseCase)
     singleOf(::SubmitClaimAnswersUseCase)
     singleOf(::ApproveClaimUseCase)

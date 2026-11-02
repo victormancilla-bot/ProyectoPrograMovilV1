@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.feature.matching
 
 import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
 import bo.edu.ucb.encuentra.core.domain.model.CampusZone
+import bo.edu.ucb.encuentra.core.domain.model.Claim
 import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
@@ -28,18 +29,30 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** Guarda quién pidió el reclamo y devuelve un número fijo, como lo haría V02. */
-internal class RecordingClaimRequester(private val number: Int = 1026) : ClaimRequester {
+/**
+ * Guarda quién pidió el reclamo y devuelve un número fijo, como lo haría V02. Las respuestas devuelven el reclamo
+ * con el estado que se le indique en [answerResult] (V01).
+ */
+internal class RecordingClaimRequester(
+    private val number: Int = 1026,
+    var answerResult: (ItemId) -> Claim = { id -> SeedData.claims.first().copy(id = id, status = ClaimStatus.EN_VERIFICACION) }
+) : ClaimRequester {
     val requests = mutableListOf<Pair<ItemId, String>>()
+    val answers = mutableListOf<Pair<ItemId, List<String>>>()
     override suspend fun requestClaim(matchId: ItemId, claimantId: String): Int {
         requests += matchId to claimantId
         return number
+    }
+    override suspend fun answerQuestions(claimId: ItemId, answers: List<String>): Claim {
+        this.answers += claimId to answers
+        return answerResult(claimId)
     }
 }
 
 /** V02 responde con un error (p. ej. doble reclamo). */
 internal class FailingClaimRequester(private val error: Throwable = DuplicateClaimException(1025)) : ClaimRequester {
     override suspend fun requestClaim(matchId: ItemId, claimantId: String): Int = throw error
+    override suspend fun answerQuestions(claimId: ItemId, answers: List<String>): Claim = throw error
 }
 
 class MatchDetailUseCasesTest {
@@ -104,10 +117,29 @@ class MatchDetailUseCasesTest {
 
         val detail = assertNotNull(observe(ItemId("m-termo")).first())
 
-        assertEquals(ExistingClaim(1027, ClaimStatus.EN_VERIFICACION), detail.existingClaim)
+        assertEquals(ExistingClaim(ItemId("c-1027"), 1027, ClaimStatus.EN_VERIFICACION), detail.existingClaim)
         assertFalse(detail.canAct)
         // El #1025 de Luis sobre la calculadora no es de Mateo: no aparece en su detalle.
         assertNull(assertNotNull(observe(ItemId("m-calculadora")).first()).existingClaim)
+    }
+
+    @Test
+    fun aBlockedClaimIsStillShownAlthoughItsMatchWasDiscarded() = runTest {
+        repository.claims.value = SeedData.claims + SeedData.claims.first().copy(
+            id = ItemId("c-1027"), number = 1027, foundItemId = ItemId("fi-termo"), claimantId = "u-mateo",
+            status = ClaimStatus.RECHAZADO, failedAttempts = Claim.MAX_ANSWER_ATTEMPTS
+        )
+        repository.groups.value = repository.groups.value.map { group ->
+            group.copy(candidates = group.candidates.map {
+                if (it.match.id.value == "m-termo") it.copy(match = it.match.copy(status = MatchStatus.DESCARTADO)) else it
+            })
+        }
+
+        val claim = assertNotNull(assertNotNull(observe(ItemId("m-termo")).first()).existingClaim)
+
+        assertTrue(claim.blocked)
+        // Sin preguntas: ya no puede responder.
+        assertTrue(claim.questions.isEmpty())
     }
 
     @Test
