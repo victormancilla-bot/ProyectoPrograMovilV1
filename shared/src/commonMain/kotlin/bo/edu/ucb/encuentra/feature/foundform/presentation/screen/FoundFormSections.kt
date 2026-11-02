@@ -15,17 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +29,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import bo.edu.ucb.encuentra.core.domain.model.Category
 import bo.edu.ucb.encuentra.core.presentation.AllItemColors
+import bo.edu.ucb.encuentra.core.presentation.ClickableField
+import bo.edu.ucb.encuentra.core.presentation.PastDatePickerDialog
+import bo.edu.ucb.encuentra.core.presentation.TimePickerDialog
+import bo.edu.ucb.encuentra.core.presentation.formatDmy
+import bo.edu.ucb.encuentra.core.presentation.formatHm
 import bo.edu.ucb.encuentra.core.presentation.icon
 import bo.edu.ucb.encuentra.core.presentation.swatchFor
 import bo.edu.ucb.encuentra.feature.foundform.domain.usecase.FoundFieldError
@@ -58,14 +54,6 @@ import edu.ucb.ds.components.selection.DefaultItemColors
 import edu.ucb.ds.components.textfields.AppTextField
 import edu.ucb.ds.icons.DsIcons
 import edu.ucb.ds.theme.UcbEncuentraTheme
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.number
-import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Clock
-import kotlin.time.Instant
 
 private enum class DetectedEditor { CATEGORY, COLOR }
 
@@ -205,7 +193,7 @@ internal fun FoundDateTimeFields(state: FoundFormState, onEvent: (FoundFormEvent
 
     Row(horizontalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.itemGap)) {
         ClickableField(
-            value = draft.foundDate?.format().orEmpty(),
+            value = draft.foundDate?.formatDmy().orEmpty(),
             label = "Fecha de hallazgo",
             icon = DsIcons.Calendar,
             errorMessage = error,
@@ -213,9 +201,8 @@ internal fun FoundDateTimeFields(state: FoundFormState, onEvent: (FoundFormEvent
             modifier = Modifier.weight(1.3f)
         )
         ClickableField(
-            value = draft.foundTime?.format().orEmpty(),
+            value = draft.foundTime?.formatHm().orEmpty(),
             label = "Hora",
-            icon = null,
             errorMessage = if (error != null) " " else null,
             onClick = { picker = "time" },
             modifier = Modifier.weight(1f)
@@ -223,76 +210,17 @@ internal fun FoundDateTimeFields(state: FoundFormState, onEvent: (FoundFormEvent
     }
 
     when (picker) {
-        "date" -> FoundDatePicker(
+        "date" -> PastDatePickerDialog(
             initial = draft.foundDate,
             onPick = { onEvent(FoundFormEvent.OnFoundDateSelected(it)) },
             onDismiss = { picker = null }
         )
-        "time" -> FoundTimePicker(
+        "time" -> TimePickerDialog(
             initial = draft.foundTime,
             onPick = { onEvent(FoundFormEvent.OnFoundTimeSelected(it)) },
             onDismiss = { picker = null }
         )
     }
-}
-
-@Composable
-private fun ClickableField(
-    value: String,
-    label: String,
-    icon: ImageVector?,
-    errorMessage: String?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(modifier) {
-        AppTextField(value = value, onValueChange = {}, label = label, leadingIcon = icon, errorMessage = errorMessage)
-        Box(Modifier.matchParentSize().clickable(onClick = onClick))
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FoundDatePicker(initial: LocalDate?, onPick: (LocalDate) -> Unit, onDismiss: () -> Unit) {
-    // El DatePicker trabaja en milisegundos UTC a medianoche.
-    val todayMillis = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toUtcMillis()
-    val state = rememberDatePickerState(
-        initialSelectedDateMillis = initial?.toUtcMillis(),
-        selectableDates = object : SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= todayMillis
-        }
-    )
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                state.selectedDateMillis?.let { millis ->
-                    onPick(Instant.fromEpochMilliseconds(millis).toLocalDateTime(TimeZone.UTC).date)
-                }
-                onDismiss()
-            }) { AppLabel("Aceptar", color = UcbEncuentraTheme.colors.primary) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { AppLabel("Cancelar", color = UcbEncuentraTheme.colors.primary) } }
-    ) {
-        DatePicker(state = state)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FoundTimePicker(initial: LocalTime?, onPick: (LocalTime) -> Unit, onDismiss: () -> Unit) {
-    val state = rememberTimePickerState(initialHour = initial?.hour ?: 0, initialMinute = initial?.minute ?: 0, is24Hour = true)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onPick(LocalTime(state.hour, state.minute))
-                onDismiss()
-            }) { AppLabel("Aceptar", color = UcbEncuentraTheme.colors.primary) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { AppLabel("Cancelar", color = UcbEncuentraTheme.colors.primary) } },
-        text = { TimePicker(state = state) }
-    )
 }
 
 /** 1-3 preguntas que solo el dueño sabría responder; las usa la verificación del reclamo (V01). */
@@ -345,11 +273,3 @@ private val QUESTION_EXAMPLES = listOf(
     "Ej. ¿Qué hay escrito en la funda?",
     "Ej. ¿Qué otro objeto estaba junto?"
 )
-
-private fun Int.pad() = toString().padStart(2, '0')
-
-private fun LocalDate.format() = "${day.pad()}/${month.number.pad()}/$year"
-
-private fun LocalTime.format() = "${hour.pad()}:${minute.pad()}"
-
-private fun LocalDate.toUtcMillis() = atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
