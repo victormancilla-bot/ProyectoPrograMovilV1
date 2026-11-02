@@ -71,7 +71,7 @@ class ClaimDetailViewModel(
         if (current.working) return
         _state.value = current.copy(confirming = null, working = true)
         viewModelScope.launch {
-            val note = current.note.trim().ifEmpty { null }
+            val note = current.note.trim()
             val result = when (decision) {
                 ClaimDecision.APPROVE -> approve(claimId, note)
                 ClaimDecision.REJECT -> reject(claimId, note)

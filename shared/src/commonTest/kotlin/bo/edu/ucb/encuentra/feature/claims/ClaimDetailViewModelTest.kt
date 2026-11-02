@@ -107,6 +107,7 @@ class ClaimDetailViewModelTest {
         assertNull(vm.state.value.confirming)
 
         vm.handleEvent(ClaimDetailEvent.OnDecide(ClaimDecision.REJECT))
+        vm.handleEvent(ClaimDetailEvent.OnNoteChanged("No respondió las preguntas"))
         vm.handleEvent(ClaimDetailEvent.OnConfirm)
         advanceUntilIdle()
         assertEquals(ClaimStatus.RECHAZADO, store.claim(1025).status)
