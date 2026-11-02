@@ -62,4 +62,5 @@ object ClaimErrors {
     const val ITEM_UNAVAILABLE = "Este objeto ya no está en custodia."
     const val ANSWERS_REQUIRED = "Responde todas las preguntas de control."
     const val ALREADY_APPROVED = "Ya hay otro reclamo aprobado para este objeto."
+    const val REASON_REQUIRED = "Escribe el motivo de la decisión: queda en la auditoría."
 }

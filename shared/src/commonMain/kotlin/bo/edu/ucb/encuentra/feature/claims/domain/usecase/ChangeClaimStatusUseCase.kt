@@ -11,6 +11,7 @@ import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
 import bo.edu.ucb.encuentra.core.domain.repository.AuditRecorder
+import bo.edu.ucb.encuentra.core.domain.repository.ClaimNotifier
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequestException
 import bo.edu.ucb.encuentra.core.domain.repository.FoundItemLifecycleRepository
 import bo.edu.ucb.encuentra.core.domain.repository.TransactionRunner
@@ -43,7 +44,9 @@ class ChangeClaimStatusUseCase(
     private val audit: AuditRecorder,
     private val transaction: TransactionRunner,
     private val getCurrentUser: GetCurrentUserUseCase,
-    private val clock: Clock
+    private val clock: Clock,
+    /** Hook de N01: avisa a quien reclamó cuando su reclamo se aprueba, rechaza, bloquea o entrega. */
+    private val notifier: ClaimNotifier = NoClaimNotifications
 ) {
     suspend operator fun invoke(
         claimId: ItemId,
@@ -59,6 +62,8 @@ class ChangeClaimStatusUseCase(
             } else if (claim.claimantId != user.id) {
                 throw ClaimRequestException(ClaimErrors.NOT_YOUR_CLAIM)
             }
+            // V03: aprobar o rechazar exige un motivo, que queda en la auditoría (S05).
+            if (transition in DECISIONS && note.isNullOrBlank()) throw ClaimRequestException(ClaimErrors.REASON_REQUIRED)
             val newStatus = ClaimStateMachine.apply(claim.status, transition)
             val now = clock.now()
             val others = claims.getByItem(claim.foundItemId).filter { it.id != claim.id }
@@ -83,11 +88,13 @@ class ChangeClaimStatusUseCase(
                     // El objeto ya salió de custodia: los demás reclamos abiertos quedan rechazados.
                     others.filter { ClaimStateMachine.isOpen(it.status) }.forEach { other ->
                         closeForClaimant(other)
-                        claims.update(other.copy(status = ClaimStatus.RECHAZADO, reviewedBy = user.id, reviewedAt = now))
+                        val rejected = other.copy(status = ClaimStatus.RECHAZADO, reviewedBy = user.id, reviewedAt = now)
+                        claims.update(rejected)
                         audit.record(
                             AuditAction.CLAIM_REJECTED, user.id, other.id.value,
                             "Reclamo #${other.number} · el objeto se entregó con el reclamo #${claim.number}"
                         )
+                        notify(rejected)
                     }
                     claim.copy(status = newStatus, deliveredBy = user.id, deliveredAt = now)
                 }
@@ -98,8 +105,13 @@ class ChangeClaimStatusUseCase(
                 listOfNotNull("Reclamo #${claim.number} · ${claim.status.label} → ${newStatus.label}", note?.trim()?.ifEmpty { null })
                     .joinToString(" · ")
             )
+            notify(updated)
             updated
         }
+    }
+
+    private suspend fun notify(claim: Claim) {
+        notifier.onClaimUpdated(claim, items.getById(claim.foundItemId)?.title ?: "tu objeto")
     }
 
     /**
@@ -150,6 +162,7 @@ class ChangeClaimStatusUseCase(
             AuditAction.CLAIM_REJECTED, actorId, claim.id.value,
             "$prefix · bloqueado: ${Claim.MAX_ANSWER_ATTEMPTS} intentos sin coincidir"
         )
+        notify(blocked)
         return blocked
     }
 
@@ -194,6 +207,7 @@ class ChangeClaimStatusUseCase(
     }
 
     private companion object {
+        val DECISIONS = setOf(ClaimTransition.APPROVE, ClaimTransition.REJECT)
         val IN_REVIEW = setOf(ReportStatus.EN_VERIFICACION, ReportStatus.MATCH_CONFIRMADO)
     }
 }
@@ -209,18 +223,25 @@ class SubmitClaimAnswersUseCase(private val change: ChangeClaimStatusUseCase) {
 
 /** EN_VERIFICACION → APROBADO: el staff valida las respuestas (V03). */
 class ApproveClaimUseCase(private val change: ChangeClaimStatusUseCase) {
-    suspend operator fun invoke(claimId: ItemId, note: String? = null): Result<Claim> =
-        change(claimId, ClaimTransition.APPROVE, note = note)
+    /** [reason] es obligatorio (V03): queda en la auditoría. */
+    suspend operator fun invoke(claimId: ItemId, reason: String): Result<Claim> =
+        change(claimId, ClaimTransition.APPROVE, note = reason)
 }
 
 /** PENDIENTE / EN_VERIFICACION → RECHAZADO (V03). */
 class RejectClaimUseCase(private val change: ChangeClaimStatusUseCase) {
-    suspend operator fun invoke(claimId: ItemId, note: String? = null): Result<Claim> =
-        change(claimId, ClaimTransition.REJECT, note = note)
+    /** [reason] es obligatorio (V03): queda en la auditoría. */
+    suspend operator fun invoke(claimId: ItemId, reason: String): Result<Claim> =
+        change(claimId, ClaimTransition.REJECT, note = reason)
 }
 
 /** APROBADO → ENTREGADO: el dueño recibió el objeto (V04). */
 class DeliverClaimUseCase(private val change: ChangeClaimStatusUseCase) {
     suspend operator fun invoke(claimId: ItemId, note: String? = null): Result<Claim> =
         change(claimId, ClaimTransition.DELIVER, note = note)
+}
+
+/** Sin notificaciones (tests y valor por defecto); Koin inyecta [bo.edu.ucb.encuentra.feature.claims.data.RoomClaimNotifier]. */
+object NoClaimNotifications : ClaimNotifier {
+    override suspend fun onClaimUpdated(claim: Claim, itemTitle: String) = Unit
 }

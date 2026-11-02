@@ -156,6 +156,21 @@ class ControlQuestionsTest {
     }
 
     @Test
+    fun theStaffSeesTheStudentReportOnlyWhenItIsTheirs() = runTest {
+        val claim = llaveroClaim()
+        session.setCurrentUser(staff)
+
+        val own = review(claim.id).first()!!
+        assertEquals("Calculadora científica", own.report?.title)
+        assertEquals(30, own.matchScore)
+
+        // El #1025 de Luis apunta (por error del seed) a la coincidencia de Mateo: no se muestra el reporte ajeno.
+        val other = review(ItemId("c-1025")).first()!!
+        assertNull(other.report)
+        assertNull(other.matchScore)
+    }
+
+    @Test
     fun answersArePrivateToTheStaff() = runTest {
         assertNull(review(ItemId("c-1024")).first())
         assertTrue(ObserveOpenClaimsUseCase(store, user)().first().isEmpty())

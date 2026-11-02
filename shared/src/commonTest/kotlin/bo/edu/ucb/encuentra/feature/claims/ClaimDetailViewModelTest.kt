@@ -56,7 +56,8 @@ class ClaimDetailViewModelTest {
             ItemId(claimId),
             ObserveClaimReviewUseCase(store, current),
             ApproveClaimUseCase(change),
-            RejectClaimUseCase(change)
+            RejectClaimUseCase(change),
+            FixedClock
         )
     }
 
@@ -88,6 +89,13 @@ class ClaimDetailViewModelTest {
         assertEquals(ClaimStatus.EN_VERIFICACION, store.claim(1024).status)
 
         vm.handleEvent(ClaimDetailEvent.OnDecide(ClaimDecision.APPROVE))
+        // Sin motivo no se confirma: el diálogo sigue abierto y avisa.
+        vm.handleEvent(ClaimDetailEvent.OnConfirm)
+        advanceUntilIdle()
+        assertTrue(vm.state.value.reasonMissing)
+        assertEquals(ClaimDecision.APPROVE, vm.state.value.confirming)
+        assertEquals(ClaimStatus.EN_VERIFICACION, store.claim(1024).status)
+
         vm.handleEvent(ClaimDetailEvent.OnNoteChanged("Mostró su carnet"))
         vm.handleEvent(ClaimDetailEvent.OnConfirm)
         advanceUntilIdle()
@@ -107,6 +115,7 @@ class ClaimDetailViewModelTest {
         assertNull(vm.state.value.confirming)
 
         vm.handleEvent(ClaimDetailEvent.OnDecide(ClaimDecision.REJECT))
+        vm.handleEvent(ClaimDetailEvent.OnNoteChanged("No respondió las preguntas"))
         vm.handleEvent(ClaimDetailEvent.OnConfirm)
         advanceUntilIdle()
         assertEquals(ClaimStatus.RECHAZADO, store.claim(1025).status)
@@ -114,9 +123,14 @@ class ClaimDetailViewModelTest {
 
     @Test
     fun theListOpensTheDetail() = runTest(dispatcher) {
-        val vm = ClaimsViewModel(ObserveOpenClaimsUseCase(store, GetCurrentUserUseCase(FakeSession(staff))))
+        val vm = ClaimsViewModel(ObserveOpenClaimsUseCase(store, GetCurrentUserUseCase(FakeSession(staff))), FixedClock)
         advanceUntilIdle()
         assertEquals(listOf(1024, 1025, 1026), vm.state.value.claims.map { it.claim.number })
+
+        vm.handleEvent(ClaimsEvent.OnToggle("c-1024"))
+        assertEquals(setOf("c-1024"), vm.state.value.expanded)
+        vm.handleEvent(ClaimsEvent.OnToggle("c-1024"))
+        assertTrue(vm.state.value.expanded.isEmpty())
 
         val effect = async { vm.effects.first() }
         vm.handleEvent(ClaimsEvent.OnClaimClicked("c-1024"))

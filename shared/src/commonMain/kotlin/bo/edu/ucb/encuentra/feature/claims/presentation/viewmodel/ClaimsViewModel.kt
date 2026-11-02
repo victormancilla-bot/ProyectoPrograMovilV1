@@ -12,9 +12,13 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 
 /** Reclamos pendientes o en verificación, en vivo desde Room (primero los que ya respondieron). */
-class ClaimsViewModel(private val observeOpen: ObserveOpenClaimsUseCase) : ViewModel() {
+class ClaimsViewModel(
+    private val observeOpen: ObserveOpenClaimsUseCase,
+    private val clock: Clock
+) : ViewModel() {
 
     private val _state = MutableStateFlow(ClaimsState())
     val state: StateFlow<ClaimsState> = _state.asStateFlow()
@@ -30,6 +34,9 @@ class ClaimsViewModel(private val observeOpen: ObserveOpenClaimsUseCase) : ViewM
 
     fun handleEvent(event: ClaimsEvent) {
         when (event) {
+            is ClaimsEvent.OnToggle -> state.value.expanded.let { open ->
+                _state.value = state.value.copy(expanded = if (event.claimId in open) open - event.claimId else open + event.claimId)
+            }
             is ClaimsEvent.OnClaimClicked -> viewModelScope.launch { _effects.emit(ClaimsEffect.NavigateToDetail(event.claimId)) }
             ClaimsEvent.OnRetry -> load()
         }
@@ -41,7 +48,16 @@ class ClaimsViewModel(private val observeOpen: ObserveOpenClaimsUseCase) : ViewM
         loadJob = viewModelScope.launch {
             observeOpen()
                 .catch { _state.value = state.value.copy(loading = false, error = LOAD_ERROR) }
-                .collect { claims -> _state.value = state.value.copy(loading = false, claims = claims) }
+                .collect { claims ->
+                    // Si un reclamo sale de la lista (aprobado o rechazado), se olvida si estaba abierto.
+                    val ids = claims.map { it.claim.id.value }.toSet()
+                    _state.value = state.value.copy(
+                        loading = false,
+                        claims = claims,
+                        expanded = state.value.expanded intersect ids,
+                        now = clock.now()
+                    )
+                }
         }
     }
 

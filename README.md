@@ -154,6 +154,14 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Panel de Verificación de Reclamos (V03)
+
+- **Lista** (pestaña Reclamos del staff, mockup "Verificación de Reclamos"): tarjetas con miniatura (foto o ícono de la categoría), "RECLAMO #1024", objeto, "Reclamado por" y chip **"Hace 2 horas"**. La flecha **expande** un resumen (estado, sugerencia de las respuestas, intentos fallidos, % de parecido) con **Revisar reclamo**. Primero los que ya respondieron las preguntas.
+- **Detalle** (no estaba en el PDF): quién reclama, estado, tiempo y % de parecido (`ScoreBadge`); **fotos** del hallazgo y del reporte; **Reporte del estudiante vs Hallazgo** fila por fila con ✔ / ✘ (el staff ve también el lugar exacto y la descripción privada que el estudiante no ve en M05); **custodia** (privado); **preguntas de control** con respuesta, esperada y sugerencia (V01). El reporte solo se muestra si es de quien reclama.
+- **Aprobar / Rechazar con motivo obligatorio**: el diálogo no deja confirmar sin motivo y el dominio también lo exige (`ClaimErrors.REASON_REQUIRED`).
+- **Hooks**: la auditoría usa `AuditRecorder` (hook de S05, ya en H05): "Reclamo #1024 · En verificación → Aprobado · {motivo}". Las notificaciones usan el hook nuevo **`ClaimNotifier`** (core) para N01: `RoomClaimNotifier` guarda una notificación interna (tipo Reclamos) para quien reclamó cuando su reclamo se aprueba, rechaza, bloquea por intentos o entrega (con deep link al Detalle de match). N01/N02 pueden sumarle notificación del sistema o push sin tocar los casos de uso.
+- Tests: `ClaimDecisionHooksTest` (motivo obligatorio, auditoría y notificación al aprobar/rechazar, entrega que avisa al dueño y rechaza a los demás, textos), `ClaimComparisonTest` (comparación reporte vs hallazgo) y los de los ViewModels.
+
 ## Preguntas de control (V01)
 
 "No se entrega por hacer match": quien reclama responde las preguntas que definió el staff y el staff decide.
@@ -163,7 +171,7 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 - **Comparación asistida** (`AnswerComparator`): sin mayúsculas, tildes, signos ni palabras de relleno. Coincide si la respuesta contiene la esperada, o al revés, o si comparte al menos la mitad de sus palabras clave ("uno de la UCB" ≈ "Escudo de la UCB"). Un objeto sin respuesta esperada (registrado antes de V01) va directo al staff.
 - **Intentos y bloqueo**: si alguna respuesta no coincide, el reclamo sigue PENDIENTE y se descuenta un intento, **sin decir cuál falló ni cuál era la respuesta**. Al 3er intento fallido (`Claim.MAX_ANSWER_ATTEMPTS`) el reclamo queda **bloqueado** (RECHAZADO), la coincidencia se descarta, el objeto vuelve a DISPONIBLE si nadie más lo reclama y todo se audita.
 - **Respuestas privadas**: solo `ObserveClaimReviewUseCase` / `ObserveOpenClaimsUseCase` las devuelven, y solo al staff. El estudiante nunca ve las respuestas esperadas, ni siquiera las suyas después de enviarlas.
-- **Decisión humana**: el detalle del reclamo para el staff (pestaña Reclamos → reclamo) muestra cada pregunta con lo que respondió el estudiante, la esperada y la sugerencia "Coincide / No coincide", más los intentos usados. Aprobar o rechazar pide confirmación y un motivo opcional que queda en la auditoría. La lista y el detalle son **mínimos**: V03 les pone el diseño del mockup "Verificación de Reclamos".
+- **Decisión humana**: el detalle del reclamo para el staff (pestaña Reclamos → reclamo) muestra cada pregunta con lo que respondió el estudiante, la esperada y la sugerencia "Coincide / No coincide", más los intentos usados. Aprobar o rechazar pide confirmación y un motivo (obligatorio desde V03) que queda en la auditoría. La lista y el detalle completos están en V03 (abajo).
 - Para que `matching` no dependa de `claims`, el hook de core `ClaimRequester` ahora también tiene `answerQuestions` (lo implementa `ClaimRequesterImpl`).
 - Tests: `AnswerComparatorTest` (3), `ControlQuestionsTest` (7: coincide, intento fallido, bloqueo al 3er intento, preguntas incompletas, sin respuesta esperada, revisión del staff, privacidad), `ClaimDetailViewModelTest` (5), más los de H03 y M05 actualizados.
 

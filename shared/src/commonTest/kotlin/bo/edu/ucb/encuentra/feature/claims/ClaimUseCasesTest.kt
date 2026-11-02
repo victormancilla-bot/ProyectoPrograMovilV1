@@ -72,7 +72,16 @@ internal class SeedClaimStore : ClaimRepository {
     }
 
     override fun observeWithItem(claimId: ItemId) = flow {
-        emit(claims[claimId]?.let { ClaimWithItem(it, items.getValue(it.foundItemId), NAMES[it.claimantId]) })
+        emit(
+            claims[claimId]?.let { claim ->
+                val match = claim.matchId?.let { matches[it] }
+                val report = match?.let { reports[it.lostReportId] }?.takeIf { it.ownerId == claim.claimantId }
+                ClaimWithItem(
+                    claim, items.getValue(claim.foundItemId), NAMES[claim.claimantId], report,
+                    match?.takeIf { report != null }?.score
+                )
+            }
+        )
     }
 
     override fun observeOpen() = flow {
@@ -189,7 +198,7 @@ class ClaimUseCasesTest {
         assertEquals(ClaimStatus.EN_VERIFICACION, answered.status)
         assertEquals(listOf("Un colgante de la UCB"), answered.controlAnswers)
 
-        val approved = asUser(staff) { approve(claim.id).getOrThrow() }
+        val approved = asUser(staff) { approve(claim.id, "Describió el colgante").getOrThrow() }
         assertEquals(ClaimStatus.APROBADO, approved.status)
         assertEquals(staff.id, approved.reviewedBy)
         assertEquals(MatchStatus.CONFIRMADO, store.match("m-llavero"))
@@ -214,11 +223,11 @@ class ClaimUseCasesTest {
         val claim = mateoClaims("m-llavero")
 
         assertEquals(ClaimErrors.ANSWERS_REQUIRED, answer(claim.id, listOf("  ")).exceptionOrNull()?.message)
-        assertEquals(ItemErrors.NOT_STAFF, reject(claim.id).exceptionOrNull()?.message)
+        assertEquals(ItemErrors.NOT_STAFF, reject(claim.id, "x").exceptionOrNull()?.message)
         assertEquals(ClaimErrors.NOT_YOUR_CLAIM, asUser(luis) { answer(claim.id, listOf("x")).exceptionOrNull()?.message })
         assertEquals(
             "No se puede aprobar un reclamo en estado \"Pendiente\".",
-            asUser(staff) { approve(claim.id).exceptionOrNull()?.message }
+            asUser(staff) { approve(claim.id, "x").exceptionOrNull()?.message }
         )
         assertEquals(ClaimStatus.PENDIENTE, store.claim(claim.number).status)
     }
@@ -227,7 +236,7 @@ class ClaimUseCasesTest {
     fun rejectingReleasesTheItemAndTheReportSearchesAgain() = runTest {
         val claim = mateoClaims("m-llavero")
 
-        val rejected = asUser(staff) { reject(claim.id, note = "No supo describir el colgante").getOrThrow() }
+        val rejected = asUser(staff) { reject(claim.id, "No supo describir el colgante").getOrThrow() }
 
         assertEquals(ClaimStatus.RECHAZADO, rejected.status)
         assertEquals(MatchStatus.DESCARTADO, store.match("m-llavero"))
@@ -239,7 +248,7 @@ class ClaimUseCasesTest {
     fun rejectingOneClaimKeepsTheItemClaimedWhileAnotherIsOpen() = runTest {
         val mateoClaim = mateoClaims("m-calculadora")
 
-        asUser(staff) { reject(ItemId("c-1025")).getOrThrow() }
+        asUser(staff) { reject(ItemId("c-1025"), "No es el dueño").getOrThrow() }
 
         // El #1025 de Luis apunta (por error del seed) a la coincidencia de Mateo: no se la toca.
         assertEquals(MatchStatus.PROPUESTO, store.match("m-calculadora"))
@@ -255,8 +264,8 @@ class ClaimUseCasesTest {
         // Luis también acierta (p. ej. vio la tapa): las dos respuestas coinciden y decide el staff.
         asUser(luis) { answer(ItemId("c-1025"), listOf("Mateo Quispe", "Casio fx-991")).getOrThrow() }
 
-        asUser(staff) { approve(mateoClaim.id).getOrThrow() }
-        val second = asUser(staff) { approve(ItemId("c-1025")).exceptionOrNull() }
+        asUser(staff) { approve(mateoClaim.id, "Mostró su carnet").getOrThrow() }
+        val second = asUser(staff) { approve(ItemId("c-1025"), "x").exceptionOrNull() }
         assertIs<ClaimRequestException>(second)
         assertEquals(ClaimErrors.ALREADY_APPROVED, second.message)
 

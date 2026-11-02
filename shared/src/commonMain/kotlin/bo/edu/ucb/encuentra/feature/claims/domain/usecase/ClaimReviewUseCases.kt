@@ -52,6 +52,8 @@ internal fun ClaimWithItem.toReview(): ClaimReview {
                 expected = expected,
                 verdict = answer?.let { AnswerComparator.compare(it, expected) }
             )
-        }
+        },
+        report = report,
+        matchScore = matchScore
     )
 }

@@ -1,8 +1,10 @@
 package bo.edu.ucb.encuentra.feature.claims.di
 
+import bo.edu.ucb.encuentra.core.domain.repository.ClaimNotifier
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequester
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.claims.data.ClaimRepositoryImpl
+import bo.edu.ucb.encuentra.feature.claims.data.RoomClaimNotifier
 import bo.edu.ucb.encuentra.feature.claims.domain.repository.ClaimRepository
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ApproveClaimUseCase
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ChangeClaimStatusUseCase
@@ -26,7 +28,9 @@ val claimsModule = module {
     single<ClaimRepository> { ClaimRepositoryImpl(get(), get(), get(), get(), get()) }
     singleOf(::CreateClaimUseCase)
     single<ClaimRequester> { ClaimRequesterImpl(get(), get()) }
-    singleOf(::ChangeClaimStatusUseCase)
+    // Hooks: auditoría (AuditRecorder, S05, en coreModule) y notificaciones a quien reclama (N01).
+    single<ClaimNotifier> { RoomClaimNotifier(get(), get()) }
+    single { ChangeClaimStatusUseCase(get(), get(), get(), get(), get(), get(), get()) }
     singleOf(::SubmitClaimAnswersUseCase)
     singleOf(::ApproveClaimUseCase)
     singleOf(::RejectClaimUseCase)
@@ -36,5 +40,5 @@ val claimsModule = module {
     singleOf(::ObserveOpenClaimsUseCase)
     viewModelOf(::ClaimsViewModel)
     // El id llega desde la ruta: koinViewModel { parametersOf(claimId) }.
-    viewModel { (claimId: String) -> ClaimDetailViewModel(ItemId(claimId), get(), get(), get()) }
+    viewModel { (claimId: String) -> ClaimDetailViewModel(ItemId(claimId), get(), get(), get(), get()) }
 }
