@@ -32,8 +32,11 @@ sealed class ClaimDetailEvent {
     data class OnNoteChanged(val note: String) : ClaimDetailEvent()
     data object OnConfirm : ClaimDetailEvent()
     data object OnDismiss : ClaimDetailEvent()
+    /** Reclamo aprobado: abre la Confirmación de Entrega (V04). */
+    data object OnOpenDelivery : ClaimDetailEvent()
 }
 
 sealed class ClaimDetailEffect {
     data object NavigateBack : ClaimDetailEffect()
+    data class NavigateToDelivery(val claimId: String) : ClaimDetailEffect()
 }

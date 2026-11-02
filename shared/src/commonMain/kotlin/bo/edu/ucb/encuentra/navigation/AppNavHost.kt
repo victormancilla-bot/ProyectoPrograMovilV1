@@ -170,7 +170,11 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
         ClaimsScreen(onOpenClaim = { claimId -> navController.navigate(NavRoute.ClaimDetail(claimId)) })
     }
     guarded<NavRoute.ClaimDetail>(navController, getCurrentUser) { route ->
-        ClaimDetailScreen(claimId = route.claimId, onNavigateBack = back)
+        ClaimDetailScreen(
+            claimId = route.claimId,
+            onNavigateBack = back,
+            onOpenDelivery = { claimId -> navController.navigate(NavRoute.Delivery(claimId)) }
+        )
     }
     guarded<NavRoute.Delivery>(navController, getCurrentUser) { route ->
         DeliveryScreen(claimId = route.claimId, onNavigateBack = back)
