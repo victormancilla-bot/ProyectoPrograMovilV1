@@ -1,6 +1,7 @@
 package bo.edu.ucb.encuentra.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavDestination
@@ -23,6 +24,9 @@ fun MainScaffold(
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
+        // Sin insets del sistema: el CurvedHeader se pinta detrás de la barra de estado y la BottomNavBar
+        // ya respeta la barra de navegación. Cada pantalla maneja su propio espacio arriba.
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (tabs.isNotEmpty()) {
                 BottomNavBar(
