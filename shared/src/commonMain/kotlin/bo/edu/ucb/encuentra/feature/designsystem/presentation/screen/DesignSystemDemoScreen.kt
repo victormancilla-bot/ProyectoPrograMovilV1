@@ -73,6 +73,7 @@ fun DesignSystemDemoScreen(onNavigateBack: () -> Unit) {
             TypographySection()
             SpacingSection()
             ShapesSection()
+            ComponentsSection()
         }
     }
 }
