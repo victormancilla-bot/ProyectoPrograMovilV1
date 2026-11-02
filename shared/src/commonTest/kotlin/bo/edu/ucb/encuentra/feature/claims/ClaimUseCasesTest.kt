@@ -78,7 +78,7 @@ internal class SeedClaimStore : ClaimRepository {
                 val report = match?.let { reports[it.lostReportId] }?.takeIf { it.ownerId == claim.claimantId }
                 ClaimWithItem(
                     claim, items.getValue(claim.foundItemId), NAMES[claim.claimantId], report,
-                    match?.takeIf { report != null }?.score
+                    match?.takeIf { report != null }?.score, claim.reviewedBy?.let { NAMES[it] }
                 )
             }
         )
@@ -86,8 +86,8 @@ internal class SeedClaimStore : ClaimRepository {
 
     override fun observeOpen() = flow {
         emit(
-            claims.values.filter { it.status == ClaimStatus.PENDIENTE || it.status == ClaimStatus.EN_VERIFICACION }
-                .sortedWith(compareBy({ it.status != ClaimStatus.EN_VERIFICACION }, { it.createdAt }))
+            claims.values.filter { it.status in OPEN_ORDER }
+                .sortedWith(compareBy({ OPEN_ORDER.indexOf(it.status) }, { it.createdAt }))
                 .map { ClaimWithItem(it, items.getValue(it.foundItemId), NAMES[it.claimantId]) }
         )
     }
@@ -118,6 +118,9 @@ internal object Direct : TransactionRunner {
 }
 
 private val NAMES = SeedData.users.associate { it.id to it.fullName }
+
+/** Mismo orden que ClaimDao.observeOpen: decidir, entregar, esperar respuestas. */
+private val OPEN_ORDER = listOf(ClaimStatus.EN_VERIFICACION, ClaimStatus.APROBADO, ClaimStatus.PENDIENTE)
 
 internal val staff = demoUser(Role.STAFF)
 internal val luis = demoUser(Role.ESTUDIANTE).copy(id = "u-luis-mendoza")

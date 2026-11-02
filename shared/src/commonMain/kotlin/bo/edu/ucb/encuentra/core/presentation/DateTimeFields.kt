@@ -43,15 +43,29 @@ fun ClickableField(
 }
 
 /** Calendario de Material 3 que solo deja elegir hasta hoy (hallazgos y pérdidas no pueden ser futuros). */
+@Composable
+fun PastDatePickerDialog(initial: LocalDate?, onPick: (LocalDate) -> Unit, onDismiss: () -> Unit) =
+    RestrictedDatePickerDialog(initial, onPick, onDismiss) { millis, todayMillis -> millis <= todayMillis }
+
+/** Calendario que solo deja elegir desde hoy (entregas programadas, V04). */
+@Composable
+fun FutureDatePickerDialog(initial: LocalDate?, onPick: (LocalDate) -> Unit, onDismiss: () -> Unit) =
+    RestrictedDatePickerDialog(initial, onPick, onDismiss) { millis, todayMillis -> millis >= todayMillis }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PastDatePickerDialog(initial: LocalDate?, onPick: (LocalDate) -> Unit, onDismiss: () -> Unit) {
+private fun RestrictedDatePickerDialog(
+    initial: LocalDate?,
+    onPick: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+    isSelectable: (millis: Long, todayMillis: Long) -> Boolean
+) {
     // El DatePicker trabaja en milisegundos UTC a medianoche.
     val todayMillis = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toUtcMillis()
     val state = rememberDatePickerState(
         initialSelectedDateMillis = initial?.toUtcMillis(),
         selectableDates = object : SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= todayMillis
+            override fun isSelectableDate(utcTimeMillis: Long) = isSelectable(utcTimeMillis, todayMillis)
         }
     )
     DatePickerDialog(

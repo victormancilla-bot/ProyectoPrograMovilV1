@@ -10,4 +10,7 @@ import bo.edu.ucb.encuentra.core.domain.model.Claim
  */
 interface ClaimNotifier {
     suspend fun onClaimUpdated(claim: Claim, itemTitle: String)
+
+    /** V04: el staff programó (o cambió) la fecha y hora de entrega de un reclamo aprobado. */
+    suspend fun onDeliveryScheduled(claim: Claim, itemTitle: String) = Unit
 }

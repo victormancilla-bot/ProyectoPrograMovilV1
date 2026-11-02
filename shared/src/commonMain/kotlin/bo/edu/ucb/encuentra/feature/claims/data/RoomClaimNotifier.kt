@@ -8,6 +8,10 @@ import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.NotificationType
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimNotifier
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
+import bo.edu.ucb.encuentra.core.presentation.formatHm
+import bo.edu.ucb.encuentra.core.presentation.formatShort
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 /**
@@ -16,8 +20,28 @@ import kotlin.time.Clock
  */
 class RoomClaimNotifier(
     private val notificationDao: AppNotificationDao,
-    private val clock: Clock
+    private val clock: Clock,
+    private val timeZone: TimeZone
 ) : ClaimNotifier {
+
+    override suspend fun onDeliveryScheduled(claim: Claim, itemTitle: String) {
+        val at = claim.scheduledDeliveryAt ?: return
+        val local = at.toLocalDateTime(timeZone)
+        notificationDao.upsert(
+            AppNotification(
+                // Una por reclamo: si se reprograma, se reemplaza y vuelve a quedar sin leer.
+                id = ItemId("n-claim-${claim.id.value}-entrega"),
+                userId = claim.claimantId,
+                type = NotificationType.CLAIM_UPDATE,
+                title = "Entrega programada",
+                body = "Recoge \"$itemTitle\" el ${local.date.formatShort()} a las ${local.time.formatHm()} en Objetos " +
+                    "Perdidos. Lleva tu carnet universitario.",
+                deepLink = claim.matchId?.let { "ucbencuentra://match/${it.value}" },
+                read = false,
+                createdAt = clock.now()
+            ).toEntity()
+        )
+    }
 
     override suspend fun onClaimUpdated(claim: Claim, itemTitle: String) {
         val (title, body) = messageFor(claim, itemTitle) ?: return

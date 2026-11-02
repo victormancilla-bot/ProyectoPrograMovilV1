@@ -13,7 +13,9 @@ data class ClaimWithItem(
     /** Reporte de quien reclama (V03), solo si la coincidencia es de su propio reporte. */
     val report: LostReport? = null,
     /** % de parecido de la coincidencia (M02). */
-    val matchScore: Int? = null
+    val matchScore: Int? = null,
+    /** Quién del staff aprobó o rechazó (V04: "Aprobado por"). */
+    val reviewerName: String? = null
 )
 
 /** Una pregunta de control con lo que respondió el estudiante, lo esperado y la sugerencia de la app (V01). */
@@ -38,7 +40,8 @@ data class ClaimReview(
     val answers: List<AnswerReview>,
     val report: LostReport? = null,
     /** % de parecido de la coincidencia (M02); null si el reclamo no viene de un reporte propio. */
-    val matchScore: Int? = null
+    val matchScore: Int? = null,
+    val reviewerName: String? = null
 ) {
     val matchingAnswers: Int get() = answers.count { it.verdict == AnswerVerdict.COINCIDE }
 

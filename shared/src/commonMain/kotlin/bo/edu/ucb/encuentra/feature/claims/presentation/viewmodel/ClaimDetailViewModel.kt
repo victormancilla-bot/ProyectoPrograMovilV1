@@ -56,6 +56,9 @@ class ClaimDetailViewModel(
             is ClaimDetailEvent.OnNoteChanged -> _state.value = state.value.copy(note = event.note, reasonMissing = false)
             ClaimDetailEvent.OnDismiss -> _state.value = state.value.copy(confirming = null)
             ClaimDetailEvent.OnConfirm -> confirm()
+            ClaimDetailEvent.OnOpenDelivery -> viewModelScope.launch {
+                _effects.emit(ClaimDetailEffect.NavigateToDelivery(claimId.value))
+            }
         }
     }
 

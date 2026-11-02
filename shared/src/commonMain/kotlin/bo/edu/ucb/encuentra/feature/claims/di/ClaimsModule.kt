@@ -29,7 +29,7 @@ val claimsModule = module {
     singleOf(::CreateClaimUseCase)
     single<ClaimRequester> { ClaimRequesterImpl(get(), get()) }
     // Hooks: auditoría (AuditRecorder, S05, en coreModule) y notificaciones a quien reclama (N01).
-    single<ClaimNotifier> { RoomClaimNotifier(get(), get()) }
+    single<ClaimNotifier> { RoomClaimNotifier(get(), get(), get()) }
     single { ChangeClaimStatusUseCase(get(), get(), get(), get(), get(), get(), get()) }
     singleOf(::SubmitClaimAnswersUseCase)
     singleOf(::ApproveClaimUseCase)

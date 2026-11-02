@@ -154,6 +154,16 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Confirmación de entrega (V04)
+
+Pantalla del Figma "Confirmación de Entrega" (staff: Reclamos → reclamo aprobado → **Confirmar entrega**; la lista del staff ahora también muestra los aprobados, después de los que hay que decidir).
+
+- **Listo para entrega**: objeto, "Ref: Reclamo #N", **Reclamado por** (estudiante) y **Aprobado por** (staff), y **Fecha y hora programada** ("4 nov 2026, 10:00 - 10:30") o "Sin programar".
+- **Programar entrega** (`ScheduleDeliveryUseCase`): fecha (solo desde hoy) y hora → "Guardar fecha y avisar al estudiante". Solo reclamos aprobados, solo staff, nunca en el pasado; se puede reprogramar. Queda en la auditoría (`DELIVERY_SCHEDULED`) y el estudiante recibe la notificación "Entrega programada" (hook `ClaimNotifier.onDeliveryScheduled`). Programar es opcional: el estudiante también puede pasar sin cita.
+- **Verificación física obligatoria** (`PhysicalChecks`): las dos casillas del mockup (identidad con carnet universitario físico y objeto recibido conforme). Sin las dos, "Confirmar entrega" queda deshabilitado y el dominio también lo rechaza.
+- **Confirmar** (`ConfirmDeliveryUseCase` → DELIVER de V02): reclamo y objeto **ENTREGADO** (con quién y cuándo), reporte "Recuperado", los demás reclamos abiertos del objeto se rechazan, **auditoría** (S05) con la verificación y **notificación** "Objeto entregado" al estudiante (N01). La pantalla pasa a "Entregado".
+- Tests: `DeliveryUseCasesTest` (programar con auditoría y aviso, permisos y fechas, checklist obligatorio, entrega completa) y `DeliveryViewModelTest`.
+
 ## Panel de Verificación de Reclamos (V03)
 
 - **Lista** (pestaña Reclamos del staff, mockup "Verificación de Reclamos"): tarjetas con miniatura (foto o ícono de la categoría), "RECLAMO #1024", objeto, "Reclamado por" y chip **"Hace 2 horas"**. La flecha **expande** un resumen (estado, sugerencia de las respuestas, intentos fallidos, % de parecido) con **Revisar reclamo**. Primero los que ya respondieron las preguntas.

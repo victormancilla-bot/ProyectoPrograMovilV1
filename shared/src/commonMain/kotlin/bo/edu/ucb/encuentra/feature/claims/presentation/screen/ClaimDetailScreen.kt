@@ -37,6 +37,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import bo.edu.ucb.encuentra.core.domain.model.Claim
+import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.presentation.formatRelative
 import bo.edu.ucb.encuentra.feature.claims.domain.model.AnswerReview
 import bo.edu.ucb.encuentra.feature.claims.domain.model.AnswerVerdict
@@ -77,7 +78,8 @@ import org.koin.core.parameter.parametersOf
 fun ClaimDetailScreen(
     claimId: String,
     viewModel: ClaimDetailViewModel = koinViewModel { parametersOf(claimId) },
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onOpenDelivery: (claimId: String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -85,6 +87,7 @@ fun ClaimDetailScreen(
         viewModel.effects.collect { effect ->
             when (effect) {
                 ClaimDetailEffect.NavigateBack -> onNavigateBack()
+                is ClaimDetailEffect.NavigateToDelivery -> onOpenDelivery(effect.claimId)
             }
         }
     }
@@ -277,6 +280,16 @@ private fun AnswerRow(position: Int, answer: AnswerReview) {
 
 @Composable
 private fun Decision(review: ClaimReview, state: ClaimDetailState, onEvent: (ClaimDetailEvent) -> Unit) {
+    if (review.claim.status == ClaimStatus.APROBADO) {
+        // V04: verificación física con carnet y entrega programada.
+        PrimaryButton(
+            text = "Confirmar entrega",
+            onClick = { onEvent(ClaimDetailEvent.OnOpenDelivery) },
+            size = AppButtonSize.Large,
+            modifier = Modifier.fillMaxWidth()
+        )
+        return
+    }
     if (!review.canApprove && !review.canReject) {
         AppBody("Este reclamo ya está ${review.claim.status.label.lowercase()}: no hay decisiones pendientes.")
         return
