@@ -98,7 +98,14 @@ data class Claim(
     val deliveredAt: Instant?,
     /** Envíos de respuestas que no coincidieron (V01): al llegar al límite el reclamo se bloquea. */
     val failedAttempts: Int = 0
-)
+) {
+    val attemptsLeft: Int get() = (MAX_ANSWER_ATTEMPTS - failedAttempts).coerceAtLeast(0)
+
+    companion object {
+        /** Intentos para responder las preguntas de control antes de que el reclamo se bloquee (V01). */
+        const val MAX_ANSWER_ATTEMPTS = 3
+    }
+}
 
 /** Evento del registro de auditoría: solo se agrega, nunca se edita ni borra (S05). */
 data class AuditLog(

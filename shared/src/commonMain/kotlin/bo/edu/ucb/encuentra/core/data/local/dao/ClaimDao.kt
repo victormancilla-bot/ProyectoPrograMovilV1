@@ -29,6 +29,13 @@ interface ClaimDao {
     @Query("SELECT * FROM claims WHERE found_item_id = :foundItemId")
     fun observeByFoundItem(foundItemId: String): Flow<List<ClaimEntity>>
 
+    /** Reclamos por revisar (V01/V03): primero los que ya respondieron las preguntas, luego los más antiguos. */
+    @Query(
+        "SELECT * FROM claims WHERE status IN ('PENDIENTE', 'EN_VERIFICACION') " +
+            "ORDER BY CASE status WHEN 'EN_VERIFICACION' THEN 0 ELSE 1 END, created_at"
+    )
+    fun observeOpen(): Flow<List<ClaimEntity>>
+
     @Query("SELECT * FROM claims WHERE claimant_id = :claimantId")
     suspend fun getByClaimant(claimantId: String): List<ClaimEntity>
 

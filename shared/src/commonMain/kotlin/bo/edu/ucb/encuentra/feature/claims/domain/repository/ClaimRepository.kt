@@ -6,6 +6,8 @@ import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
+import bo.edu.ucb.encuentra.feature.claims.domain.model.ClaimWithItem
+import kotlinx.coroutines.flow.Flow
 
 /**
  * Reclamos (V02) y lo que cambia con ellos: la coincidencia y el reporte del dueño.
@@ -35,4 +37,10 @@ interface ClaimRepository {
     suspend fun getReport(id: ItemId): LostReport?
 
     suspend fun updateReportStatus(id: ItemId, status: ReportStatus)
+
+    /** Un reclamo con su objeto y quien reclama, en vivo (detalle del staff, V01/V03). */
+    fun observeWithItem(claimId: ItemId): Flow<ClaimWithItem?>
+
+    /** Reclamos pendientes o en verificación, en vivo (lista del staff). */
+    fun observeOpen(): Flow<List<ClaimWithItem>>
 }

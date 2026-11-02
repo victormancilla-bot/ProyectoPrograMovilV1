@@ -17,6 +17,8 @@ import bo.edu.ucb.encuentra.core.domain.repository.TransactionRunner
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.item.ItemErrors
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
+import bo.edu.ucb.encuentra.feature.claims.domain.model.AnswerComparator
+import bo.edu.ucb.encuentra.feature.claims.domain.model.AnswerVerdict
 import bo.edu.ucb.encuentra.feature.claims.domain.model.ClaimErrors
 import bo.edu.ucb.encuentra.feature.claims.domain.model.ClaimStateMachine
 import bo.edu.ucb.encuentra.feature.claims.domain.model.ClaimTransition
@@ -60,13 +62,11 @@ class ChangeClaimStatusUseCase(
             val newStatus = ClaimStateMachine.apply(claim.status, transition)
             val now = clock.now()
             val others = claims.getByItem(claim.foundItemId).filter { it.id != claim.id }
+            // Responder no siempre avanza: puede sumar un intento fallido o bloquear el reclamo (V01).
+            if (transition == ClaimTransition.SUBMIT_ANSWERS) return@run submitAnswers(claim, answers, user.id, others)
 
             val updated = when (transition) {
-                ClaimTransition.SUBMIT_ANSWERS -> {
-                    val clean = answers.map { it.trim() }
-                    if (clean.isEmpty() || clean.any { it.isEmpty() }) throw ClaimRequestException(ClaimErrors.ANSWERS_REQUIRED)
-                    claim.copy(status = newStatus, controlAnswers = clean)
-                }
+                ClaimTransition.SUBMIT_ANSWERS -> error("Se maneja en submitAnswers")
                 ClaimTransition.APPROVE -> {
                     if (others.any { it.status == ClaimStatus.APROBADO }) throw ClaimRequestException(ClaimErrors.ALREADY_APPROVED)
                     setMatchAndReport(claim, MatchStatus.CONFIRMADO, ReportStatus.MATCH_CONFIRMADO)
@@ -74,11 +74,7 @@ class ChangeClaimStatusUseCase(
                 }
                 ClaimTransition.REJECT -> {
                     closeForClaimant(claim)
-                    // Si nadie más lo está reclamando, el objeto vuelve al catálogo (RELEASE de H05).
-                    val item = items.getById(claim.foundItemId)
-                    if (item?.status == ItemStatus.RECLAMADO && others.none { ClaimStateMachine.isOpen(it.status) }) {
-                        applyToItem(claim.foundItemId, ItemTransition.RELEASE)
-                    }
+                    releaseIfNobodyElse(claim, others)
                     claim.copy(status = newStatus, reviewedBy = user.id, reviewedAt = now)
                 }
                 ClaimTransition.DELIVER -> {
@@ -103,6 +99,65 @@ class ChangeClaimStatusUseCase(
                     .joinToString(" · ")
             )
             updated
+        }
+    }
+
+    /**
+     * V01: compara cada respuesta con la esperada ([AnswerComparator]).
+     * - Todas coinciden (o el objeto no tiene respuesta esperada) → EN_VERIFICACION: decide el staff.
+     * - Alguna no coincide → sigue PENDIENTE con un intento fallido más. No se dice cuál falló ni cuál era la
+     *   respuesta, para no regalar pistas.
+     * - Al llegar a [Claim.MAX_ANSWER_ATTEMPTS] → el reclamo se bloquea (RECHAZADO) y se audita.
+     * Las respuestas se guardan siempre: son privadas y solo las ve el staff.
+     */
+    private suspend fun submitAnswers(claim: Claim, answers: List<String>, actorId: String, others: List<Claim>): Claim {
+        val item = items.getById(claim.foundItemId) ?: throw ClaimRequestException(ItemErrors.NOT_FOUND)
+        val clean = answers.map { it.trim() }
+        if (clean.size != item.controlQuestions.size || clean.any { it.isEmpty() }) {
+            throw ClaimRequestException(ClaimErrors.ANSWERS_REQUIRED)
+        }
+        val verdicts = clean.mapIndexed { i, answer -> AnswerComparator.compare(answer, item.expectedAnswers.getOrNull(i)) }
+        val prefix = "Reclamo #${claim.number}"
+
+        if (verdicts.none { it == AnswerVerdict.NO_COINCIDE }) {
+            val answered = claim.copy(status = ClaimStatus.EN_VERIFICACION, controlAnswers = clean)
+            claims.update(answered)
+            audit.record(
+                AuditAction.CLAIM_ANSWERED, actorId, claim.id.value,
+                "$prefix · ${claim.status.label} → ${answered.status.label} · ${clean.size} respuesta(s)"
+            )
+            return answered
+        }
+
+        val attempts = claim.failedAttempts + 1
+        if (attempts < Claim.MAX_ANSWER_ATTEMPTS) {
+            val retry = claim.copy(controlAnswers = clean, failedAttempts = attempts)
+            claims.update(retry)
+            audit.record(
+                AuditAction.CLAIM_ANSWERED, actorId, claim.id.value,
+                "$prefix · respuestas no coinciden (intento $attempts de ${Claim.MAX_ANSWER_ATTEMPTS})"
+            )
+            return retry
+        }
+
+        closeForClaimant(claim)
+        releaseIfNobodyElse(claim, others)
+        val blocked = claim.copy(
+            status = ClaimStatus.RECHAZADO, controlAnswers = clean, failedAttempts = attempts, reviewedAt = clock.now()
+        )
+        claims.update(blocked)
+        audit.record(
+            AuditAction.CLAIM_REJECTED, actorId, claim.id.value,
+            "$prefix · bloqueado: ${Claim.MAX_ANSWER_ATTEMPTS} intentos sin coincidir"
+        )
+        return blocked
+    }
+
+    /** Si nadie más lo está reclamando, el objeto vuelve al catálogo (RELEASE de H05). */
+    private suspend fun releaseIfNobodyElse(claim: Claim, others: List<Claim>) {
+        val item = items.getById(claim.foundItemId)
+        if (item?.status == ItemStatus.RECLAMADO && others.none { ClaimStateMachine.isOpen(it.status) }) {
+            applyToItem(claim.foundItemId, ItemTransition.RELEASE)
         }
     }
 
@@ -143,7 +198,10 @@ class ChangeClaimStatusUseCase(
     }
 }
 
-/** PENDIENTE → EN_VERIFICACION: quien reclama responde las preguntas de control (pantalla en V01). */
+/**
+ * Quien reclama responde las preguntas de control (V01). Devuelve el reclamo: EN_VERIFICACION si coincidieron,
+ * PENDIENTE con un intento fallido más si no, o RECHAZADO si se acabaron los intentos.
+ */
 class SubmitClaimAnswersUseCase(private val change: ChangeClaimStatusUseCase) {
     suspend operator fun invoke(claimId: ItemId, answers: List<String>): Result<Claim> =
         change(claimId, ClaimTransition.SUBMIT_ANSWERS, answers = answers)
