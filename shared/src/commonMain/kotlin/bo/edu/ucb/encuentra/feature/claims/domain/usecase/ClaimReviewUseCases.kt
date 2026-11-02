@@ -54,6 +54,7 @@ internal fun ClaimWithItem.toReview(): ClaimReview {
             )
         },
         report = report,
-        matchScore = matchScore
+        matchScore = matchScore,
+        reviewerName = reviewerName
     )
 }

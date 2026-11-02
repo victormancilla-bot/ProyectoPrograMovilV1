@@ -67,7 +67,8 @@ class ClaimRepositoryImpl(
                             item = it.toModel(),
                             claimantName = userDao.getById(claim.claimantId)?.fullName,
                             report = report?.toModel(),
-                            matchScore = match?.takeIf { report != null }?.score
+                            matchScore = match?.takeIf { report != null }?.score,
+                            reviewerName = claim.reviewedBy?.let { id -> userDao.getById(id)?.fullName }
                         )
                     }
                 }
