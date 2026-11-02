@@ -7,6 +7,8 @@ import bo.edu.ucb.encuentra.feature.matching.data.RoomMatchingStore
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingConfigRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingStore
+import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ClaimMatchUseCase
+import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMatchDetailUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMyMatchesUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.RejectMatchUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.RunMatchingUseCase
@@ -25,6 +27,8 @@ val matchingModule = module {
     singleOf(::RejectMatchUseCase)
     single<MatchRepository> { MatchRepositoryImpl(get(), get(), get()) }
     singleOf(::ObserveMyMatchesUseCase)
+    singleOf(::ObserveMatchDetailUseCase)
+    singleOf(::ClaimMatchUseCase)
     viewModelOf(::MatchListViewModel)
     viewModelOf(::MatchDetailViewModel)
 }

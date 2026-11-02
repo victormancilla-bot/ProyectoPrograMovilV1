@@ -11,12 +11,14 @@ import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.foundform.FakeSession
 import bo.edu.ucb.encuentra.feature.foundform.demoUser
 import bo.edu.ucb.encuentra.feature.matching.domain.model.MatchCandidate
+import bo.edu.ucb.encuentra.feature.matching.domain.model.MatchPair
 import bo.edu.ucb.encuentra.feature.matching.domain.model.ReportMatches
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMyMatchesUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -36,6 +38,12 @@ internal class SeedMatchRepository : MatchRepository {
     )
 
     override fun observeForOwner(ownerId: String): Flow<List<ReportMatches>> = groups
+
+    override fun observeMatch(matchId: ItemId): Flow<MatchPair?> = groups.map { all ->
+        all.firstNotNullOfOrNull { group ->
+            group.candidates.firstOrNull { it.match.id == matchId }?.let { MatchPair(it.match, group.report, it.item) }
+        }
+    }
 
     val rejected = mutableListOf<ItemId>()
 
