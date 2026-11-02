@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.model.ReportDraft
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.ValidateReportStepUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -14,10 +15,23 @@ import kotlinx.coroutines.launch
 
 /** ViewModel compartido por los 4 pasos del wizard (L02-L04). Cada cambio revalida el paso actual. */
 class ReportWizardViewModel(
-    private val validateStep: ValidateReportStepUseCase
+    private val validateStep: ValidateReportStepUseCase,
+    getCurrentUser: GetCurrentUserUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(stateFor(step = 1, draft = ReportDraft()))
+    // Fechas en "hoy" y contacto prellenado con el correo del perfil (L03).
+    private val _state = MutableStateFlow(
+        stateFor(
+            step = 1,
+            draft = validateStep.today().let { today ->
+                ReportDraft(
+                    lostFrom = today,
+                    lostTo = today,
+                    contactEmail = getCurrentUser()?.email?.value.orEmpty()
+                )
+            }
+        )
+    )
     val state: StateFlow<ReportDraftState> = _state.asStateFlow()
 
     private val _effects = MutableSharedFlow<ReportWizardEffect>()
@@ -39,6 +53,17 @@ class ReportWizardViewModel(
             ReportWizardEvent.OnShowAllColors -> _state.value = state.value.copy(showAllColors = true)
             is ReportWizardEvent.OnBrandChanged -> updateDraft(draft.copy(brand = event.brand))
             is ReportWizardEvent.OnFeaturesChanged -> updateDraft(draft.copy(features = event.features))
+            is ReportWizardEvent.OnZoneSelected -> updateDraft(draft.copy(zone = event.zone))
+            is ReportWizardEvent.OnLocationDetailChanged -> updateDraft(draft.copy(locationDetail = event.detail))
+            // Si "Desde" pasa a "Hasta", "Hasta" lo sigue: el rango no queda invertido por elegir en otro orden.
+            is ReportWizardEvent.OnLostFromSelected -> updateDraft(
+                draft.copy(lostFrom = event.date, lostTo = draft.lostTo?.takeIf { it >= event.date } ?: event.date)
+            )
+            is ReportWizardEvent.OnLostToSelected -> updateDraft(draft.copy(lostTo = event.date))
+            is ReportWizardEvent.OnTimeSlotSelected -> updateDraft(draft.copy(timeSlot = event.slot))
+            is ReportWizardEvent.OnPhotoPicked -> updateDraft(draft.copy(photoUri = event.uri))
+            ReportWizardEvent.OnPhotoRemoved -> updateDraft(draft.copy(photoUri = null))
+            is ReportWizardEvent.OnPhoneChanged -> updateDraft(draft.copy(contactPhone = event.phone))
             ReportWizardEvent.OnNext -> goToStep(state.value.step + 1)
             ReportWizardEvent.OnBack -> if (state.value.step == 1) {
                 viewModelScope.launch { _effects.emit(ReportWizardEffect.Cancel) }
