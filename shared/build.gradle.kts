@@ -126,6 +126,7 @@ kotlin {
             implementation(libs.firebase.storage)
             implementation(libs.firebase.messaging)
             implementation(libs.firebase.config)
+            implementation(libs.firebase.database)
 
             implementation(libs.ucb.designsystem)
 

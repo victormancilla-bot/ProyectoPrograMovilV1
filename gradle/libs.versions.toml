@@ -97,6 +97,7 @@ firebase-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = 
 firebase-storage = { module = "dev.gitlive:firebase-storage", version.ref = "firebaseGitlive" }
 firebase-messaging = { module = "dev.gitlive:firebase-messaging", version.ref = "firebaseGitlive" }
 firebase-config = { module = "dev.gitlive:firebase-config", version.ref = "firebaseGitlive" }
+firebase-database = { module = "dev.gitlive:firebase-database", version.ref = "firebaseGitlive" }
 
 # Sesión persistente (S01)
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }

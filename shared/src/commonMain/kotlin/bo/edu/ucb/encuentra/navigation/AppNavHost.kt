@@ -150,7 +150,14 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
     }
 
     // Staff / Admin
-    guarded<NavRoute.Dashboard>(navController, getCurrentUser) { DashboardScreen(onNavigateBack = back) }
+    guarded<NavRoute.Dashboard>(navController, getCurrentUser) {
+        DashboardScreen(
+            onRegisterFound = { navController.navigate(NavRoute.FoundForm) },
+            onOpenClaims = { navController.navigate(NavRoute.Claims) },
+            onOpenClaim = { claimId -> navController.navigate(NavRoute.ClaimDetail(claimId)) },
+            onOpenInventory = { navController.navigate(NavRoute.Inventory) }
+        )
+    }
     guarded<NavRoute.FoundCapture>(navController, getCurrentUser) { FoundCaptureScreen(onNavigateBack = back) }
     // Al registrar vuelve a donde se abrió (Inventario); H07 lista el objeto nuevo.
     guarded<NavRoute.FoundForm>(navController, getCurrentUser) {

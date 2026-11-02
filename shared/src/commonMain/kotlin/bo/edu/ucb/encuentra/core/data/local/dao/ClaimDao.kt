@@ -36,6 +36,13 @@ interface ClaimDao {
     )
     fun observeOpen(): Flow<List<ClaimEntity>>
 
+    @Query("SELECT COUNT(*) FROM claims WHERE status = :status")
+    fun observeCountByStatus(status: ClaimStatus): Flow<Int>
+
+    /** Dashboard (D01): los reclamos abiertos más recientes. */
+    @Query("SELECT * FROM claims WHERE status IN ('PENDIENTE', 'EN_VERIFICACION') ORDER BY created_at DESC LIMIT :limit")
+    fun observeLatestOpen(limit: Int): Flow<List<ClaimEntity>>
+
     @Query("SELECT * FROM claims WHERE claimant_id = :claimantId")
     suspend fun getByClaimant(claimantId: String): List<ClaimEntity>
 

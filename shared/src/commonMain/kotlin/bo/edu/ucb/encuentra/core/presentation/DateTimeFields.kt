@@ -119,6 +119,21 @@ fun formatDateRange(from: LocalDate, to: LocalDate): String = when {
     else -> "${from.formatLong()} al ${to.formatLong()}"
 }
 
+/** "Hace un momento", "Hace 5 min", "Hace 2 horas", "Hace 3 días" o la fecha corta si pasó más de una semana. */
+fun formatRelative(then: Instant, now: Instant): String {
+    val elapsed = (now - then).coerceAtLeast(kotlin.time.Duration.ZERO)
+    val minutes = elapsed.inWholeMinutes
+    val hours = elapsed.inWholeHours
+    val days = elapsed.inWholeDays
+    return when {
+        minutes < 1 -> "Hace un momento"
+        minutes < 60 -> "Hace $minutes min"
+        hours < 24 -> if (hours == 1L) "Hace 1 hora" else "Hace $hours horas"
+        days < 7 -> if (days == 1L) "Hace 1 día" else "Hace $days días"
+        else -> then.toLocalDate().formatShort()
+    }
+}
+
 /** Rango compacto para columnas angostas: "12 oct 2026", "10–11 oct 2026", "30 oct – 2 nov 2026". */
 fun formatShortRange(from: LocalDate, to: LocalDate): String {
     val fromMonth = MONTHS[from.month.number - 1].take(3)
