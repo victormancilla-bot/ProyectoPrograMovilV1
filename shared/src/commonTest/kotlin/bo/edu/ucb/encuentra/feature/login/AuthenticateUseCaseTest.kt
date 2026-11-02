@@ -17,8 +17,9 @@ class AuthenticateUseCaseTest {
     private class FakeSession : SessionRepository {
         var user: UserModel? = null
         override fun getCurrentUser() = user
-        override fun setCurrentUser(user: UserModel) { this.user = user }
-        override fun clearSession() { user = null }
+        override suspend fun setCurrentUser(user: UserModel) { this.user = user }
+        override suspend fun clearSession() { user = null }
+        override suspend fun restore() = Unit
     }
 
     @Test

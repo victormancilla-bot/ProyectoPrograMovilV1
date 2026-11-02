@@ -14,8 +14,9 @@ fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     )
 }
 
+/** Carpeta Documents de la app: ahí viven la base de datos y la sesión. */
 @OptIn(ExperimentalForeignApi::class)
-private fun documentDirectory(): String {
+internal fun documentDirectory(): String {
     val documentDirectory = NSFileManager.defaultManager.URLForDirectory(
         directory = NSDocumentDirectory,
         inDomain = NSUserDomainMask,
