@@ -118,7 +118,14 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
             }
         )
     }
-    guarded<NavRoute.MyReports>(navController, getCurrentUser) { MyReportsScreen(onNavigateBack = back) }
+    guarded<NavRoute.MyReports>(navController, getCurrentUser) {
+        MyReportsScreen(
+            onNavigateBack = back,
+            onOpenMatch = { matchId -> navController.navigate(NavRoute.MatchDetail(matchId)) },
+            onSeeAllMatches = { navController.navigate(NavRoute.MatchList) },
+            onReportLost = { navController.navigateToTab(NavRoute.ReportWizard, NavRoute.Home) }
+        )
+    }
     guarded<NavRoute.FoundCatalog>(navController, getCurrentUser) { FoundCatalogScreen(onNavigateBack = back) }
     guarded<NavRoute.HowItWorks>(navController, getCurrentUser) { HowItWorksScreen(onNavigateBack = back) }
     guarded<NavRoute.MatchList>(navController, getCurrentUser) {

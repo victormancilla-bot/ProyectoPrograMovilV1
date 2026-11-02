@@ -4,6 +4,7 @@ import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
 import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
+import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
@@ -70,6 +71,14 @@ class ObserveMyMatchesUseCaseTest {
         val result = observe().first()
         assertEquals(listOf(65, 30), result.first().candidates.map { it.match.score })
         assertTrue(result.none { it.candidates.isEmpty() })
+    }
+
+    @Test
+    fun closedReportsNoLongerShowTheirCandidates() = runTest {
+        repository.groups.value = repository.groups.value.map { group ->
+            if (group.report.id.value == "lr-calculadora") group.copy(report = group.report.copy(status = ReportStatus.CERRADO)) else group
+        }
+        assertEquals(listOf("lr-cuaderno"), observe().first().map { it.report.id.value })
     }
 
     @Test

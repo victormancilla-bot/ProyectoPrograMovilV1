@@ -77,6 +77,15 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - `RunMatchingUseCase` implementa el hook `MatchingTrigger`: corre **al enviar un reporte (L04)** contra los objetos DISPONIBLES y **al registrar un hallazgo (H03)** contra los reportes BUSCANDO. Por cada reporte con coincidencias nuevas crea una notificación **NEW_MATCH** al dueño (la cuenta el Home y abre la mejor por deep link). Si el matching falla, el reporte o el objeto igual quedan guardados.
 - Tests: `MatchEngineTest` (8, casos borde de fechas, textos, datos desconocidos), `RunMatchingUseCaseTest` (4).
 
+## Mis reportes (L05)
+
+- Pantalla del PDF "Mis Reportes": chips **Todos / Buscando / Verificación** (Verificación = en verificación o con match confirmado) y tarjetas con categoría, nombre, "Reportado: …", ubicación, chip de estado ("Match confirmado", "En verificación", "Vencido"…) y **Ver detalles**. Los que ya no están en curso (cerrados, recuperados, vencidos) aparecen atenuados y al final.
+- Lista en vivo desde Room con `Flow` (`MyReportsRepositoryImpl`): crear, cerrar o un match nuevo se ven sin recargar.
+- **Detalle del reporte** en la misma pantalla (sin ruta nueva: `NavRoute.kt` está congelado): datos, rango de fechas, ubicación, foto, contacto y **sus coincidencias** con su % (tocar una abre el detalle del match). El botón atrás del teléfono vuelve a la lista (`NavigationBackHandler` de `androidx.navigationevent`, el reemplazo de `BackHandler`).
+- **Cerrar reporte** con confirmación y motivo: "Ya lo encontré por mi cuenta" (RECUPERADO) o "Ya no lo estoy buscando" (CERRADO). Solo si está BUSCANDO y es del usuario; queda en la auditoría (`AuditAction.REPORT_CLOSED`). Un reporte cerrado deja de aparecer en Posibles coincidencias y el matching ya no lo toca.
+- Estados: cargando, vacío ("Aún no reportaste nada" → Reportar objeto perdido), filtro sin resultados y error con Reintentar.
+- Tests: `MyReportsUseCasesTest` (5, con el seed), `MyReportsViewModelTest` (6).
+
 ## Matching fase 2 (M02): score ponderado y ranking
 
 - **Score ponderado 0–100** en `MatchEngine`: color, marca, zona, fecha y **texto** (palabras clave del título + descripción, sin tildes ni palabras vacías). Cada criterio da una similitud 0–1 que se multiplica por su peso; los pesos son relativos (no tienen que sumar 100).
