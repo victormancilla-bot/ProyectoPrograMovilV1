@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.core.di
 
 import bo.edu.ucb.encuentra.core.data.SessionRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.local.AppDatabase
+import bo.edu.ucb.encuentra.core.data.local.seed.DatabaseSeeder
 import bo.edu.ucb.encuentra.core.domain.repository.SessionRepository
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import org.koin.core.module.dsl.singleOf
@@ -20,4 +21,5 @@ val coreModule = module {
     single { get<AppDatabase>().claimDao() }
     single { get<AppDatabase>().auditLogDao() }
     single { get<AppDatabase>().appNotificationDao() }
+    singleOf(::DatabaseSeeder)
 }
