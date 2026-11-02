@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.feature.matching.domain.usecase
 
+import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
@@ -27,7 +28,9 @@ class ObserveMatchDetailUseCase(
     operator fun invoke(matchId: ItemId): Flow<MatchDetail?> {
         val user = getCurrentUser() ?: return flowOf(null)
         return repository.observeMatch(matchId).map { pair ->
-            pair?.takeIf { it.report.ownerId == user.id && it.match.status != MatchStatus.DESCARTADO }?.toDetail()
+            // Una descartada se sigue mostrando si el dueño la reclamó: así ve en qué quedó su reclamo (p. ej. bloqueado).
+            pair?.takeIf { it.report.ownerId == user.id && (it.match.status != MatchStatus.DESCARTADO || it.ownClaim != null) }
+                ?.toDetail()
         }
     }
 
@@ -53,7 +56,16 @@ class ObserveMatchDetailUseCase(
             // Encontrado antes de perderlo no puede ser: el score no lo mira (lo descarta el filtro duro), la tabla sí.
             date = if (item.foundAt < report.lostFrom) ComparisonVerdict.POR_VERIFICAR else verdict(MatchEngine.dateSimilarity(report, item))
         ),
-        existingClaim = ownClaim?.let { ExistingClaim(it.number, it.status) }
+        existingClaim = ownClaim?.let { claim ->
+            ExistingClaim(
+                id = claim.id,
+                number = claim.number,
+                status = claim.status,
+                failedAttempts = claim.failedAttempts,
+                // Solo mientras puede responder; las respuestas esperadas nunca salen de claims.
+                questions = if (claim.status == ClaimStatus.PENDIENTE) item.controlQuestions else emptyList()
+            )
+        }
     )
 
     private fun verdict(similarity: Double) =

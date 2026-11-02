@@ -102,7 +102,8 @@ fun FoundItemEntity.toModel() = FoundItem(
     controlQuestions = controlQuestions,
     registeredBy = registeredBy,
     retentionUntil = retentionUntil.toInstant(),
-    createdAt = createdAt.toInstant()
+    createdAt = createdAt.toInstant(),
+    expectedAnswers = expectedAnswers
 )
 
 fun FoundItem.toEntity() = FoundItemEntity(
@@ -124,7 +125,8 @@ fun FoundItem.toEntity() = FoundItemEntity(
     controlQuestions = controlQuestions,
     registeredBy = registeredBy,
     retentionUntil = retentionUntil.toMillis(),
-    createdAt = createdAt.toMillis()
+    createdAt = createdAt.toMillis(),
+    expectedAnswers = expectedAnswers
 )
 
 fun CustodyEventEntity.toModel() = CustodyEvent(
@@ -178,7 +180,8 @@ fun ClaimEntity.toModel() = Claim(
     reviewedAt = reviewedAt?.toInstant(),
     scheduledDeliveryAt = scheduledDeliveryAt?.toInstant(),
     deliveredBy = deliveredBy,
-    deliveredAt = deliveredAt?.toInstant()
+    deliveredAt = deliveredAt?.toInstant(),
+    failedAttempts = failedAttempts
 )
 
 fun Claim.toEntity() = ClaimEntity(
@@ -194,7 +197,8 @@ fun Claim.toEntity() = ClaimEntity(
     reviewedAt = reviewedAt?.toMillis(),
     scheduledDeliveryAt = scheduledDeliveryAt?.toMillis(),
     deliveredBy = deliveredBy,
-    deliveredAt = deliveredAt?.toMillis()
+    deliveredAt = deliveredAt?.toMillis(),
+    failedAttempts = failedAttempts
 )
 
 fun AuditLogEntity.toModel() = AuditLog(

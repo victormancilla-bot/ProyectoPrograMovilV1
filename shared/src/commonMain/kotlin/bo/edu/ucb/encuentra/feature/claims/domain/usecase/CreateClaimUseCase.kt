@@ -34,9 +34,9 @@ class CreateClaimUseCase(
     private val audit: AuditRecorder,
     private val transaction: TransactionRunner,
     private val clock: Clock
-) : ClaimRequester {
+) {
 
-    override suspend fun requestClaim(matchId: ItemId, claimantId: String): Int = transaction.run {
+    suspend fun requestClaim(matchId: ItemId, claimantId: String): Int = transaction.run {
         val match = claims.getMatch(matchId) ?: throw ClaimRequestException(ClaimErrors.MATCH_NOT_FOUND)
         val report = claims.getReport(match.lostReportId) ?: throw ClaimRequestException(ClaimErrors.MATCH_NOT_FOUND)
         if (report.ownerId != claimantId) throw ClaimRequestException(ClaimErrors.NOT_YOUR_REPORT)
@@ -82,4 +82,14 @@ class CreateClaimUseCase(
     private companion object {
         val OPEN_REPORTS = setOf(ReportStatus.BUSCANDO, ReportStatus.EN_VERIFICACION)
     }
+}
+
+/** Lo que usa el Detalle de match (M05) a través del hook de core: crear el reclamo (V02) y responder (V01). */
+class ClaimRequesterImpl(
+    private val create: CreateClaimUseCase,
+    private val answer: SubmitClaimAnswersUseCase
+) : ClaimRequester {
+    override suspend fun requestClaim(matchId: ItemId, claimantId: String): Int = create.requestClaim(matchId, claimantId)
+
+    override suspend fun answerQuestions(claimId: ItemId, answers: List<String>): Claim = answer(claimId, answers).getOrThrow()
 }

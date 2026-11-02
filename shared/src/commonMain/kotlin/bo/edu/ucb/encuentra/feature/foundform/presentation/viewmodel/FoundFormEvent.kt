@@ -28,6 +28,8 @@ sealed class FoundFormEvent {
 
     // Preguntas de control (V01)
     data class OnQuestionChanged(val index: Int, val text: String) : FoundFormEvent()
+    /** Respuesta esperada de la pregunta [index] (V01, privada). */
+    data class OnExpectedAnswerChanged(val index: Int, val text: String) : FoundFormEvent()
     data object OnAddQuestion : FoundFormEvent()
     data class OnRemoveQuestion(val index: Int) : FoundFormEvent()
 

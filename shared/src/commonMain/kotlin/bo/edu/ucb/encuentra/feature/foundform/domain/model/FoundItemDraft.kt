@@ -28,5 +28,12 @@ data class FoundItemDraft(
     val foundDate: LocalDate? = null,
     val foundTime: LocalTime? = null,
     /** 1-3 preguntas que solo el dueño puede responder (V01). */
-    val controlQuestions: List<String> = listOf("")
-)
+    val controlQuestions: List<String> = listOf(""),
+    /** Respuesta esperada de cada pregunta, en la misma posición. Privada: solo la ve el staff (V01). */
+    val expectedAnswers: List<String> = listOf("")
+) {
+    /** Preguntas escritas con su respuesta esperada (las vacías se ignoran). */
+    val questionsWithAnswers: List<Pair<String, String>>
+        get() = controlQuestions.mapIndexed { i, q -> q.trim() to expectedAnswers.getOrElse(i) { "" }.trim() }
+            .filter { it.first.isNotEmpty() }
+}

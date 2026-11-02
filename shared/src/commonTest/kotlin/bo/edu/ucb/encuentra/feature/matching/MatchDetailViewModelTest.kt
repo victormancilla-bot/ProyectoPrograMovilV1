@@ -1,10 +1,13 @@
 package bo.edu.ucb.encuentra.feature.matching
 
 import bo.edu.ucb.encuentra.core.domain.repository.DuplicateClaimException
+import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
+import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequester
 import bo.edu.ucb.encuentra.feature.foundform.FakeSession
+import bo.edu.ucb.encuentra.feature.matching.domain.usecase.AnswerControlQuestionsUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ClaimMatchUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMatchDetailUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.RejectMatchUseCase
@@ -49,8 +52,55 @@ class MatchDetailViewModelTest {
             ItemId(matchId),
             ObserveMatchDetailUseCase(repository, user),
             ClaimMatchUseCase(requester, user),
-            RejectMatchUseCase(repository, FakeMatchingTrigger())
+            RejectMatchUseCase(repository, FakeMatchingTrigger()),
+            AnswerControlQuestionsUseCase(requester)
         )
+    }
+
+    /** Mateo ya reclamó el termo y el reclamo está pendiente de respuestas (V01). */
+    private fun pendingTermoClaim(failedAttempts: Int = 0) {
+        repository.claims.value = SeedData.claims + SeedData.claims.first().copy(
+            id = ItemId("c-1027"), number = 1027, foundItemId = ItemId("fi-termo"), claimantId = "u-mateo",
+            status = ClaimStatus.PENDIENTE, controlAnswers = emptyList(), failedAttempts = failedAttempts
+        )
+    }
+
+    @Test
+    fun pendingClaimAsksTheControlQuestions() = runTest(dispatcher) {
+        pendingTermoClaim()
+        val requester = RecordingClaimRequester()
+        val vm = viewModel("m-termo", requester)
+        advanceUntilIdle()
+
+        assertEquals(listOf("¿Tiene algún sticker o marca?"), vm.state.value.detail?.existingClaim?.questions)
+        assertEquals(listOf(""), vm.state.value.answers)
+        assertFalse(vm.state.value.canSubmitAnswers)
+
+        vm.handleEvent(MatchDetailEvent.OnAnswerChanged(0, "Un sticker de la UCB"))
+        vm.handleEvent(MatchDetailEvent.OnSubmitAnswers)
+        advanceUntilIdle()
+
+        assertEquals(listOf(ItemId("c-1027") to listOf("Un sticker de la UCB")), requester.answers)
+        assertNull(vm.state.value.answersFeedback)
+    }
+
+    @Test
+    fun wrongAnswersShowTheAttemptsLeftWithoutSayingWhich() = runTest(dispatcher) {
+        pendingTermoClaim()
+        val requester = RecordingClaimRequester(answerResult = { id ->
+            SeedData.claims.first().copy(id = id, status = ClaimStatus.PENDIENTE, failedAttempts = 2)
+        })
+        val vm = viewModel("m-termo", requester)
+        advanceUntilIdle()
+
+        vm.handleEvent(MatchDetailEvent.OnAnswerChanged(0, "Ninguno"))
+        vm.handleEvent(MatchDetailEvent.OnSubmitAnswers)
+        advanceUntilIdle()
+
+        assertEquals("Tus respuestas no coinciden con lo registrado. Te queda 1 intento.", vm.state.value.answersFeedback)
+        // Lo escrito se conserva para corregirlo.
+        assertEquals(listOf("Ninguno"), vm.state.value.answers)
+        assertFalse(vm.state.value.working)
     }
 
     @Test

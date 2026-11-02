@@ -44,7 +44,8 @@ class RegisterFoundItemUseCase(
             custodyDetail = draft.custodyDetail.trim(),
             status = ItemStatus.DISPONIBLE,
             photoUrls = emptyList(),
-            controlQuestions = draft.controlQuestions.map { it.trim() }.filter { it.isNotEmpty() },
+            controlQuestions = draft.questionsWithAnswers.map { it.first },
+            expectedAnswers = draft.questionsWithAnswers.map { it.second },
             registeredBy = user.id,
             retentionUntil = now + RETENTION,
             createdAt = now

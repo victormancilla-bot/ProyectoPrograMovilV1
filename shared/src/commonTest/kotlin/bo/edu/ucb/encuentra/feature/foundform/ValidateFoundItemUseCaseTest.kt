@@ -32,7 +32,8 @@ internal val validFoundDraft = FoundItemDraft(
     custodyPlace = CustodyPlace.OFICINA,
     foundDate = LocalDate(2026, 11, 2),
     foundTime = LocalTime(9, 30),
-    controlQuestions = listOf("¿Qué fondo de pantalla tiene?")
+    controlQuestions = listOf("¿Qué fondo de pantalla tiene?"),
+    expectedAnswers = listOf("Un perro")
 )
 
 class ValidateFoundItemUseCaseTest {
@@ -73,12 +74,27 @@ class ValidateFoundItemUseCaseTest {
         assertEquals(setOf(FoundFieldError.QUESTION_REQUIRED), validate(validFoundDraft.copy(controlQuestions = listOf(" ", ""))))
         assertEquals(
             setOf(FoundFieldError.TOO_MANY_QUESTIONS),
-            validate(validFoundDraft.copy(controlQuestions = listOf("a?", "b?", "c?", "d?")))
+            validate(validFoundDraft.copy(controlQuestions = listOf("a?", "b?", "c?", "d?"), expectedAnswers = listOf("A", "B", "C", "D")))
         )
         assertEquals(
             setOf(FoundFieldError.QUESTION_TOO_LONG),
             validate(validFoundDraft.copy(controlQuestions = listOf("x".repeat(ValidateFoundItemUseCase.QUESTION_MAX + 1))))
         )
+    }
+
+    @Test
+    fun everyQuestionNeedsItsExpectedAnswer() {
+        assertEquals(setOf(FoundFieldError.ANSWER_REQUIRED), validate(validFoundDraft.copy(expectedAnswers = listOf("  "))))
+        assertEquals(
+            setOf(FoundFieldError.ANSWER_REQUIRED),
+            validate(validFoundDraft.copy(controlQuestions = listOf("a?", "b?"), expectedAnswers = listOf("A")))
+        )
+        assertEquals(
+            setOf(FoundFieldError.ANSWER_TOO_LONG),
+            validate(validFoundDraft.copy(expectedAnswers = listOf("x".repeat(ValidateFoundItemUseCase.ANSWER_MAX + 1))))
+        )
+        // Una pregunta vacía no exige respuesta.
+        assertEquals(emptySet(), validate(validFoundDraft.copy(controlQuestions = listOf("a?", " "), expectedAnswers = listOf("A", ""))))
     }
 
     @Test

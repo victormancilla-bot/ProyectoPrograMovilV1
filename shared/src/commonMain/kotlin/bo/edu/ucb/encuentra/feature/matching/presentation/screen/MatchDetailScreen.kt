@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import bo.edu.ucb.encuentra.core.domain.model.Claim
 import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.presentation.formatShortRange
@@ -52,6 +53,7 @@ import bo.edu.ucb.encuentra.core.presentation.icon
 import bo.edu.ucb.encuentra.core.presentation.swatchFor
 import bo.edu.ucb.encuentra.core.presentation.toLocalDate
 import bo.edu.ucb.encuentra.feature.matching.domain.model.ComparisonVerdict
+import bo.edu.ucb.encuentra.feature.matching.domain.model.ExistingClaim
 import bo.edu.ucb.encuentra.feature.matching.domain.model.MatchDetail
 import bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel.MatchDetailEffect
 import bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel.MatchDetailEvent
@@ -70,6 +72,7 @@ import edu.ucb.ds.components.label.AppLabel
 import edu.ucb.ds.components.label.AppOverline
 import edu.ucb.ds.components.label.AppTitle
 import edu.ucb.ds.components.states.EmptyState
+import edu.ucb.ds.components.textfields.AppTextField
 import edu.ucb.ds.components.states.ErrorState
 import edu.ucb.ds.components.states.LoadingState
 import edu.ucb.ds.components.surfaces.AppSurface
@@ -350,13 +353,11 @@ private fun ProtectedInfoNote() {
 private fun Actions(detail: MatchDetail, state: MatchDetailState, onEvent: (MatchDetailEvent) -> Unit) {
     val colors = UcbEncuentraTheme.colors
     Column(verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.itemGap)) {
-        val claimNumber = state.shownClaimNumber
         val existing = detail.existingClaim
         when {
-            claimNumber != null && (existing == null || existing.status == ClaimStatus.PENDIENTE) -> InfoBox(
-                "Reclamo #$claimNumber enviado. El staff revisará tus respuestas y te avisará cuándo recoger el objeto."
-            )
-            existing != null -> InfoBox("Tu reclamo #${existing.number} está: ${existing.status.label}.")
+            existing != null -> ClaimProgress(existing, state, onEvent)
+            // Recién creado: Room todavía no devolvió el reclamo.
+            state.claimNumber != null -> InfoBox("Reclamo #${state.claimNumber} enviado.")
             state.canAct -> {
                 PrimaryButton(
                     text = "Esto es mío — verificar",
@@ -379,6 +380,63 @@ private fun Actions(detail: MatchDetail, state: MatchDetailState, onEvent: (Matc
         }
         state.actionError?.let { AppLabel(it, color = colors.error, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
         Spacer(Modifier.height(UcbEncuentraTheme.spacing.medium))
+    }
+}
+
+/** En qué quedó el reclamo del dueño: preguntas de control (V01) mientras está pendiente, luego su estado. */
+@Composable
+private fun ClaimProgress(claim: ExistingClaim, state: MatchDetailState, onEvent: (MatchDetailEvent) -> Unit) {
+    when (claim.status) {
+        ClaimStatus.PENDIENTE -> VerificationForm(claim, state, onEvent)
+        ClaimStatus.EN_VERIFICACION -> InfoBox(
+            "Reclamo #${claim.number}: tus respuestas coinciden y el staff está verificando. Te avisaremos cuándo recoger el objeto."
+        )
+        ClaimStatus.APROBADO -> InfoBox("Reclamo #${claim.number} aprobado. Acércate a Objetos Perdidos con tu carnet para recogerlo.")
+        ClaimStatus.ENTREGADO -> InfoBox("Reclamo #${claim.number}: el objeto ya te fue entregado.")
+        ClaimStatus.RECHAZADO -> InfoBox(
+            if (claim.blocked) {
+                "Reclamo #${claim.number} bloqueado: se agotaron los ${Claim.MAX_ANSWER_ATTEMPTS} intentos para responder las preguntas."
+            } else {
+                "Reclamo #${claim.number} rechazado: el staff no pudo confirmar que el objeto sea tuyo."
+            }
+        )
+    }
+}
+
+/**
+ * Verificación de propiedad (V01, pantalla que no estaba en el PDF): las preguntas de control que definió el staff.
+ * No se muestran pistas ni cuál respuesta falló; solo los intentos que quedan.
+ */
+@Composable
+private fun VerificationForm(claim: ExistingClaim, state: MatchDetailState, onEvent: (MatchDetailEvent) -> Unit) {
+    val colors = UcbEncuentraTheme.colors
+    val spacing = UcbEncuentraTheme.spacing
+    AppCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(spacing.large), verticalArrangement = Arrangement.spacedBy(spacing.itemGap)) {
+            AppOverline("Verifica que es tuyo · Reclamo #${claim.number}", color = colors.primary)
+            AppBody(
+                "Responde lo que solo el dueño sabría. Tus respuestas son privadas: solo las ve el staff. " +
+                    if (claim.attemptsLeft == 1) "Te queda 1 intento." else "Tienes ${claim.attemptsLeft} intentos."
+            )
+            claim.questions.forEachIndexed { index, question ->
+                AppTextField(
+                    value = state.answers.getOrElse(index) { "" },
+                    onValueChange = { onEvent(MatchDetailEvent.OnAnswerChanged(index, it)) },
+                    label = question,
+                    placeholder = "Tu respuesta",
+                    enabled = !state.working,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            state.answersFeedback?.let { AppLabel(it, color = colors.error) }
+            PrimaryButton(
+                text = "Enviar respuestas",
+                onClick = { onEvent(MatchDetailEvent.OnSubmitAnswers) },
+                enabled = state.canSubmitAnswers,
+                size = AppButtonSize.Large,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 

@@ -83,7 +83,9 @@ data class FoundItemEntity(
     @ColumnInfo(name = "control_questions") val controlQuestions: List<String>,
     @ColumnInfo(name = "registered_by") val registeredBy: String,
     @ColumnInfo(name = "retention_until") val retentionUntil: Long,
-    @ColumnInfo(name = "created_at") val createdAt: Long
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+    // v2 (V01): respuestas esperadas de las preguntas de control, privadas del staff.
+    @ColumnInfo(name = "expected_answers", defaultValue = "[]") val expectedAnswers: List<String> = emptyList()
 )
 
 @Entity(
@@ -139,7 +141,9 @@ data class ClaimEntity(
     @ColumnInfo(name = "reviewed_at") val reviewedAt: Long?,
     @ColumnInfo(name = "scheduled_delivery_at") val scheduledDeliveryAt: Long?,
     @ColumnInfo(name = "delivered_by") val deliveredBy: String?,
-    @ColumnInfo(name = "delivered_at") val deliveredAt: Long?
+    @ColumnInfo(name = "delivered_at") val deliveredAt: Long?,
+    // v2 (V01): envíos de respuestas que no coincidieron.
+    @ColumnInfo(name = "failed_attempts", defaultValue = "0") val failedAttempts: Int = 0
 )
 
 @Entity(

@@ -7,6 +7,7 @@ import bo.edu.ucb.encuentra.feature.matching.data.RoomMatchingStore
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingConfigRepository
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingStore
+import bo.edu.ucb.encuentra.feature.matching.domain.usecase.AnswerControlQuestionsUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ClaimMatchUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMatchDetailUseCase
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMyMatchesUseCase
@@ -31,7 +32,8 @@ val matchingModule = module {
     singleOf(::ObserveMyMatchesUseCase)
     singleOf(::ObserveMatchDetailUseCase)
     singleOf(::ClaimMatchUseCase)
+    singleOf(::AnswerControlQuestionsUseCase)
     viewModelOf(::MatchListViewModel)
     // El id llega desde la ruta (o el deep link): koinViewModel { parametersOf(matchId) }.
-    viewModel { (matchId: String) -> MatchDetailViewModel(ItemId(matchId), get(), get(), get()) }
+    viewModel { (matchId: String) -> MatchDetailViewModel(ItemId(matchId), get(), get(), get(), get()) }
 }

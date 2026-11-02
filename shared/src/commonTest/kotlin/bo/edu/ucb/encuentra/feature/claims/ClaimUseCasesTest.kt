@@ -19,6 +19,7 @@ import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.item.ItemErrors
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.claims.domain.model.ClaimErrors
+import bo.edu.ucb.encuentra.feature.claims.domain.model.ClaimWithItem
 import bo.edu.ucb.encuentra.feature.claims.domain.repository.ClaimRepository
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ApproveClaimUseCase
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ChangeClaimStatusUseCase
@@ -30,6 +31,7 @@ import bo.edu.ucb.encuentra.feature.foundform.FakeSession
 import bo.edu.ucb.encuentra.feature.foundform.FixedClock
 import bo.edu.ucb.encuentra.feature.foundform.demoUser
 import bo.edu.ucb.encuentra.feature.myreports.mateo
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -39,7 +41,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /** Reclamos, coincidencias, reportes y objetos del seed 2026 en memoria (como Room, con el índice único). */
-private class SeedClaimStore : ClaimRepository {
+internal class SeedClaimStore : ClaimRepository {
     val claims = SeedData.claims.associateBy { it.id }.toMutableMap()
     val matches = SeedData.matches.associateBy { it.id }.toMutableMap()
     val reports = SeedData.lostReports.associateBy { it.id }.toMutableMap()
@@ -69,6 +71,18 @@ private class SeedClaimStore : ClaimRepository {
         items[id] = items.getValue(id).copy(status = status)
     }
 
+    override fun observeWithItem(claimId: ItemId) = flow {
+        emit(claims[claimId]?.let { ClaimWithItem(it, items.getValue(it.foundItemId), NAMES[it.claimantId]) })
+    }
+
+    override fun observeOpen() = flow {
+        emit(
+            claims.values.filter { it.status == ClaimStatus.PENDIENTE || it.status == ClaimStatus.EN_VERIFICACION }
+                .sortedWith(compareBy({ it.status != ClaimStatus.EN_VERIFICACION }, { it.createdAt }))
+                .map { ClaimWithItem(it, items.getValue(it.foundItemId), NAMES[it.claimantId]) }
+        )
+    }
+
     fun item(id: String) = items.getValue(ItemId(id)).status
     fun report(id: String) = reports.getValue(ItemId(id)).status
     fun match(id: String) = matches.getValue(ItemId(id)).status
@@ -76,26 +90,28 @@ private class SeedClaimStore : ClaimRepository {
 }
 
 /** Los objetos del mismo store vistos como el repositorio de H05 (getById choca de tipo con ClaimRepository). */
-private class ItemsOf(private val store: SeedClaimStore) : FoundItemLifecycleRepository {
+internal class ItemsOf(private val store: SeedClaimStore) : FoundItemLifecycleRepository {
     override suspend fun getById(id: ItemId) = store.items[id]
     override suspend fun updateStatus(id: ItemId, status: ItemStatus) = store.setItemStatus(id, status)
     override suspend fun moveCustody(event: CustodyEvent) = Unit
     override fun observeCustodyHistory(id: ItemId) = flowOf(emptyList<CustodyEvent>())
 }
 
-private class Audit : AuditRecorder {
+internal class Audit : AuditRecorder {
     val entries = mutableListOf<Pair<AuditAction, String>>()
     override suspend fun record(action: AuditAction, actorId: String, targetId: String, detail: String) {
         entries += action to detail
     }
 }
 
-private object Direct : TransactionRunner {
+internal object Direct : TransactionRunner {
     override suspend fun <T> run(block: suspend () -> T): T = block()
 }
 
-private val staff = demoUser(Role.STAFF)
-private val luis = demoUser(Role.ESTUDIANTE).copy(id = "u-luis-mendoza")
+private val NAMES = SeedData.users.associate { it.id to it.fullName }
+
+internal val staff = demoUser(Role.STAFF)
+internal val luis = demoUser(Role.ESTUDIANTE).copy(id = "u-luis-mendoza")
 
 class ClaimUseCasesTest {
 
@@ -235,8 +251,9 @@ class ClaimUseCasesTest {
     @Test
     fun deliveringRejectsTheOtherOpenClaimsAndOnlyOneCanBeApproved() = runTest {
         val mateoClaim = mateoClaims("m-calculadora")
-        answer(mateoClaim.id, listOf("Mateo Rojas")).getOrThrow()
-        asUser(luis) { answer(ItemId("c-1025"), listOf("Luis")).getOrThrow() }
+        answer(mateoClaim.id, listOf("Mateo Quispe", "fx-991")).getOrThrow()
+        // Luis también acierta (p. ej. vio la tapa): las dos respuestas coinciden y decide el staff.
+        asUser(luis) { answer(ItemId("c-1025"), listOf("Mateo Quispe", "Casio fx-991")).getOrThrow() }
 
         asUser(staff) { approve(mateoClaim.id).getOrThrow() }
         val second = asUser(staff) { approve(ItemId("c-1025")).exceptionOrNull() }
