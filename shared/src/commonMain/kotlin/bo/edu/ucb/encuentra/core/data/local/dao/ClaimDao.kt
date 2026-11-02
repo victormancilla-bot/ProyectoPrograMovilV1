@@ -26,6 +26,9 @@ interface ClaimDao {
     @Query("SELECT * FROM claims WHERE found_item_id = :foundItemId ORDER BY created_at")
     suspend fun getByFoundItem(foundItemId: String): List<ClaimEntity>
 
+    @Query("SELECT * FROM claims WHERE found_item_id = :foundItemId")
+    fun observeByFoundItem(foundItemId: String): Flow<List<ClaimEntity>>
+
     @Query("SELECT * FROM claims WHERE claimant_id = :claimantId")
     suspend fun getByClaimant(claimantId: String): List<ClaimEntity>
 

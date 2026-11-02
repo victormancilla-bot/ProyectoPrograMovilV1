@@ -1,6 +1,8 @@
 package bo.edu.ucb.encuentra.feature.matching.domain.model
 
 import bo.edu.ucb.encuentra.core.domain.model.CampusZone
+import bo.edu.ucb.encuentra.core.domain.model.Claim
+import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.FoundItem
 import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.core.domain.model.Match
@@ -11,7 +13,10 @@ import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import kotlin.time.Instant
 
 /** Una coincidencia completa, tal como sale de Room (solo la usa el dominio para armar [MatchDetail]). */
-data class MatchPair(val match: Match, val report: LostReport, val item: FoundItem)
+data class MatchPair(val match: Match, val report: LostReport, val item: FoundItem, val ownClaim: Claim? = null)
+
+/** El reclamo que el dueño ya hizo sobre este objeto (V02): se muestra en vez de los botones. */
+data class ExistingClaim(val number: Int, val status: ClaimStatus)
 
 /**
  * Vista LIMITADA del objeto encontrado (M05): lo justo para reconocerlo. NO incluye la custodia, las preguntas
@@ -47,13 +52,14 @@ data class MatchDetail(
     val status: MatchStatus,
     val report: LostReport,
     val item: FoundItemPreview,
-    val comparison: MatchComparison
+    val comparison: MatchComparison,
+    val existingClaim: ExistingClaim? = null
 ) {
     /**
      * "Esto es mío" y "No es mío" solo en coincidencias propuestas de un reporte abierto (buscando o con otro
-     * reclamo en verificación). Una confirmada ya la revisó el staff; un reporte cerrado ya no reclama nada.
+     * reclamo en verificación) y sin reclamo previo de esta persona. Una confirmada ya la revisó el staff.
      */
-    val canAct: Boolean get() = status == MatchStatus.PROPUESTO && report.status in ACTIONABLE
+    val canAct: Boolean get() = existingClaim == null && status == MatchStatus.PROPUESTO && report.status in ACTIONABLE
 
     private companion object {
         val ACTIONABLE = setOf(ReportStatus.BUSCANDO, ReportStatus.EN_VERIFICACION)

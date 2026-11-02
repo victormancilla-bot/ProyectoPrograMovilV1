@@ -5,6 +5,7 @@ import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.matching.domain.engine.MatchEngine
 import bo.edu.ucb.encuentra.feature.matching.domain.model.ComparisonVerdict
+import bo.edu.ucb.encuentra.feature.matching.domain.model.ExistingClaim
 import bo.edu.ucb.encuentra.feature.matching.domain.model.FoundItemPreview
 import bo.edu.ucb.encuentra.feature.matching.domain.model.MatchComparison
 import bo.edu.ucb.encuentra.feature.matching.domain.model.MatchDetail
@@ -49,8 +50,10 @@ class ObserveMatchDetailUseCase(
             brand = verdict(MatchEngine.brandSimilarity(report.brand, item.brand)),
             color = verdict(MatchEngine.colorSimilarity(report.color, item.color)),
             zone = verdict(MatchEngine.zoneSimilarity(report.zone, item.foundZone)),
-            date = verdict(MatchEngine.dateSimilarity(report, item))
-        )
+            // Encontrado antes de perderlo no puede ser: el score no lo mira (lo descarta el filtro duro), la tabla sí.
+            date = if (item.foundAt < report.lostFrom) ComparisonVerdict.POR_VERIFICAR else verdict(MatchEngine.dateSimilarity(report, item))
+        ),
+        existingClaim = ownClaim?.let { ExistingClaim(it.number, it.status) }
     )
 
     private fun verdict(similarity: Double) =

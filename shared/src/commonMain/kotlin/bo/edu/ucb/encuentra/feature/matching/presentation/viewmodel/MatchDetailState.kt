@@ -20,6 +20,9 @@ data class MatchDetailState(
     val notFound: Boolean get() = !loading && error == null && detail == null
 
     val canAct: Boolean get() = detail?.canAct == true && claimNumber == null
+
+    /** Reclamo recién enviado o el que ya existía (V02), con su estado si viene de Room. */
+    val shownClaimNumber: Int? get() = claimNumber ?: detail?.existingClaim?.number
 }
 
 sealed class MatchDetailEvent {
