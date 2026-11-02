@@ -83,37 +83,37 @@ object SeedData {
             "fi-calculadora", "Calculadora Científica Casio", Category.ELECTRONICA, Subcategory.CALCULADORA, "Negro", "Casio",
             "Calculadora Casio fx-991 con un nombre escrito en la tapa.", CampusZone.BLOQUE_C, "Aula 201",
             "2026-10-12T10:30:00-04:00", ItemStatus.RECLAMADO,
-            listOf("¿Qué nombre está escrito en la tapa?", "¿Qué modelo exacto es?")
+            listOf("¿Qué nombre está escrito en la tapa?" to "Mateo Quispe", "¿Qué modelo exacto es?" to "fx-991")
         ),
         foundItem(
             "fi-termo", "Termo Azul Oscuro", Category.ROPA_ACCESORIOS, Subcategory.TERMO, "Azul", "Stanley",
             "Termo azul oscuro de 1 litro.", CampusZone.CAFETERIA, null,
             "2026-10-10T12:15:00-04:00", ItemStatus.DISPONIBLE,
-            listOf("¿Tiene algún sticker o marca?")
+            listOf("¿Tiene algún sticker o marca?" to "Sticker de la UCB")
         ),
         foundItem(
             "fi-llavero", "Llavero con 3 llaves", Category.LLAVES, Subcategory.LLAVERO, "Plateado", null,
             "Llavero metálico con 3 llaves y un colgante de la UCB.", CampusZone.PARQUEO, null,
             "2026-08-08T18:00:00-04:00", ItemStatus.DISPONIBLE,
-            listOf("¿Qué colgante tiene el llavero?")
+            listOf("¿Qué colgante tiene el llavero?" to "Escudo de la UCB")
         ),
         foundItem(
             "fi-billetera", "Billetera Negra de Cuero", Category.ROPA_ACCESORIOS, Subcategory.BILLETERA, "Negro", null,
             "Billetera de cuero negro con documentos.", CampusZone.BIBLIOTECA_CENTRAL, "Piso 1",
             "2026-10-30T16:00:00-04:00", ItemStatus.RECLAMADO,
-            listOf("¿Qué documentos había dentro?", "¿De qué color es el interior?")
+            listOf("¿Qué documentos había dentro?" to "Carnet universitario y tarjeta de débito", "¿De qué color es el interior?" to "Café")
         ),
         foundItem(
             "fi-cuaderno-tapa-dura", "Cuaderno de Tapa Dura", Category.LIBROS_CUADERNOS, Subcategory.CUADERNO, "Gris", "Moleskine",
             "Se encontró en una mesa cerca de la entrada principal. Tiene algunas hojas arrancadas al principio.",
             CampusZone.CAFETERIA, "Cafetería Central", "2026-11-01T10:45:00-04:00", ItemStatus.DISPONIBLE,
-            listOf("¿De qué materia son los apuntes?")
+            listOf("¿De qué materia son los apuntes?" to "Cálculo II")
         ),
         foundItem(
             "fi-apuntes-fisica", "Cuaderno de Apuntes - Física II", Category.LIBROS_CUADERNOS, Subcategory.APUNTES, "Azul", null,
             "Cuaderno anillado con apuntes de Física II.", CampusZone.BLOQUE_B, "Aula 305",
             "2026-10-28T09:20:00-04:00", ItemStatus.RECLAMADO,
-            listOf("¿Cuál es el nombre del docente en la primera hoja?")
+            listOf("¿Cuál es el nombre del docente en la primera hoja?" to "Roberto Pérez")
         )
     )
 
@@ -243,7 +243,8 @@ object SeedData {
         detail: String?,
         foundAt: String,
         status: ItemStatus,
-        questions: List<String>
+        /** Pregunta de control → respuesta esperada (privada, V01). */
+        questions: List<Pair<String, String>>
     ): FoundItem {
         val found = at(foundAt)
         return FoundItem(
@@ -262,7 +263,8 @@ object SeedData {
             custodyDetail = OFICINA,
             status = status,
             photoUrls = emptyList(),
-            controlQuestions = questions,
+            controlQuestions = questions.map { it.first },
+            expectedAnswers = questions.map { it.second },
             registeredBy = STAFF_ID,
             retentionUntil = found + RETENTION,
             createdAt = found

@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.core.data.local
 
+import androidx.room3.AutoMigration
 import androidx.room3.ColumnTypeConverters
 import androidx.room3.ConstructedBy
 import androidx.room3.Database
@@ -38,8 +39,12 @@ import bo.edu.ucb.encuentra.core.data.local.entity.UserEntity
         AuditLogEntity::class,
         AppNotificationEntity::class
     ],
-    version = 1,
-    exportSchema = true
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [
+        // v2 (V01): found_items.expected_answers y claims.failed_attempts, columnas nuevas con valor por defecto.
+        AutoMigration(from = 1, to = 2)
+    ]
 )
 @ColumnTypeConverters(ListConverters::class)
 @ConstructedBy(AppDatabaseConstructor::class)

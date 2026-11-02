@@ -45,7 +45,9 @@ data class FoundItem(
     val controlQuestions: List<String>,
     val registeredBy: String,
     val retentionUntil: Instant,
-    val createdAt: Instant
+    val createdAt: Instant,
+    /** Respuesta esperada de cada pregunta (misma posición). PRIVADA: solo la ve el staff (V01). */
+    val expectedAnswers: List<String> = emptyList()
 )
 
 /** Un movimiento en el historial de custodia de un objeto encontrado (H05). */
@@ -93,7 +95,9 @@ data class Claim(
     val reviewedAt: Instant?,
     val scheduledDeliveryAt: Instant?,
     val deliveredBy: String?,
-    val deliveredAt: Instant?
+    val deliveredAt: Instant?,
+    /** Envíos de respuestas que no coincidieron (V01): al llegar al límite el reclamo se bloquea. */
+    val failedAttempts: Int = 0
 )
 
 /** Evento del registro de auditoría: solo se agrega, nunca se edita ni borra (S05). */

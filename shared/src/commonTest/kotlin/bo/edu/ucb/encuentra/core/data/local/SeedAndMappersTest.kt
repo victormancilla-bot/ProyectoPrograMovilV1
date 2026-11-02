@@ -57,4 +57,13 @@ class SeedAndMappersTest {
         assertTrue(SeedData.lostReports.all { it.createdAt.toString().startsWith("2026") })
         assertTrue(SeedData.foundItems.all { it.foundAt.toString().startsWith("2026") })
     }
+
+    @Test
+    fun everyControlQuestionHasItsExpectedAnswer() {
+        SeedData.foundItems.forEach { item ->
+            assertTrue(item.controlQuestions.isNotEmpty(), item.title)
+            assertEquals(item.controlQuestions.size, item.expectedAnswers.size, item.title)
+            assertTrue(item.expectedAnswers.none { it.isBlank() }, item.title)
+        }
+    }
 }
