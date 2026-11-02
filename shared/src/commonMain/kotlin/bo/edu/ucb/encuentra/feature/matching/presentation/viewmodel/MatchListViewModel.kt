@@ -3,6 +3,7 @@ package bo.edu.ucb.encuentra.feature.matching.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bo.edu.ucb.encuentra.feature.matching.domain.usecase.ObserveMyMatchesUseCase
+import bo.edu.ucb.encuentra.feature.matching.domain.usecase.RejectMatchUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 
 /** Posibles coincidencias (M04). La lista se actualiza sola cuando cambian los matches en Room. */
 class MatchListViewModel(
-    private val observeMatches: ObserveMyMatchesUseCase
+    private val observeMatches: ObserveMyMatchesUseCase,
+    private val rejectMatch: RejectMatchUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MatchListState())
@@ -37,6 +39,9 @@ class MatchListViewModel(
             MatchListEvent.OnModifyCriteria -> emit(MatchListEffect.NavigateToMyReports)
             MatchListEvent.OnReportLost -> emit(MatchListEffect.NavigateToReportWizard)
             MatchListEvent.OnRetry -> load()
+            is MatchListEvent.OnRejectMatch -> _state.value = state.value.copy(pendingReject = event.matchId, rejectError = null)
+            MatchListEvent.OnDismissReject -> _state.value = state.value.copy(pendingReject = null)
+            MatchListEvent.OnConfirmReject -> confirmReject()
         }
     }
 
@@ -60,11 +65,21 @@ class MatchListViewModel(
         }
     }
 
+    private fun confirmReject() {
+        val matchId = state.value.pendingReject ?: return
+        _state.value = state.value.copy(pendingReject = null)
+        // La lista se actualiza sola desde Room: la tarjeta desaparece y puede entrar el siguiente candidato.
+        viewModelScope.launch {
+            rejectMatch(matchId).onFailure { _state.value = state.value.copy(rejectError = REJECT_ERROR) }
+        }
+    }
+
     private fun emit(effect: MatchListEffect) {
         viewModelScope.launch { _effects.emit(effect) }
     }
 
     companion object {
         const val LOAD_ERROR = "No pudimos cargar tus coincidencias."
+        const val REJECT_ERROR = "No se pudo marcar como \"No es mío\", intenta de nuevo."
     }
 }

@@ -6,6 +6,7 @@ import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.NotificationType
+import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
 import bo.edu.ucb.encuentra.core.domain.repository.MatchingTrigger
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.matching.domain.engine.MatchEngine
@@ -18,9 +19,11 @@ import kotlin.time.Clock
  * Matching (M01-M02): re-calcula el ranking de un reporte con los pesos de Remote Config.
  * Corre al crear o editar un reporte (L04 / L05) y al registrar un hallazgo (H03), para cada reporte afectado.
  *
- * Por reporte: los "No es mío" (DESCARTADO) y los CONFIRMADO no se tocan ni vuelven a proponerse;
- * del Top-N nuevo se crean los pares que no existían (con aviso NEW_MATCH al dueño), se actualiza el score
- * de los PROPUESTO que siguen y se borran los PROPUESTO que quedaron fuera.
+ * Solo se re-calculan reportes BUSCANDO (uno en verificación o confirmado no se toca). Por reporte:
+ * los "No es mío" (DESCARTADO) y los CONFIRMADO no se tocan ni vuelven a proponerse; del Top-N nuevo se
+ * crean los pares que no existían (con aviso NEW_MATCH al dueño), se actualiza el score de los PROPUESTO
+ * que siguen y se borran los PROPUESTO cuyo objeto sigue disponible pero quedó fuera del Top-N
+ * (si el objeto cambió de estado, p. ej. lo están reclamando, de eso se encarga el flujo de reclamos).
  */
 class RunMatchingUseCase(
     private val store: MatchingStore,
@@ -47,6 +50,7 @@ class RunMatchingUseCase(
 
     /** Devuelve la notificación para el dueño si aparecieron coincidencias nuevas. */
     private suspend fun rematchReport(report: LostReport, items: List<FoundItem>, config: MatchingConfig): AppNotification? {
+        if (report.status != ReportStatus.BUSCANDO) return null
         val existing = store.matchesForReport(report.id).associateBy { it.foundItemId }
         val locked = existing.values.filter { it.status != MatchStatus.PROPUESTO }.map { it.foundItemId }.toSet()
         val ranked = MatchEngine.rank(report, items, config, excluded = locked)
@@ -63,7 +67,10 @@ class RunMatchingUseCase(
             }
         }
         val rankedIds = ranked.map { it.first.id }.toSet()
-        val stale = existing.values.filter { it.status == MatchStatus.PROPUESTO && it.foundItemId !in rankedIds }.map { it.id }
+        val availableIds = items.map { it.id }.toSet()
+        val stale = existing.values
+            .filter { it.status == MatchStatus.PROPUESTO && it.foundItemId in availableIds && it.foundItemId !in rankedIds }
+            .map { it.id }
 
         store.saveMatches(toSave)
         store.deleteMatches(stale)

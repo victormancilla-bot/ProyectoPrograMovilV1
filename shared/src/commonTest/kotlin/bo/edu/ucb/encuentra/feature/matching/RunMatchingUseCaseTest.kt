@@ -6,6 +6,7 @@ import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.NotificationType
+import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
 import bo.edu.ucb.encuentra.core.domain.model.Subcategory
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.foundform.FixedClock
@@ -113,11 +114,32 @@ class RunMatchingUseCaseTest {
         matching.onReportCreated(lostReport())
         assertEquals(2, store.matches.size)
 
-        // Un cambio de pesos en Remote Config actualiza el score de lo ya propuesto.
-        store.items = listOf(foundItem(id = "fi-6", color = "Rojo"), foundItem(id = "fi-5", color = "Rojo"))
+        // Un cambio de pesos en Remote Config actualiza el score de lo ya propuesto (mismo Top-2, sin duplicar).
+        store.items = (1..6).map { foundItem(id = "fi-$it", color = "Rojo") }
         config.config = PHASE1.copy(topN = 2, colorWeight = 10.0)
         matching.onReportUpdated(lostReport())
-        assertEquals(listOf("fi-6" to 85, "fi-5" to 85), store.scores())
+        assertEquals(listOf("fi-1" to 85, "fi-2" to 85), store.scores())
+    }
+
+    @Test
+    fun reportsNotSearchingAreLeftUntouched() = runTest {
+        // Regresión: "No es mío" en un reporte EN_VERIFICACION borraba las demás propuestas del seed.
+        val store = FakeMatchingStore(items = listOf(foundItem(id = "fi-1")))
+        val matching = RunMatchingUseCase(store, FixedConfig(), FixedClock)
+        matching.onReportCreated(lostReport())
+        matching.onReportUpdated(lostReport(status = ReportStatus.EN_VERIFICACION, subcategory = Subcategory.LAPTOP))
+        assertEquals(listOf("fi-1"), store.matches.values.map { it.foundItemId.value })
+    }
+
+    @Test
+    fun proposalsForItemsNoLongerAvailableAreKept() = runTest {
+        val store = FakeMatchingStore(items = listOf(foundItem(id = "fi-1"), foundItem(id = "fi-2", color = "Gris")))
+        val matching = RunMatchingUseCase(store, FixedConfig(), FixedClock)
+        matching.onReportCreated(lostReport())
+        // fi-1 pasa a RECLAMADO (ya no está entre los disponibles): su propuesta no se borra.
+        store.items = listOf(foundItem(id = "fi-2", color = "Gris"))
+        matching.onReportUpdated(lostReport())
+        assertEquals(setOf("fi-1", "fi-2"), store.matches.values.map { it.foundItemId.value }.toSet())
     }
 
     @Test

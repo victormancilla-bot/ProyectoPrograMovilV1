@@ -36,7 +36,12 @@ internal class SeedMatchRepository : MatchRepository {
 
     override fun observeForOwner(ownerId: String): Flow<List<ReportMatches>> = groups
 
-    override suspend fun reject(matchId: ItemId): LostReport? = null
+    val rejected = mutableListOf<ItemId>()
+
+    override suspend fun reject(matchId: ItemId): LostReport? {
+        rejected += matchId
+        return SeedData.lostReports.first()
+    }
 }
 
 class ObserveMyMatchesUseCaseTest {
