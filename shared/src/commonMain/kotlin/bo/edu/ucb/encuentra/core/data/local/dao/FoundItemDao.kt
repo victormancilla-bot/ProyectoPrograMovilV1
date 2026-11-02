@@ -33,6 +33,14 @@ interface FoundItemDao {
     @Query("SELECT COUNT(*) FROM found_items WHERE status = :status")
     fun observeCountByStatus(status: ItemStatus): Flow<Int>
 
+    /** Dashboard (D01): objetos físicamente en custodia (disponibles o reclamados, H05). */
+    @Query("SELECT COUNT(*) FROM found_items WHERE status IN ('DISPONIBLE', 'RECLAMADO')")
+    fun observeInCustodyCount(): Flow<Int>
+
+    /** Dashboard (D01): disponibles cuya retención vence antes de [until] (D04 decide qué hacer con ellos). */
+    @Query("SELECT COUNT(*) FROM found_items WHERE status = 'DISPONIBLE' AND retention_until <= :until")
+    fun observeExpiringCount(until: Long): Flow<Int>
+
     @Upsert
     suspend fun upsert(item: FoundItemEntity)
 
