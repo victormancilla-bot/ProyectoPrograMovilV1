@@ -5,10 +5,9 @@ import bo.edu.ucb.encuentra.core.domain.model.MatchStatus
 import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequester
-import bo.edu.ucb.encuentra.core.domain.repository.ClaimsNotAvailableException
+import bo.edu.ucb.encuentra.core.domain.repository.DuplicateClaimException
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
-import bo.edu.ucb.encuentra.feature.claims.data.PendingClaimRequester
 import bo.edu.ucb.encuentra.feature.foundform.FakeSession
 import bo.edu.ucb.encuentra.feature.foundform.demoUser
 import bo.edu.ucb.encuentra.feature.matching.domain.model.ComparisonVerdict.COINCIDE
@@ -33,6 +32,11 @@ internal class RecordingClaimRequester(private val number: Int = 1026) : ClaimRe
         requests += matchId to claimantId
         return number
     }
+}
+
+/** V02 responde con un error (p. ej. doble reclamo). */
+internal class FailingClaimRequester(private val error: Throwable = DuplicateClaimException(1025)) : ClaimRequester {
+    override suspend fun requestClaim(matchId: ItemId, claimantId: String): Int = throw error
 }
 
 class MatchDetailUseCasesTest {
@@ -97,11 +101,11 @@ class MatchDetailUseCasesTest {
     }
 
     @Test
-    fun claimFailsWithoutSessionOrWhileV02IsPending() = runTest {
+    fun claimFailsWithoutSessionOrWhenV02Refuses() = runTest {
         val noSession = ClaimMatchUseCase(RecordingClaimRequester(), GetCurrentUserUseCase(FakeSession(null)))
         assertTrue(noSession(ItemId("m-termo")).isFailure)
 
-        val pending = ClaimMatchUseCase(PendingClaimRequester(), GetCurrentUserUseCase(FakeSession(mateo)))
-        assertIs<ClaimsNotAvailableException>(pending(ItemId("m-termo")).exceptionOrNull())
+        val refused = ClaimMatchUseCase(FailingClaimRequester(), GetCurrentUserUseCase(FakeSession(mateo)))
+        assertIs<DuplicateClaimException>(refused(ItemId("m-termo")).exceptionOrNull())
     }
 }
