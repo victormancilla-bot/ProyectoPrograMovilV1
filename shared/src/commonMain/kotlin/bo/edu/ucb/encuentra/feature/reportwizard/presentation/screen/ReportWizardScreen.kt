@@ -4,9 +4,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import bo.edu.ucb.encuentra.core.presentation.FeatureStub
+import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWizardEffect
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWizardEvent
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel.ReportWizardViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -22,6 +24,14 @@ fun ReportWizardScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                ReportWizardEffect.Cancel -> onCancel()
+            }
+        }
+    }
+
     FeatureStub(
         title = "Reportar objeto perdido",
         owner = "Integrante C",
@@ -29,7 +39,7 @@ fun ReportWizardScreen(
         detail = "Paso ${state.step} de ${state.totalSteps}",
         actions = {
             Button(onClick = { viewModel.handleEvent(ReportWizardEvent.OnNext) }) { Text("Siguiente") }
-            TextButton(onClick = { viewModel.handleEvent(ReportWizardEvent.OnPrevious) }) { Text("Anterior") }
+            TextButton(onClick = { viewModel.handleEvent(ReportWizardEvent.OnBack) }) { Text("Anterior") }
         },
         backLabel = "Cancelar",
         onNavigateBack = onCancel
