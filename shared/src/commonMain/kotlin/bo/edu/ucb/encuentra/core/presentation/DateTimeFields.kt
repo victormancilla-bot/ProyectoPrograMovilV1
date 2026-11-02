@@ -103,6 +103,12 @@ private val MONTHS = listOf(
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
 )
 
+/** "12 oct 2026" (tarjetas de listas, como "Encontrado: 12 Oct 2023" del mockup). */
+fun LocalDate.formatShort() = "$day ${MONTHS[month.number - 1].take(3)} $year"
+
+/** Fecha local de un instante, en la zona del dispositivo. */
+fun Instant.toLocalDate(): LocalDate = toLocalDateTime(TimeZone.currentSystemDefault()).date
+
 /** "2 de noviembre de 2026" (resúmenes y detalle). */
 fun LocalDate.formatLong() = "$day de ${MONTHS[month.number - 1]} de $year"
 

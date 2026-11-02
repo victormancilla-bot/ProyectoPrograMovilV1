@@ -121,7 +121,15 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
     guarded<NavRoute.MyReports>(navController, getCurrentUser) { MyReportsScreen(onNavigateBack = back) }
     guarded<NavRoute.FoundCatalog>(navController, getCurrentUser) { FoundCatalogScreen(onNavigateBack = back) }
     guarded<NavRoute.HowItWorks>(navController, getCurrentUser) { HowItWorksScreen(onNavigateBack = back) }
-    guarded<NavRoute.MatchList>(navController, getCurrentUser) { MatchListScreen(onNavigateBack = back) }
+    guarded<NavRoute.MatchList>(navController, getCurrentUser) {
+        MatchListScreen(
+            onNavigateBack = back,
+            onOpenMatch = { matchId -> navController.navigate(NavRoute.MatchDetail(matchId)) },
+            // "Modificar criterios" vuelve al reporte: Mis reportes (L05 agrega el detalle y la edición).
+            onModifyCriteria = { navController.navigate(NavRoute.MyReports) },
+            onReportLost = { navController.navigateToTab(NavRoute.ReportWizard, NavRoute.Home) }
+        )
+    }
     // Se abre también desde una notificación: ucbencuentra://match/{matchId} (el guard sigue aplicando).
     guarded<NavRoute.MatchDetail>(
         navController,
