@@ -123,10 +123,36 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - **Análisis de coincidencia**: "Lo que reportaste" vs "Lo que se encontró" fila por fila (tipo, marca, color con su muestra, lugar y fecha) con **✔ coincide** o **? por verificar**. Usa las mismas similitudes del score (`MatchEngine`, M02): ✔ solo si el dato coincide del todo; distinto o desconocido = ?.
 - **Vista limitada del hallazgo** (`FoundItemPreview`): no incluye la descripción del staff, el lugar exacto, la custodia ni las preguntas de control, porque podrían darle las respuestas a quien no es el dueño. La pantalla lo explica en "Información protegida".
 - Solo el dueño del reporte ve la coincidencia: con otra sesión, o si ya se descartó, aparece "Coincidencia no disponible".
-- **Esto es mío — verificar** → `ClaimMatchUseCase` llama al hook `ClaimRequester` (core). V02 lo implementa creando el reclamo; mientras tanto `PendingClaimRequester` (en `feature/claims/data`) avisa "La verificación de reclamos todavía no está disponible". Si el reclamo se crea, los botones se reemplazan por "Reclamo #N enviado".
+- **Esto es mío — verificar** → `ClaimMatchUseCase` llama al hook `ClaimRequester` (core), que implementa V02 (`CreateClaimUseCase`, ver abajo). Si el reclamo se crea, los botones se reemplazan por "Reclamo #N enviado"; los errores de V02 ("Ya reclamaste este objeto (Reclamo #N).") se muestran tal cual.
+- Si el dueño ya reclamó el objeto, el detalle lo sabe desde Room y muestra su reclamo con el estado en vez de los botones.
 - **No es lo mío, seguir buscando** → confirmación y `RejectMatchUseCase` (M02): la coincidencia se descarta, se re-calcula el ranking y se vuelve a la lista.
 - Los botones solo aparecen en coincidencias **propuestas** de un reporte abierto; si ya está confirmada o el reporte se cerró se muestra un aviso.
-- Tests: `MatchDetailUseCasesTest` (6, con el seed), `MatchDetailViewModelTest` (6).
+- Tests: `MatchDetailUseCasesTest` (8, con el seed), `MatchDetailViewModelTest` (7).
+
+## Reclamos: flujo y estados (V02)
+
+Estados del reclamo con su máquina de estados (`ClaimStateMachine`, igual que H05 para el objeto):
+
+```
+PENDIENTE ──responder (quien reclama, V01)──▶ EN_VERIFICACION ──aprobar (staff)──▶ APROBADO ──entregar (staff)──▶ ENTREGADO
+    │                                              │
+    └──────────────rechazar (staff)────────────────┴──▶ RECHAZADO
+```
+
+- **Crear** (`CreateClaimUseCase`, desde "Esto es mío — verificar" de M05), en una transacción: valida que la coincidencia sea del reporte de quien reclama y siga propuesta, y que el objeto siga en custodia; **bloquea el doble reclamo** del mismo objeto por la misma persona (además del índice único `found_item_id + claimant_id` de Room); crea el reclamo PENDIENTE con número visible (#1027…); el objeto pasa a **RECLAMADO con la máquina de H05**; el reporte pasa a "En verificación"; queda en la auditoría.
+- **Varias personas pueden reclamar el mismo objeto** (decisión): si alguien reclamó primero, el dueño real no queda bloqueado; el objeto ya está RECLAMADO y el staff decide. Solo un reclamo por objeto puede quedar aprobado.
+- **Transiciones** (`ChangeClaimStatusUseCase` + `SubmitClaimAnswersUseCase`, `ApproveClaimUseCase`, `RejectClaimUseCase`, `DeliverClaimUseCase`), cada una auditada:
+
+| Transición | Quién | Coincidencia | Reporte del dueño | Objeto (H05) |
+|---|---|---|---|---|
+| Responder preguntas | quien reclama | — | — | — |
+| Aprobar | staff | CONFIRMADO | Match confirmado | sigue RECLAMADO |
+| Rechazar | staff | DESCARTADO | vuelve a Buscando si no tiene otro reclamo abierto | vuelve a DISPONIBLE si nadie más lo reclama |
+| Entregar | staff | — | Recuperado | ENTREGADO; los demás reclamos abiertos se rechazan |
+
+- Un reclamo solo cambia la coincidencia y el reporte si el reporte es de quien reclama (protege ante datos mal cargados).
+- Las pantallas que usan estas transiciones son de otras tarjetas: responder preguntas (V01), panel del staff (V03) y entrega (V04).
+- Tests: `ClaimStateMachineTest` (4) y `ClaimUseCasesTest` (9, con el seed: crear, doble reclamo, objeto ya reclamado por otro, permisos, flujo completo hasta la entrega, rechazo, entrega con otros reclamos abiertos).
 
 ## Estados y custodia del objeto (H05)
 
