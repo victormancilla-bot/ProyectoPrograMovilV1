@@ -33,15 +33,24 @@ Paquete: `bo.edu.ucb.encuentra` · Flavors: `dev` (`bo.edu.ucb.encuentra.dev`) y
   ```
 - **iOS:** abre `iosApp/` en Xcode y ejecuta.
 
-Usuarios de prueba (contraseña `password`), hasta que S01/S02 conecten el login real:
+Usuarios de prueba (están en el seed de Room). El login pide primero el correo y, al tocar **Continuar**, la contraseña `password` (S02 la reemplazará por Google UCB):
 
 | Correo | Rol | Entra a |
 |---|---|---|
 | `estudiante@ucb.edu.bo` | ESTUDIANTE | Inicio · barra: Inicio, Buscar, Reportar, Alertas, Perfil |
 | `staff@ucb.edu.bo` | STAFF | Panel · barra: Panel, Inventario, Reclamos, Alertas, Perfil |
 | `admin@ucb.edu.bo` | ADMIN | Igual que staff |
+| `ana.gomez@ucb.edu.bo`, `luis.mendoza@ucb.edu.bo`, `carlos.mamani@ucb.edu.bo` | ESTUDIANTE | Inicio (reclamantes del seed) |
 
 Las pantallas que no están en la barra se abren desde **Perfil → Menú de desarrollo** (solo mientras son stubs).
+
+## Login y sesión (S01)
+
+- Pantalla del Figma "Login Estudiante": header alto con el escudo, tarjeta blanca, **Continuar** y "Contacta a Sistemas UCB".
+- Dos pasos en la misma tarjeta: (1) el correo debe ser **@ucb.edu.bo** (`ValidateInstitutionalEmailUseCase`); (2) contraseña. `AuthenticateUseCase` busca el usuario en Room (`UserRepository`) y responde "Correo o contraseña incorrectos" sin revelar qué correos existen.
+- **Sesión persistente** con DataStore (`SessionRepositoryImpl`): guarda solo el id del usuario; al abrir la app se restaura desde Room y se entra directo al home del rol. **Perfil → Cerrar sesión** la borra.
+- Para empezar de cero (borra sesión y base): *Ajustes → Apps → UCB Encuentra (dev) → Borrar datos*, o `adb shell pm clear bo.edu.ucb.encuentra.dev`.
+- ⚠️ El enlace a Sistemas UCB abre `mailto:sistemas@ucb.edu.bo` (`LoginViewModel.SUPPORT_URI`): **es de prueba**, falta confirmar el contacto real (o leerlo de Remote Config, F08).
 
 ## Navegación (F05)
 
