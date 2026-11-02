@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -229,27 +230,41 @@ internal fun ControlQuestions(state: FoundFormState, onEvent: (FoundFormEvent) -
     val questions = state.draft.controlQuestions
     Column(verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.medium)) {
         AppOverline("Preguntas de control", color = UcbEncuentraTheme.colors.onSurface)
-        AppBody("Algo que solo el dueño sabría (no lo pongas en la descripción). Se le preguntará al reclamar.")
+        AppBody(
+            "Algo que solo el dueño sabría (no lo pongas en la descripción). Se le preguntará al reclamar y la app " +
+                "comparará su respuesta con la que escribas aquí. La respuesta esperada solo la ve el staff."
+        )
         questions.forEachIndexed { index, question ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AppTextField(
-                    value = question,
-                    onValueChange = { onEvent(FoundFormEvent.OnQuestionChanged(index, it)) },
-                    placeholder = QUESTION_EXAMPLES.getOrElse(index) { QUESTION_EXAMPLES.first() },
-                    modifier = Modifier.weight(1f)
-                )
-                if (questions.size > 1) {
-                    IconButton(onClick = { onEvent(FoundFormEvent.OnRemoveQuestion(index)) }) {
-                        Icon(Icons.Filled.Close, contentDescription = "Quitar pregunta ${index + 1}")
+            Column(verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.small)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AppTextField(
+                        value = question,
+                        onValueChange = { onEvent(FoundFormEvent.OnQuestionChanged(index, it)) },
+                        placeholder = QUESTION_EXAMPLES.getOrElse(index) { QUESTION_EXAMPLES.first() },
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (questions.size > 1) {
+                        IconButton(onClick = { onEvent(FoundFormEvent.OnRemoveQuestion(index)) }) {
+                            Icon(Icons.Filled.Close, contentDescription = "Quitar pregunta ${index + 1}")
+                        }
                     }
                 }
+                AppTextField(
+                    value = state.draft.expectedAnswers.getOrElse(index) { "" },
+                    onValueChange = { onEvent(FoundFormEvent.OnExpectedAnswerChanged(index, it)) },
+                    placeholder = "Respuesta esperada (privada)",
+                    leadingIcon = Icons.Outlined.Lock,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
         FieldError(
             state.errorFor(
                 FoundFieldError.QUESTION_REQUIRED,
                 FoundFieldError.QUESTION_TOO_LONG,
-                FoundFieldError.TOO_MANY_QUESTIONS
+                FoundFieldError.TOO_MANY_QUESTIONS,
+                FoundFieldError.ANSWER_REQUIRED,
+                FoundFieldError.ANSWER_TOO_LONG
             )
         )
         if (state.canAddQuestion) {

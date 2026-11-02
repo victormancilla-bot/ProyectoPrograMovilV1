@@ -39,6 +39,8 @@ class FoundFormViewModel(
     fun handleEvent(event: FoundFormEvent) {
         val draft = state.value.draft
         val questions = draft.controlQuestions
+        // Una respuesta esperada por pregunta, en la misma posición (V01).
+        val answers = draft.expectedAnswers.let { it + List((questions.size - it.size).coerceAtLeast(0)) { "" } }
         when (event) {
             is FoundFormEvent.OnCategorySelected -> updateDraft(
                 // Al cambiar de categoría, la subcategoría anterior ya no corresponde.
@@ -61,12 +63,20 @@ class FoundFormViewModel(
             is FoundFormEvent.OnQuestionChanged -> if (event.index in questions.indices) {
                 updateDraft(draft.copy(controlQuestions = questions.toMutableList().also { it[event.index] = event.text }))
             }
+            is FoundFormEvent.OnExpectedAnswerChanged -> if (event.index in questions.indices) {
+                updateDraft(draft.copy(expectedAnswers = answers.toMutableList().also { it[event.index] = event.text }))
+            }
             FoundFormEvent.OnAddQuestion -> if (state.value.canAddQuestion) {
-                updateDraft(draft.copy(controlQuestions = questions + ""))
+                updateDraft(draft.copy(controlQuestions = questions + "", expectedAnswers = answers.take(questions.size) + ""))
             }
             // Siempre queda al menos un campo de pregunta.
             is FoundFormEvent.OnRemoveQuestion -> if (questions.size > 1 && event.index in questions.indices) {
-                updateDraft(draft.copy(controlQuestions = questions.filterIndexed { i, _ -> i != event.index }))
+                updateDraft(
+                    draft.copy(
+                        controlQuestions = questions.filterIndexed { i, _ -> i != event.index },
+                        expectedAnswers = answers.take(questions.size).filterIndexed { i, _ -> i != event.index }
+                    )
+                )
             }
             FoundFormEvent.OnSubmit -> submit()
             FoundFormEvent.OnDismissError -> _state.value = state.value.copy(error = null)

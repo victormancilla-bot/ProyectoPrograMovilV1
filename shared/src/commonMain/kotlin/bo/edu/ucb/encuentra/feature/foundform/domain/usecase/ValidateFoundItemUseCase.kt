@@ -20,7 +20,9 @@ enum class FoundFieldError(val message: String) {
     FOUND_DATE_IN_FUTURE("La fecha del hallazgo no puede ser futura"),
     QUESTION_REQUIRED("Agrega al menos una pregunta de control"),
     TOO_MANY_QUESTIONS("Máximo ${ValidateFoundItemUseCase.MAX_QUESTIONS} preguntas"),
-    QUESTION_TOO_LONG("Cada pregunta: máximo ${ValidateFoundItemUseCase.QUESTION_MAX} caracteres")
+    QUESTION_TOO_LONG("Cada pregunta: máximo ${ValidateFoundItemUseCase.QUESTION_MAX} caracteres"),
+    ANSWER_REQUIRED("Escribe la respuesta esperada de cada pregunta"),
+    ANSWER_TOO_LONG("Cada respuesta: máximo ${ValidateFoundItemUseCase.ANSWER_MAX} caracteres")
 }
 
 /** Reglas del formulario "Registrar Objeto" (H03). El botón Registrar se habilita solo sin errores. */
@@ -53,6 +55,10 @@ class ValidateFoundItemUseCase(
         if (questions.isEmpty()) add(FoundFieldError.QUESTION_REQUIRED)
         if (draft.controlQuestions.size > MAX_QUESTIONS) add(FoundFieldError.TOO_MANY_QUESTIONS)
         if (questions.any { it.length > QUESTION_MAX }) add(FoundFieldError.QUESTION_TOO_LONG)
+        // V01: sin respuesta esperada no hay contra qué comparar lo que conteste el estudiante.
+        val answers = draft.questionsWithAnswers.map { it.second }
+        if (answers.any { it.isEmpty() }) add(FoundFieldError.ANSWER_REQUIRED)
+        if (answers.any { it.length > ANSWER_MAX }) add(FoundFieldError.ANSWER_TOO_LONG)
     }
 
     /** Fecha y hora del hallazgo en la zona del dispositivo, o null si falta alguna. */
@@ -67,5 +73,6 @@ class ValidateFoundItemUseCase(
         const val FEATURES_MAX = 500
         const val MAX_QUESTIONS = 3
         const val QUESTION_MAX = 120
+        const val ANSWER_MAX = 80
     }
 }

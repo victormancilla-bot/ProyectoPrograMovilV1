@@ -63,7 +63,8 @@ class FoundFormViewModelTest {
         FoundFormEvent.OnTitleChanged("Smartphone Negro"),
         FoundFormEvent.OnFoundZoneSelected(CampusZone.BIBLIOTECA_CENTRAL),
         FoundFormEvent.OnCustodySelected(CustodyPlace.OFICINA),
-        FoundFormEvent.OnQuestionChanged(0, "¿Qué fondo de pantalla tiene?")
+        FoundFormEvent.OnQuestionChanged(0, "¿Qué fondo de pantalla tiene?"),
+        FoundFormEvent.OnExpectedAnswerChanged(0, "Un perro")
     )
 
     @Test
@@ -89,8 +90,14 @@ class FoundFormViewModelTest {
         send(FoundFormEvent.OnAddQuestion, FoundFormEvent.OnAddQuestion, FoundFormEvent.OnAddQuestion)
         assertEquals(3, state.draft.controlQuestions.size)
         assertFalse(state.canAddQuestion)
-        send(FoundFormEvent.OnQuestionChanged(2, "¿Qué tiene en la funda?"), FoundFormEvent.OnRemoveQuestion(1))
+        send(
+            FoundFormEvent.OnQuestionChanged(2, "¿Qué tiene en la funda?"),
+            FoundFormEvent.OnExpectedAnswerChanged(2, "Stickers"),
+            FoundFormEvent.OnRemoveQuestion(1)
+        )
         assertEquals(listOf("", "¿Qué tiene en la funda?"), state.draft.controlQuestions)
+        // Cada respuesta esperada sigue a su pregunta al quitar otra.
+        assertEquals(listOf("", "Stickers"), state.draft.expectedAnswers)
     }
 
     @Test
