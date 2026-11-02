@@ -59,6 +59,15 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - MVI: `HomeState` / `HomeEvent` / `HomeEffect`; tests en `HomeViewModelTest`.
 - Pendiente de otras tarjetas: el menú (☰) y la luna de modo oscuro del header (S07).
 
+## Wizard de reporte (L02)
+
+- Un solo `ReportWizardViewModel` para los 4 pasos con el borrador (`ReportDraftState` + `ReportDraft`); cancelar lo descarta (F05).
+- **Paso 1 · Categoría** (Figma "Reportar - Categoría"): grilla de 6 categorías y, al elegir una, sus subcategorías en chips (obligatoria: la confirmación muestra "Electrónica / Laptops").
+- **Paso 2 · Atributos** (Figma "Reportar - Atributos"): ¿qué es? (nombre, obligatorio), color principal (obligatorio; "+" muestra 13 colores), marca (opcional), características distintivas (opcional).
+- Validación por paso en `ValidateReportStepUseCase`: **Siguiente** queda deshabilitado hasta que el paso es válido. La flecha atrás vuelve al paso anterior sin perder datos (en el paso 1 cancela).
+- Pasos 3 y 4: L03 (dónde y cuándo, foto, contacto) y L04 (confirmación y envío).
+- Tests: `ValidateReportStepUseCaseTest`, `ReportWizardViewModelTest`.
+
 ## Navegación (F05)
 
 - Rutas `@Serializable` en `navigation/NavRoute.kt`; todas pasan por `RouteGuard`: sin sesión → Login, rol incorrecto → home de su rol.
