@@ -59,6 +59,24 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - MVI: `HomeState` / `HomeEvent` / `HomeEffect`; tests en `HomeViewModelTest`.
 - Pendiente de otras tarjetas: el menú (☰) y la luna de modo oscuro del header (S07).
 
+## Estados y custodia del objeto (H05)
+
+Máquina de estados en `core/domain/model/ItemStateMachine.kt`:
+
+```
+DISPONIBLE ──reclamar──▶ RECLAMADO ──entregar──▶ ENTREGADO
+    ▲                       │
+    └────────liberar────────┘   (reclamo rechazado, V01)
+DISPONIBLE ──descartar──▶ DESCARTADO   (retención vencida, D04)
+DISPONIBLE ──donar──────▶ DONADO       (retención vencida, D04)
+```
+
+- ENTREGADO, DESCARTADO y DONADO son finales. Cualquier otra transición lanza `InvalidTransitionException` ("No se puede descartar un objeto en estado \"Reclamado\"").
+- Un use case por transición en `core/domain/usecase/item`: `ClaimItemUseCase`, `ReleaseItemUseCase`, `DeliverItemUseCase`, `DiscardItemUseCase`, `DonateItemUseCase` (todos sobre `ChangeItemStatusUseCase`). Reclamar lo puede hacer el estudiante; el resto, solo staff.
+- Custodia: `MoveCustodyUseCase` (oficina, locker, bodega + detalle) agrega un `CustodyEvent` al historial y actualiza el lugar actual; solo para objetos DISPONIBLE o RECLAMADO. `ObserveCustodyHistoryUseCase` devuelve el historial (más reciente primero).
+- Hook de auditoría para S05: `AuditRecorder` (hoy `RoomAuditRecorder`, tabla append-only). Cada cambio de estado o custodia se guarda junto con su auditoría en una sola transacción (`TransactionRunner` → `withWriteTransaction` de Room).
+- Tests: `ItemStateMachineTest` (todas las combinaciones estado × transición), `ItemLifecycleUseCasesTest`.
+
 ## Registrar objeto encontrado (H03)
 
 - Pantalla del mockup "Registrar - Formulario de Objeto" para el staff (por ahora se abre desde **Inventario → Registrar objeto encontrado**; H01 la abrirá después de la foto).
