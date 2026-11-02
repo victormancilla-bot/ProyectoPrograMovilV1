@@ -59,6 +59,24 @@ Las pantallas que no están en la barra se abren desde **Perfil → Menú de des
 - MVI: `HomeState` / `HomeEvent` / `HomeEffect`; tests en `HomeViewModelTest`.
 - Pendiente de otras tarjetas: el menú (☰) y la luna de modo oscuro del header (S07).
 
+## Matching fase 1 (M01)
+
+`feature/matching/domain/engine/MatchEngine.kt`: Kotlin puro en `commonMain`, sin UI ni Room.
+
+1. **Filtro duro** (descarta el ruido antes de cualquier IA): misma sede, misma categoría y subcategoría, objeto **DISPONIBLE**, reporte **BUSCANDO** y fechas compatibles (encontrado desde el inicio del rango de pérdida hasta **30 días** después del final).
+2. **Score 0–100**:
+
+| Criterio | Puntos | Coincide | No se sabe | No coincide |
+|---|---|---|---|---|
+| Color | 40 | 40 | 20 | 0 |
+| Marca (sin mayúsculas; "Casio fx-991" = "Casio") | 25 | 25 | 12 | 0 |
+| Zona | 25 | 25 | 12 ("Otro lugar") | 0 |
+| Fechas | 10 | 10 si se encontró dentro del rango | | −1 cada 3 días después |
+
+- Se guardan los pares con score ≥ 30 como **PROPUESTO**, con id fijo por par (`m-<reporte>-<objeto>`): correrlo dos veces no duplica, y no se pisan los descartados.
+- `RunMatchingUseCase` implementa el hook `MatchingTrigger`: corre **al enviar un reporte (L04)** contra los objetos DISPONIBLES y **al registrar un hallazgo (H03)** contra los reportes BUSCANDO. Por cada reporte con coincidencias nuevas crea una notificación **NEW_MATCH** al dueño (la cuenta el Home y abre la mejor por deep link). Si el matching falla, el reporte o el objeto igual quedan guardados.
+- Tests: `MatchEngineTest` (8, casos borde de fechas, textos, datos desconocidos), `RunMatchingUseCaseTest` (4).
+
 ## Posibles coincidencias (M04)
 
 - Pantalla del Figma "Resultados de Matching" (se abre desde "N coincidencias nuevas" del Home): candidatos con `ItemCard` + `ScoreBadge` de color (verde ≥ 80, naranja 50-79, gris < 50) y ranking `#1, #2...` del más al menos parecido. **Nunca un "es / no es"**: siempre un porcentaje.

@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.feature.reportwizard
 
 import bo.edu.ucb.encuentra.core.domain.model.CampusZone
 import bo.edu.ucb.encuentra.core.domain.model.Category
+import bo.edu.ucb.encuentra.core.domain.model.FoundItem
 import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
 import bo.edu.ucb.encuentra.core.domain.model.Role
@@ -35,8 +36,13 @@ internal class FakeLostReportRepository : LostReportRepository {
 
 internal class FakeMatchingTrigger(private val fail: Boolean = false) : MatchingTrigger {
     val triggered = mutableListOf<LostReport>()
+    val registered = mutableListOf<FoundItem>()
     override suspend fun onReportCreated(report: LostReport) {
         triggered += report
+        if (fail) error("matching caído")
+    }
+    override suspend fun onFoundItemRegistered(item: FoundItem) {
+        registered += item
         if (fail) error("matching caído")
     }
 }
