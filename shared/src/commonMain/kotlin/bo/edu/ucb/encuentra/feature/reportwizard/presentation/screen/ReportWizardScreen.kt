@@ -87,6 +87,7 @@ private fun ReportWizardContent(state: ReportDraftState, onEvent: (ReportWizardE
                 when (state.step) {
                     1 -> CategoryStep(state = state, onEvent = onEvent)
                     2 -> AttributesStep(state = state, onEvent = onEvent)
+                    3 -> WhereWhenStep(state = state, onEvent = onEvent)
                     else -> AppBody(
                         "Paso ${state.step} · ${state.stepName}: llega con L03/L04.",
                         textAlign = TextAlign.Center,
