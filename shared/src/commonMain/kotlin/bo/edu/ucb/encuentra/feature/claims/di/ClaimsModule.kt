@@ -1,6 +1,7 @@
 package bo.edu.ucb.encuentra.feature.claims.di
 
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimRequester
+import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.claims.data.ClaimRepositoryImpl
 import bo.edu.ucb.encuentra.feature.claims.domain.repository.ClaimRepository
 import bo.edu.ucb.encuentra.feature.claims.domain.usecase.ApproveClaimUseCase
@@ -15,6 +16,7 @@ import bo.edu.ucb.encuentra.feature.claims.domain.usecase.SubmitClaimAnswersUseC
 import bo.edu.ucb.encuentra.feature.claims.presentation.viewmodel.ClaimDetailViewModel
 import bo.edu.ucb.encuentra.feature.claims.presentation.viewmodel.ClaimsViewModel
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
@@ -33,5 +35,6 @@ val claimsModule = module {
     singleOf(::ObserveClaimReviewUseCase)
     singleOf(::ObserveOpenClaimsUseCase)
     viewModelOf(::ClaimsViewModel)
-    viewModelOf(::ClaimDetailViewModel)
+    // El id llega desde la ruta: koinViewModel { parametersOf(claimId) }.
+    viewModel { (claimId: String) -> ClaimDetailViewModel(ItemId(claimId), get(), get(), get()) }
 }

@@ -159,7 +159,9 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
     guarded<NavRoute.Inventory>(navController, getCurrentUser) {
         InventoryScreen(onNavigateBack = back, onRegisterFound = { navController.navigate(NavRoute.FoundForm) })
     }
-    guarded<NavRoute.Claims>(navController, getCurrentUser) { ClaimsScreen(onNavigateBack = back) }
+    guarded<NavRoute.Claims>(navController, getCurrentUser) {
+        ClaimsScreen(onOpenClaim = { claimId -> navController.navigate(NavRoute.ClaimDetail(claimId)) })
+    }
     guarded<NavRoute.ClaimDetail>(navController, getCurrentUser) { route ->
         ClaimDetailScreen(claimId = route.claimId, onNavigateBack = back)
     }
