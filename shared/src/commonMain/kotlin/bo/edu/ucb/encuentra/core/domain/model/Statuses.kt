@@ -3,7 +3,7 @@ package bo.edu.ucb.encuentra.core.domain.model
 /**
  * Estado de un objeto ENCONTRADO en custodia (H05): DISPONIBLE → RECLAMADO → ENTREGADO / DESCARTADO / DONADO.
  * "Por vencer" y "Vencido" no son estados: se calculan con la fecha de retención (D04).
- * Las transiciones válidas las define H05.
+ * Las transiciones válidas están en [ItemStateMachine].
  */
 enum class ItemStatus(val label: String) {
     DISPONIBLE("Disponible"),

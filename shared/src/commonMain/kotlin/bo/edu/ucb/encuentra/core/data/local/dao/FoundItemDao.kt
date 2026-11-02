@@ -4,6 +4,7 @@ import androidx.room3.Dao
 import androidx.room3.Query
 import androidx.room3.Upsert
 import bo.edu.ucb.encuentra.core.data.local.entity.FoundItemEntity
+import bo.edu.ucb.encuentra.core.domain.model.CustodyPlace
 import bo.edu.ucb.encuentra.core.domain.model.ItemStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -36,4 +37,8 @@ interface FoundItemDao {
 
     @Query("UPDATE found_items SET status = :status WHERE id = :id")
     suspend fun updateStatus(id: String, status: ItemStatus)
+
+    /** Lugar actual; el historial queda en custody_events (H05). */
+    @Query("UPDATE found_items SET custody_place = :place, custody_detail = :detail WHERE id = :id")
+    suspend fun updateCustody(id: String, place: CustodyPlace, detail: String)
 }
