@@ -13,7 +13,10 @@ import bo.edu.ucb.encuentra.feature.foundform.domain.repository.FoundItemReposit
 import bo.edu.ucb.encuentra.feature.reportwizard.FakeMatchingTrigger
 import bo.edu.ucb.encuentra.feature.foundform.domain.usecase.RegisterFoundItemUseCase
 import bo.edu.ucb.encuentra.feature.foundform.domain.usecase.ValidateFoundItemUseCase
+import bo.edu.ucb.encuentra.core.FixedAppConfig
+import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
 import kotlinx.coroutines.test.runTest
+import kotlin.time.Duration.Companion.days
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -50,13 +53,15 @@ class RegisterFoundItemUseCaseTest {
 
     private val repository = FakeFoundItemRepository()
     private val matching = FakeMatchingTrigger()
+    private val config = FixedAppConfig()
 
     private fun register(user: UserModel?, trigger: FakeMatchingTrigger = matching) = RegisterFoundItemUseCase(
         ValidateFoundItemUseCase(FixedClock, BoliviaTime),
         repository,
         trigger,
         GetCurrentUserUseCase(FakeSession(user)),
-        FixedClock
+        FixedClock,
+        GetAppConfigUseCase(config)
     )
 
     @Test
@@ -80,7 +85,7 @@ class RegisterFoundItemUseCaseTest {
         assertEquals(listOf("Un perro"), item.expectedAnswers)
         assertEquals("u-ana-staff", item.registeredBy)
         assertEquals(Campus.LA_PAZ, item.campus)
-        assertEquals(FixedClock.now() + RegisterFoundItemUseCase.RETENTION, item.retentionUntil)
+        assertEquals(FixedClock.now() + 90.days, item.retentionUntil)
     }
 
     @Test
@@ -103,5 +108,12 @@ class RegisterFoundItemUseCaseTest {
         assertEquals(RegisterFoundItemUseCase.NOT_STAFF, result.exceptionOrNull()?.message)
         assertEquals(RegisterFoundItemUseCase.NO_SESSION, register(null)(validFoundDraft).exceptionOrNull()?.message)
         assertTrue(repository.saved.isEmpty())
+    }
+
+    @Test
+    fun retentionComesFromRemoteConfig() = runTest {
+        config.update { it.copy(retentionDays = 30) }
+        val item = register(demoUser(Role.STAFF))(validFoundDraft).getOrThrow()
+        assertEquals(FixedClock.now() + 30.days, item.retentionUntil)
     }
 }

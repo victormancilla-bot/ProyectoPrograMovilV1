@@ -1,6 +1,8 @@
 package bo.edu.ucb.encuentra.feature.login
 
+import bo.edu.ucb.encuentra.core.FixedAppConfig
 import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
+import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
 import bo.edu.ucb.encuentra.core.domain.repository.SessionRepository
 import bo.edu.ucb.encuentra.core.domain.repository.UserRepository
@@ -30,6 +32,7 @@ import kotlin.test.assertNull
 class LoginViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
+    private val config = FixedAppConfig()
 
     private val session = object : SessionRepository {
         var user: UserModel? = null
@@ -49,7 +52,7 @@ class LoginViewModelTest {
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        viewModel = LoginViewModel(ValidateInstitutionalEmailUseCase(), AuthenticateUseCase(users, session))
+        viewModel = LoginViewModel(ValidateInstitutionalEmailUseCase(), AuthenticateUseCase(users, session), GetAppConfigUseCase(config))
     }
 
     @AfterTest
@@ -97,5 +100,16 @@ class LoginViewModelTest {
 
         assertEquals(AuthenticateUseCase.WRONG_CREDENTIALS, viewModel.state.value.passwordError)
         assertNull(session.user)
+    }
+
+    @Test
+    fun supportUsesTheContactFromRemoteConfig() = runTest(dispatcher) {
+        config.update { it.copy(supportContact = "objetosperdidos@ucb.edu.bo") }
+
+        val effect = async { viewModel.effects.first() }
+        viewModel.handleEvent(LoginEvent.OnContactSupport)
+        advanceUntilIdle()
+
+        assertEquals(LoginEffect.OpenSupport(LoginViewModel.supportUri("objetosperdidos@ucb.edu.bo")), effect.await())
     }
 }
