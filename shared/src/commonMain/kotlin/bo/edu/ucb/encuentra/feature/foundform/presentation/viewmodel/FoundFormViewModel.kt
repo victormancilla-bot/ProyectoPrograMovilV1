@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import bo.edu.ucb.encuentra.core.domain.repository.CapturedPhotosStore
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
@@ -22,12 +23,18 @@ class FoundFormViewModel(
     private val validate: ValidateFoundItemUseCase,
     private val register: RegisterFoundItemUseCase,
     clock: Clock,
-    timeZone: TimeZone
+    timeZone: TimeZone,
+    /** Fotos del paso 1, Captura (H01): se guardan con el objeto y se limpian al registrar. */
+    private val photos: CapturedPhotosStore
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
         clock.now().toLocalDateTime(timeZone).let { now ->
-            val draft = FoundItemDraft(foundDate = now.date, foundTime = LocalTime(now.hour, now.minute))
+            val draft = FoundItemDraft(
+                photos = photos.photos.value,
+                foundDate = now.date,
+                foundTime = LocalTime(now.hour, now.minute)
+            )
             FoundFormState(draft = draft, errors = validate(draft))
         }
     )
@@ -98,6 +105,7 @@ class FoundFormViewModel(
         viewModelScope.launch {
             register(current.draft)
                 .onSuccess { item ->
+                    photos.clear()
                     _state.value = state.value.copy(saving = false)
                     _effects.emit(FoundFormEffect.Registered(item.title))
                 }

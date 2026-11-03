@@ -10,6 +10,7 @@ import bo.edu.ucb.encuentra.core.data.remoteconfig.AppConfigRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.remoteconfig.FirebaseRemoteConfigDataSource
 import bo.edu.ucb.encuentra.core.data.remoteconfig.RemoteConfigDataSource
 import bo.edu.ucb.encuentra.core.domain.repository.AppConfigRepository
+import bo.edu.ucb.encuentra.core.domain.repository.CapturedPhotosStore
 import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.ObserveAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.RefreshAppConfigUseCase
@@ -47,6 +48,9 @@ val coreModule = module {
     singleOf(::GetAppConfigUseCase)
     singleOf(::ObserveAppConfigUseCase)
     singleOf(::RefreshAppConfigUseCase)
+
+    // Fotos del objeto que se está registrando (H01 → H03).
+    singleOf(::CapturedPhotosStore)
 
     // Reloj y zona horaria inyectables: los tests usan un reloj fijo.
     single<Clock> { Clock.System }

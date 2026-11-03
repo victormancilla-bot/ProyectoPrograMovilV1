@@ -16,6 +16,7 @@ import bo.edu.ucb.encuentra.feature.foundform.presentation.viewmodel.FoundFormVi
 import bo.edu.ucb.encuentra.feature.reportwizard.FakeMatchingTrigger
 import bo.edu.ucb.encuentra.core.FixedAppConfig
 import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
+import bo.edu.ucb.encuentra.core.domain.repository.CapturedPhotosStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -40,6 +41,7 @@ class FoundFormViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val repository = FakeFoundItemRepository()
+    private val photos = CapturedPhotosStore()
     private lateinit var viewModel: FoundFormViewModel
 
     @BeforeTest
@@ -50,7 +52,8 @@ class FoundFormViewModelTest {
             validate, repository, FakeMatchingTrigger(), GetCurrentUserUseCase(FakeSession(demoUser(Role.STAFF))), FixedClock,
             GetAppConfigUseCase(FixedAppConfig())
         )
-        viewModel = FoundFormViewModel(validate, register, FixedClock, BoliviaTime)
+        photos.add("file:///data/found_photos/1.jpg")
+        viewModel = FoundFormViewModel(validate, register, FixedClock, BoliviaTime, photos)
     }
 
     @AfterTest
@@ -117,6 +120,9 @@ class FoundFormViewModelTest {
 
         assertEquals(FoundFormEffect.Registered("Smartphone Negro"), effect.await())
         assertEquals(ItemStatus.DISPONIBLE, repository.saved.single().status)
+        // H01: las fotos del paso 1 se guardan con el objeto y el borrador se limpia.
+        assertEquals(listOf("file:///data/found_photos/1.jpg"), repository.saved.single().photoUrls)
+        assertTrue(photos.photos.value.isEmpty())
         assertFalse(state.saving)
     }
 }

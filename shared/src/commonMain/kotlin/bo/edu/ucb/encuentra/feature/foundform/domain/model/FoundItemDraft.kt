@@ -12,6 +12,8 @@ import kotlinx.datetime.LocalTime
  * [suggestedByAi] marca que categoría y color vinieron de la IA (H02); en R3 se eligen a mano.
  */
 data class FoundItemDraft(
+    /** Fotos ya comprimidas (`file://...`) del paso 1, Captura (H01). Mínimo una. */
+    val photos: List<String> = emptyList(),
     // Datos detectados (editables)
     val category: Category? = null,
     val subcategory: Subcategory? = null,

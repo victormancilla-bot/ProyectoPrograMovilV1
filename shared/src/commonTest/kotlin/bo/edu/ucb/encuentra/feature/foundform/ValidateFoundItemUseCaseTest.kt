@@ -24,6 +24,7 @@ internal object FixedClock : Clock {
 internal val BoliviaTime = TimeZone.of("America/La_Paz")
 
 internal val validFoundDraft = FoundItemDraft(
+    photos = listOf("file:///data/found_photos/1.jpg"),
     category = Category.ELECTRONICA,
     subcategory = Subcategory.CELULAR,
     color = "Negro",
@@ -49,7 +50,7 @@ class ValidateFoundItemUseCaseTest {
     fun emptyDraftListsEveryRequiredField() {
         assertEquals(
             setOf(
-                FoundFieldError.CATEGORY_REQUIRED, FoundFieldError.SUBCATEGORY_REQUIRED, FoundFieldError.COLOR_REQUIRED,
+                FoundFieldError.PHOTO_REQUIRED, FoundFieldError.CATEGORY_REQUIRED, FoundFieldError.SUBCATEGORY_REQUIRED, FoundFieldError.COLOR_REQUIRED,
                 FoundFieldError.TITLE_TOO_SHORT, FoundFieldError.FOUND_ZONE_REQUIRED, FoundFieldError.CUSTODY_REQUIRED,
                 FoundFieldError.FOUND_DATE_REQUIRED, FoundFieldError.QUESTION_REQUIRED
             ),
@@ -80,6 +81,11 @@ class ValidateFoundItemUseCaseTest {
             setOf(FoundFieldError.QUESTION_TOO_LONG),
             validate(validFoundDraft.copy(controlQuestions = listOf("x".repeat(ValidateFoundItemUseCase.QUESTION_MAX + 1))))
         )
+    }
+
+    @Test
+    fun atLeastOnePhotoIsRequired() {
+        assertEquals(setOf(FoundFieldError.PHOTO_REQUIRED), validate(validFoundDraft.copy(photos = emptyList())))
     }
 
     @Test
