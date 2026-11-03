@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- F11: splash del sistema (Android 12+) con el fondo azul UCB y el ícono de la app. -->
+    <style name="Theme.UcbEncuentra" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/ucb_primary</item>
+        <item name="android:windowSplashScreenBackground">@color/ucb_primary</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+    </style>
+</resources>

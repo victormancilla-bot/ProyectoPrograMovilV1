@@ -33,6 +33,7 @@ import bo.edu.ucb.encuentra.core.domain.model.NotificationType
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.ThemeMode
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
+import bo.edu.ucb.encuentra.core.presentation.PermissionsPanel
 import bo.edu.ucb.encuentra.feature.profile.domain.usecase.label
 import bo.edu.ucb.encuentra.feature.profile.presentation.viewmodel.ProfileEffect
 import bo.edu.ucb.encuentra.feature.profile.presentation.viewmodel.ProfileEvent
@@ -99,6 +100,7 @@ private fun ProfileContent(
                 ContactSection(state, onEvent)
                 AppearanceSection(state, onEvent)
                 NotificationsSection(state, onEvent)
+                Section("Permisos") { PermissionsPanel(state.permissions) }
                 if (state.canManageRoles) {
                     Section("Administración") {
                         PrimaryButton(

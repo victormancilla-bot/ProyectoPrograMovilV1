@@ -5,6 +5,7 @@ import bo.edu.ucb.encuentra.core.domain.model.NotificationType
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
 import bo.edu.ucb.encuentra.core.domain.model.UserPreferences
+import bo.edu.ucb.encuentra.core.presentation.AppPermission
 
 data class ProfileState(
     val user: UserModel? = null,
@@ -25,4 +26,9 @@ data class ProfileState(
         else listOf(NotificationType.NEW_MATCH, NotificationType.CLAIM_UPDATE)
 
     val phoneChanged: Boolean get() = phone.trim() != prefs.contactPhone
+
+    /** F11: permisos que usa cada rol (el staff fotografía hallazgos; la ubicación es para el mapa de H04). */
+    val permissions: List<AppPermission>
+        get() = if (user?.role?.isStaff == true) listOf(AppPermission.NOTIFICATIONS, AppPermission.CAMERA, AppPermission.LOCATION)
+        else listOf(AppPermission.NOTIFICATIONS, AppPermission.LOCATION)
 }
