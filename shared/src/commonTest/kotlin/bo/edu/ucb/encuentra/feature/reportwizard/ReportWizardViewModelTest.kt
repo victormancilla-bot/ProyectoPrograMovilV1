@@ -1,5 +1,7 @@
 package bo.edu.ucb.encuentra.feature.reportwizard
 
+import bo.edu.ucb.encuentra.core.InMemoryPreferences
+import bo.edu.ucb.encuentra.core.domain.usecase.GetContactPhoneUseCase
 import bo.edu.ucb.encuentra.core.domain.model.Category
 import bo.edu.ucb.encuentra.core.domain.model.Subcategory
 import bo.edu.ucb.encuentra.core.domain.model.CampusZone
@@ -51,7 +53,8 @@ class ReportWizardViewModelTest {
         viewModel = ReportWizardViewModel(
             validate,
             SubmitLostReportUseCase(validate, repository, matching, session, FixedClock),
-            session
+            session,
+            GetContactPhoneUseCase(InMemoryPreferences(), session)
         )
     }
 
