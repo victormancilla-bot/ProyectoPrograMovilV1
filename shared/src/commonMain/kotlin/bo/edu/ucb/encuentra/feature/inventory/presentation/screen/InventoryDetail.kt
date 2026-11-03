@@ -149,7 +149,7 @@ private fun PhotosCard(detail: InventoryItemDetail) {
         if (item.photoUrls.isEmpty()) {
             Row(horizontalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.itemGap), verticalAlignment = Alignment.CenterVertically) {
                 ItemPhoto(item, Modifier.size(72.dp))
-                AppBody("Sin fotos registradas (la captura de fotos llega con H01).", modifier = Modifier.weight(1f))
+                AppBody("Sin fotos registradas (objeto cargado antes de la captura de fotos).", modifier = Modifier.weight(1f))
             }
         } else {
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.itemGap)) {
