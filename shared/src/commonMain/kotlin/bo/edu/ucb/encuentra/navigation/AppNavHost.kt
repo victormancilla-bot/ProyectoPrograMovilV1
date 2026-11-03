@@ -139,8 +139,13 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
             onReportLost = { navController.navigateToTab(NavRoute.ReportWizard, NavRoute.Home) }
         )
     }
-    guarded<NavRoute.FoundCatalog>(navController, getCurrentUser) { FoundCatalogScreen(onNavigateBack = back) }
-    guarded<NavRoute.HowItWorks>(navController, getCurrentUser) { HowItWorksScreen(onNavigateBack = back) }
+    // L07: "¿Es tuyo?" lleva al wizard de reporte; el matching lo conecta con el objeto.
+    guarded<NavRoute.FoundCatalog>(navController, getCurrentUser) {
+        FoundCatalogScreen(onReport = { navController.navigate(NavRoute.ReportWizard) })
+    }
+    guarded<NavRoute.HowItWorks>(navController, getCurrentUser) {
+        HowItWorksScreen(onReport = { navController.navigate(NavRoute.ReportWizard) }, onNavigateBack = back)
+    }
     guarded<NavRoute.MatchList>(navController, getCurrentUser) {
         MatchListScreen(
             onNavigateBack = back,

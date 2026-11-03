@@ -154,6 +154,17 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Objetos encontrados y Cómo funciona (L07)
+
+Pestaña **Buscar** del estudiante y accesos rápidos del Inicio (el PDF no tiene estas pantallas: se armaron con el DS).
+
+- **Catálogo limitado:** solo objetos DISPONIBLES, del más reciente al más antiguo, con `ItemCard`: **categoría, tipo, zona y fecha**. No se muestran el título que escribió el staff, la descripción, el color, la marca, la custodia ni las preguntas de control (con eso cualquiera podría reclamar algo ajeno). El recorte se hace en la capa de datos (`CatalogItem`), así esos campos nunca llegan a la pantalla.
+- **Foto difuminada** (`Modifier.blur`, Android 12+): se ve qué tipo de objeto es, pero no stickers, nombres ni documentos. Sin foto, el ícono de la categoría.
+- **Filtros** por categoría y por zona (solo se ofrecen las que tienen objetos) y "Quitar filtros".
+- **¿Es tuyo? Repórtalo** abre el wizard de reporte: el matching lo conecta con el objeto y el reclamo sigue el flujo normal (preguntas de control + staff).
+- **Cómo funciona** en 4 pasos (Reporta → Te avisamos → Demuestra que es tuyo → Recógelo con tu carnet). Los días de retención salen de Remote Config (F08).
+- Código: `feature/foundcatalog`. Tests: `FoundCatalogTest`.
+
 ## Política de retención automática (D04)
 
 Los objetos encontrados se guardan `retention_days` (Remote Config, 90 por defecto). Al vencer, el staff decide si se **donan** o se **descartan**.
