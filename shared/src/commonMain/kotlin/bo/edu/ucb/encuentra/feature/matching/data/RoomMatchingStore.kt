@@ -1,6 +1,5 @@
 package bo.edu.ucb.encuentra.feature.matching.data
 
-import bo.edu.ucb.encuentra.core.data.local.dao.AppNotificationDao
 import bo.edu.ucb.encuentra.core.data.local.dao.FoundItemDao
 import bo.edu.ucb.encuentra.core.data.local.dao.LostReportDao
 import bo.edu.ucb.encuentra.core.data.local.dao.MatchDao
@@ -12,6 +11,7 @@ import bo.edu.ucb.encuentra.core.domain.model.ItemStatus
 import bo.edu.ucb.encuentra.core.domain.model.LostReport
 import bo.edu.ucb.encuentra.core.domain.model.Match
 import bo.edu.ucb.encuentra.core.domain.model.ReportStatus
+import bo.edu.ucb.encuentra.core.domain.usecase.NotificationCenter
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.feature.matching.domain.repository.MatchingStore
 
@@ -19,7 +19,8 @@ class RoomMatchingStore(
     private val foundItemDao: FoundItemDao,
     private val lostReportDao: LostReportDao,
     private val matchDao: MatchDao,
-    private val notificationDao: AppNotificationDao
+    /** N01: guarda en Room y avisa en el sistema si el dueño del reporte es quien usa la app. */
+    private val notifications: NotificationCenter
 ) : MatchingStore {
 
     override suspend fun availableFoundItems(): List<FoundItem> =
@@ -39,7 +40,5 @@ class RoomMatchingStore(
         if (ids.isNotEmpty()) matchDao.deleteByIds(ids.map { it.value })
     }
 
-    override suspend fun notify(notifications: List<AppNotification>) {
-        if (notifications.isNotEmpty()) notificationDao.upsertAll(notifications.map { it.toEntity() })
-    }
+    override suspend fun notify(notifications: List<AppNotification>) = this.notifications.publish(notifications)
 }

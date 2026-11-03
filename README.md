@@ -154,6 +154,18 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Notificaciones internas (N01)
+
+Avisos de **coincidencia nueva** (matching) y de **cambios del reclamo** (aprobado, rechazado, bloqueado, entrega programada, entregado), como notificación del sistema.
+
+- **expect/actual**: interfaz `LocalNotifier` (core) que cada plataforma registra en su `platformModule()`: `AndroidLocalNotifier` (`NotificationCompat`) e `IosLocalNotifier` (pendiente, no se compila desde Windows). Igual el permiso: `rememberNotificationPermission` expect/actual.
+- **Permiso POST_NOTIFICATIONS** (Android 13+, en el manifest): se pide cuando entra un usuario (`LocalNotificationsEffect` en `AppNavHost`). Sin permiso no se muestra nada en el sistema, pero el aviso queda guardado para la bandeja (N04).
+- **Canales** (`NotificationChannels`, como en ucbp1): **Coincidencias**, **Reclamos**, **Retención** y General; el usuario puede silenciar cada uno en Ajustes.
+- **Se guardan en Room** (`notifications`): todo pasa por `NotificationCenter` (core), que usan el matching (`RoomMatchingStore`) y los reclamos (`RoomClaimNotifier`).
+- **A quién se le muestra:** en la demo todos usan el mismo teléfono, así que el aviso se muestra al momento **solo si el destinatario es quien tiene la sesión abierta**. Si el staff aprueba el reclamo de Ana, a Ana le llega cuando entra (`deliverPending`, máximo 5, una sola vez: se recuerda en la DataStore hasta cuándo ya se le mostró). Entre dispositivos lo resuelve el push de N02.
+- **Tocar la notificación** abre su deep link de F05 (`ucbencuentra://match/{id}` → Detalle de match); si no tiene, abre la app.
+- Tests: `NotificationCenterTest` (se guarda todo y se notifica solo al usuario actual, pendientes al entrar sin repetir, leídas excluidas y máximo 5, sin sesión).
+
 ## Captura de foto (H01)
 
 El registro de un objeto encontrado empieza ahora por las fotos: **Inventario o Dashboard → "Registrar objeto encontrado" → Captura (paso 1) → Formulario (pasos 2 y 3)**. Al registrar se vuelve a la pantalla de origen.

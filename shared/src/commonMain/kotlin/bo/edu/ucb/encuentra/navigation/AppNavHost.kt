@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
+import bo.edu.ucb.encuentra.core.presentation.LocalNotificationsEffect
 import bo.edu.ucb.encuentra.feature.alerts.presentation.screen.AlertsScreen
 import bo.edu.ucb.encuentra.feature.audit.presentation.screen.AuditScreen
 import bo.edu.ucb.encuentra.feature.claims.presentation.screen.ClaimDetailScreen
@@ -55,6 +56,9 @@ fun AppNavHost(
 
     // Con sesión se abre directo el home de su rol; sin sesión, Login.
     val startDestination = remember { getCurrentUser()?.let { RouteGuard.homeFor(it.role) } ?: NavRoute.Login }
+
+    // N01: al entrar un usuario se pide el permiso de notificaciones y se muestran sus avisos pendientes.
+    LocalNotificationsEffect(userId = user?.id)
 
     // Deep links que llegan con la app abierta (notificaciones).
     DisposableEffect(navController) {
