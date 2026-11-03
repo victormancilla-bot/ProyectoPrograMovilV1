@@ -39,7 +39,7 @@ Usuarios de prueba (están en el seed de Room). El login pide primero el correo 
 |---|---|---|
 | `estudiante@ucb.edu.bo` | ESTUDIANTE | Inicio · barra: Inicio, Buscar, Reportar, Alertas, Perfil |
 | `staff@ucb.edu.bo` | STAFF | Panel · barra: Panel, Inventario, Reclamos, Alertas, Perfil |
-| `admin@ucb.edu.bo` | ADMIN | Igual que staff |
+| `admin@ucb.edu.bo` | ADMIN | Igual que staff + **Perfil → Roles y permisos** (S03) |
 | `ana.gomez@ucb.edu.bo`, `luis.mendoza@ucb.edu.bo`, `carlos.mamani@ucb.edu.bo` | ESTUDIANTE | Inicio (reclamantes del seed) |
 
 Las pantallas que no están en la barra se abren desde **Perfil → Menú de desarrollo** (solo mientras son stubs).
@@ -153,6 +153,17 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 ```
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
+
+## Roles ESTUDIANTE / STAFF / ADMIN (S03)
+
+El rol decide qué ve y qué puede hacer cada quien. **Nadie se asigna staff a sí mismo.**
+
+- **Campo `role`** de la cuenta (`users` en Room; en Firebase `users/{uid}.role`). Solo un **ADMIN** lo cambia: lo valida `ChangeUserRoleUseCase` y, para cuando exista el proyecto de Firebase (S02), las reglas en `firebase/firestore.rules` (al crear la cuenta siempre es ESTUDIANTE; el dueño no puede tocar su rol; el admin solo cambia el de otras cuentas, entre ESTUDIANTE y STAFF).
+- **Reglas del dominio** (`feature/profile/domain/usecase/RoleAdminUseCases.kt`): solo ADMIN; nadie cambia su propio rol; las cuentas ADMIN no se tocan desde la app y solo se asigna ESTUDIANTE o STAFF; cada cambio queda en la **auditoría** (`ROLE_CHANGED`, p. ej. "Estudiante → Staff") en la misma transacción.
+- **UI y rutas por rol** (F05): nueva ruta `NavRoute.UserRoles` con nivel de acceso **ADMIN** en `RouteGuard` (el staff vuelve a su Panel; el estudiante, a su Inicio). El botón **Roles y permisos** solo aparece en el Perfil del admin.
+- **Pantalla Roles y permisos**: asignar staff por correo institucional (la persona debe haber ingresado una vez), lista de cuentas con filtros por rol y contador, **Hacer staff** / **Quitar staff** (quitar pide confirmación).
+- **Cuentas de prueba**: ver la tabla de arriba (estudiante, staff, admin). El rol nuevo se aplica la próxima vez que la persona ingresa.
+- Tests: `RoleAdminUseCasesTest`, `UserRolesViewModelTest` y `RouteGuardTest` (solo admin entra al panel).
 
 ## Notificaciones internas (N01)
 

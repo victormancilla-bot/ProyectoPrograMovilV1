@@ -9,7 +9,7 @@ import bo.edu.ucb.encuentra.core.domain.model.UserModel
  */
 object RouteGuard {
 
-    private enum class Access { PUBLIC, STUDENT, STAFF, ANY_USER }
+    private enum class Access { PUBLIC, STUDENT, STAFF, ADMIN, ANY_USER }
 
     fun homeFor(role: Role): NavRoute = if (role.isStaff) NavRoute.Dashboard else NavRoute.Home
 
@@ -25,6 +25,12 @@ object RouteGuard {
         Access.STAFF -> when {
             user == null -> NavRoute.Login
             !user.role.isStaff -> homeFor(user.role)
+            else -> null
+        }
+        // S03: el staff que no es admin vuelve a su Panel; el estudiante, a su Home.
+        Access.ADMIN -> when {
+            user == null -> NavRoute.Login
+            user.role != Role.ADMIN -> homeFor(user.role)
             else -> null
         }
     }
@@ -49,6 +55,8 @@ object RouteGuard {
         is NavRoute.ClaimDetail,
         is NavRoute.Delivery,
         NavRoute.Audit -> Access.STAFF
+
+        NavRoute.UserRoles -> Access.ADMIN
 
         NavRoute.Alerts,
         NavRoute.Profile,
