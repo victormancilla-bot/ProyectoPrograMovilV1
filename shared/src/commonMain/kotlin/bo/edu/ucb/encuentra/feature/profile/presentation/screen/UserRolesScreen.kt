@@ -58,9 +58,6 @@ import edu.ucb.ds.theme.UcbEncuentraTheme
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
-/** Tiempo que se ve el mensaje de éxito o error de un cambio. */
-private const val MESSAGE_MILLIS = 4_000L
-
 /** S03 · Roles y permisos (solo ADMIN): asignar staff por correo y quitarlo. No hay mockup en Figma: usa el DS. */
 @Composable
 fun UserRolesScreen(
@@ -74,12 +71,6 @@ fun UserRolesScreen(
             when (effect) {
                 UserRolesEffect.NavigateBack -> onNavigateBack()
             }
-        }
-    }
-    LaunchedEffect(state.message) {
-        if (state.message != null) {
-            delay(MESSAGE_MILLIS)
-            viewModel.handleEvent(UserRolesEvent.OnMessageShown)
         }
     }
 
@@ -139,7 +130,6 @@ private fun UserRolesBody(state: UserRolesState, onEvent: (UserRolesEvent) -> Un
         verticalArrangement = Arrangement.spacedBy(spacing.itemGap)
     ) {
         item { AssignStaffCard(state, onEvent) }
-        state.message?.let { message -> item { MessageBanner(message) } }
         item {
             AppOverline("Cuentas", modifier = Modifier.padding(top = spacing.medium))
         }
@@ -189,25 +179,6 @@ private fun AssignStaffCard(state: UserRolesState, onEvent: (UserRolesEvent) -> 
                 leadingIcon = Icons.Outlined.PersonAdd,
                 modifier = Modifier.fillMaxWidth()
             )
-        }
-    }
-}
-
-@Composable
-private fun MessageBanner(message: String) {
-    val colors = UcbEncuentraTheme.colors
-    AppCard(Modifier.fillMaxWidth()) {
-        Row(
-            Modifier.padding(UcbEncuentraTheme.spacing.large),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.itemGap)
-        ) {
-            androidx.compose.material3.Icon(
-                Icons.Outlined.AdminPanelSettings,
-                contentDescription = null,
-                tint = colors.primary
-            )
-            AppBody(message)
         }
     }
 }

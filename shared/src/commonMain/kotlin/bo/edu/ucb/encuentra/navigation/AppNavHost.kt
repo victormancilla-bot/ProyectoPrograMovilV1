@@ -2,6 +2,9 @@ package bo.edu.ucb.encuentra.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -20,7 +23,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
+import bo.edu.ucb.encuentra.core.domain.repository.ConnectivityMonitor
+import bo.edu.ucb.encuentra.core.domain.usecase.RefreshAppConfigUseCase
+import bo.edu.ucb.encuentra.core.presentation.AppSnackbarVisuals
 import bo.edu.ucb.encuentra.core.presentation.LocalNotificationsEffect
+import bo.edu.ucb.encuentra.core.presentation.UserMessages
 import bo.edu.ucb.encuentra.feature.alerts.domain.usecase.ObserveUnreadAlertsCountUseCase
 import bo.edu.ucb.encuentra.feature.alerts.presentation.screen.AlertsScreen
 import bo.edu.ucb.encuentra.feature.audit.presentation.screen.AuditScreen
@@ -52,7 +59,10 @@ import org.koin.compose.koinInject
 @Composable
 fun AppNavHost(
     getCurrentUser: GetCurrentUserUseCase = koinInject(),
-    observeUnreadAlerts: ObserveUnreadAlertsCountUseCase = koinInject()
+    observeUnreadAlerts: ObserveUnreadAlertsCountUseCase = koinInject(),
+    messages: UserMessages = koinInject(),
+    connectivity: ConnectivityMonitor = koinInject(),
+    refreshConfig: RefreshAppConfigUseCase = koinInject()
 ) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -64,6 +74,25 @@ fun AppNavHost(
 
     // N01: al entrar un usuario se pide el permiso de notificaciones y se muestran sus avisos pendientes.
     LocalNotificationsEffect(userId = user?.id)
+
+    // F11: mensajes unificados (un solo SnackbarHost) y estado de la conexión.
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        messages.messages.collect { snackbarHostState.showSnackbar(AppSnackbarVisuals(it)) }
+    }
+    val isOnline by connectivity.isOnline.collectAsState()
+    val scope = rememberCoroutineScope()
+    val retryConnection: () -> Unit = {
+        scope.launch {
+            connectivity.recheck()
+            if (connectivity.isOnline.value) {
+                refreshConfig(force = true)
+                messages.success("Conexión restablecida")
+            } else {
+                messages.error("Sigues sin conexión. Lo que hagas se guarda en el teléfono.")
+            }
+        }
+    }
 
     // N04: badge de la pestaña Alertas con las no leídas del usuario actual.
     val unreadAlerts by remember(user?.id) { observeUnreadAlerts(user?.id) }.collectAsState(initial = 0)
@@ -83,7 +112,10 @@ fun AppNavHost(
         centerAction = user?.let { RoleTabs.centerActionFor(it.role) },
         currentDestination = currentDestination,
         onTabClick = { route -> navController.navigateToTab(route, user?.role?.let(RouteGuard::homeFor)) },
-        badges = mapOf(NavRoute.Alerts to unreadAlerts)
+        badges = mapOf(NavRoute.Alerts to unreadAlerts),
+        snackbarHostState = snackbarHostState,
+        isOnline = isOnline,
+        onRetryConnection = retryConnection
     ) { innerPadding ->
         NavHost(
             navController = navController,

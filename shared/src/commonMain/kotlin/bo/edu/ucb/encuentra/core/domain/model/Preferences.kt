@@ -16,7 +16,9 @@ enum class AppLanguage(val tag: String, val label: String) {
 /** Preferencias del teléfono: valen antes de iniciar sesión y para cualquier usuario. */
 data class DevicePreferences(
     val theme: ThemeMode = ThemeMode.SISTEMA,
-    val language: AppLanguage = AppLanguage.ES
+    val language: AppLanguage = AppLanguage.ES,
+    /** F11: ya se explicó en este teléfono para qué son los avisos (no se insiste en cada ingreso). */
+    val notificationsRationaleShown: Boolean = false
 )
 
 /**

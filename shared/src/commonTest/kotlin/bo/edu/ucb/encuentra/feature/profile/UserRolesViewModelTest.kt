@@ -1,5 +1,7 @@
 package bo.edu.ucb.encuentra.feature.profile
 
+import bo.edu.ucb.encuentra.core.RecordingMessages
+import bo.edu.ucb.encuentra.core.presentation.MessageKind
 import bo.edu.ucb.encuentra.core.InMemoryUsers
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
@@ -33,6 +35,7 @@ class UserRolesViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val users = InMemoryUsers()
+    private val messages = RecordingMessages()
 
     @BeforeTest
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -47,7 +50,8 @@ class UserRolesViewModelTest {
             ObserveUsersUseCase(users, getCurrentUser),
             AssignStaffByEmailUseCase(users, change),
             change,
-            getCurrentUser
+            getCurrentUser,
+            messages
         )
     }
 
@@ -62,7 +66,8 @@ class UserRolesViewModelTest {
 
         val state = vm.state.value
         assertEquals("", state.email)
-        assertEquals("Ana Gómez ahora es Staff.", state.message)
+        assertEquals(MessageKind.SUCCESS, messages.last?.kind)
+        assertEquals("Ana Gómez ahora es Staff.", messages.last?.text)
         assertEquals(Role.STAFF, state.users.first { it.id == "u-ana-gomez" }.role)
 
         vm.handleEvent(UserRolesEvent.OnFilterChanged(RoleFilter.STAFF))

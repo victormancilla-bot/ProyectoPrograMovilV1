@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- F11: banner "sin conexión". -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- F11/H04: ubicación para marcar en el mapa (se justifica antes de pedirla; sin ella, lista de zonas). -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- H01: fotos de los objetos encontrados. La cámara es opcional (sin cámara se usa la galería). -->
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- N01: notificaciones locales (Android 13+ pide permiso en tiempo de ejecución). -->

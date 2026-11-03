@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.feature.inventory.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import bo.edu.ucb.encuentra.core.presentation.UserMessages
 import bo.edu.ucb.encuentra.core.domain.model.FoundItem
 import bo.edu.ucb.encuentra.feature.inventory.domain.model.RetentionAction
 import bo.edu.ucb.encuentra.feature.inventory.domain.model.RetentionOverview
@@ -30,8 +31,7 @@ data class RetentionState(
     val now: Instant,
     val pending: PendingResolution? = null,
     val note: String = "",
-    val working: Boolean = false,
-    val message: String? = null
+    val working: Boolean = false
 )
 
 sealed class RetentionEvent {
@@ -41,7 +41,6 @@ sealed class RetentionEvent {
     data object OnDismiss : RetentionEvent()
     /** Corre el mismo chequeo que el Worker diario (avisa al staff), sin esperar un día. */
     data object OnCheckNow : RetentionEvent()
-    data object OnMessageShown : RetentionEvent()
     data object OnBack : RetentionEvent()
 }
 
@@ -54,7 +53,9 @@ class RetentionViewModel(
     private val observeRetention: ObserveRetentionUseCase,
     private val resolveExpired: ResolveExpiredItemUseCase,
     private val checkRetention: CheckRetentionUseCase,
-    private val clock: Clock
+    private val clock: Clock,
+    /** F11: avisos unificados (snackbar). */
+    private val messages: UserMessages
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RetentionState(now = clock.now()))
@@ -78,7 +79,6 @@ class RetentionViewModel(
             RetentionEvent.OnDismiss -> _state.update { it.copy(pending = null, note = "") }
             RetentionEvent.OnConfirm -> confirm()
             RetentionEvent.OnCheckNow -> checkNow()
-            RetentionEvent.OnMessageShown -> _state.update { it.copy(message = null) }
             RetentionEvent.OnBack -> viewModelScope.launch { _effects.emit(RetentionEffect.NavigateBack) }
         }
     }
@@ -89,17 +89,11 @@ class RetentionViewModel(
         _state.update { it.copy(working = true) }
         viewModelScope.launch {
             val result = resolveExpired(pending.item.id.value, pending.action, _state.value.note)
-            _state.update {
-                it.copy(
-                    working = false,
-                    pending = null,
-                    note = "",
-                    message = result.fold(
-                        onSuccess = { item -> "\"${item.title}\" quedó como ${pending.action.pastLabel}." },
-                        onFailure = { e -> e.message ?: "No se pudo completar" }
-                    )
-                )
-            }
+            _state.update { it.copy(working = false, pending = null, note = "") }
+            result.fold(
+                onSuccess = { item -> messages.success("\"${item.title}\" quedó como ${pending.action.pastLabel}.") },
+                onFailure = { e -> messages.error(e.message ?: "No se pudo completar") }
+            )
         }
     }
 
@@ -107,18 +101,18 @@ class RetentionViewModel(
         if (_state.value.working) return
         _state.update { it.copy(working = true) }
         viewModelScope.launch {
-            val message = runCatching { checkRetention() }.fold(
+            runCatching { checkRetention() }.fold(
                 onSuccess = { check ->
-                    if (check.notifiedStaff == 0) "No hay objetos vencidos ni por vencer."
+                    if (check.notifiedStaff == 0) messages.show("No hay objetos vencidos ni por vencer.")
                     else {
                         val who = if (check.notifiedStaff == 1) "1 persona" else "${check.notifiedStaff} personas"
                         val expired = if (check.expired == 1) "1 vencido" else "${check.expired} vencidos"
-                        "Se avisó a $who del staff: $expired y ${check.expiring} por vencer."
+                        messages.success("Se avisó a $who del staff: $expired y ${check.expiring} por vencer.")
                     }
                 },
-                onFailure = { e -> e.message ?: "No se pudo revisar" }
+                onFailure = { e -> messages.error(e.message ?: "No se pudo revisar") }
             )
-            _state.update { it.copy(working = false, message = message) }
+            _state.update { it.copy(working = false) }
         }
     }
 

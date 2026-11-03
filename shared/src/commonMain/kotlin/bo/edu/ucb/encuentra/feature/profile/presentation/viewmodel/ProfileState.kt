@@ -13,7 +13,6 @@ data class ProfileState(
     /** Lo que se está escribiendo en el campo de WhatsApp (se guarda con el botón). */
     val phone: String = "",
     val phoneError: String? = null,
-    val message: String? = null,
     val confirmLogout: Boolean = false,
     val loggingOut: Boolean = false
 ) {

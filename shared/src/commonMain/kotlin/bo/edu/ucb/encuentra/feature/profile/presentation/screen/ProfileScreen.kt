@@ -56,8 +56,6 @@ import edu.ucb.ds.theme.UcbEncuentraTheme
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
-private const val MESSAGE_MILLIS = 3_000L
-
 /**
  * S07 · Perfil y Ajustes (pestaña Perfil; no está en el PDF, se arma con el DS como el UserState de ucbp1):
  * datos del usuario, WhatsApp de contacto, tema, idioma, avisos y cerrar sesión.
@@ -76,12 +74,6 @@ fun ProfileScreen(
             when (effect) {
                 ProfileEffect.NavigateToLogin -> onNavigateToLogin()
             }
-        }
-    }
-    LaunchedEffect(state.message) {
-        if (state.message != null) {
-            delay(MESSAGE_MILLIS)
-            viewModel.handleEvent(ProfileEvent.OnMessageShown)
         }
     }
 
@@ -211,7 +203,6 @@ private fun ContactSection(state: ProfileState, onEvent: (ProfileEvent) -> Unit)
             enabled = state.phoneChanged,
             modifier = Modifier.fillMaxWidth()
         )
-        state.message?.let { AppLabel(it, color = UcbEncuentraTheme.colors.success) }
     }
 }
 

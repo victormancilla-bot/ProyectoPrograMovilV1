@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.feature.inventory
 
+import bo.edu.ucb.encuentra.core.RecordingMessages
 import bo.edu.ucb.encuentra.core.InMemoryNotifications
 import bo.edu.ucb.encuentra.core.RecordingNotifier
 import bo.edu.ucb.encuentra.core.domain.model.ItemStatus
@@ -38,6 +39,7 @@ import kotlin.test.assertNull
 class RetentionViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
+    private val messages = RecordingMessages()
     private val repository = InMemoryRetention(listOf(itemExpiring("fi-paraguas", -5), itemExpiring("fi-termo", 2)))
 
     @BeforeTest
@@ -53,7 +55,8 @@ class RetentionViewModelTest {
             ObserveRetentionUseCase(repository, getCurrentUser, FixedClock),
             ResolveExpiredItemUseCase(repository, DonateItemUseCase(change), DiscardItemUseCase(change), getCurrentUser, FixedClock),
             CheckRetentionUseCase(repository, NotificationCenter(InMemoryNotifications(), RecordingNotifier(), getCurrentUser), FixedClock, BoliviaTime),
-            FixedClock
+            FixedClock,
+            messages
         )
     }
 
@@ -71,7 +74,7 @@ class RetentionViewModelTest {
         vm.handleEvent(RetentionEvent.OnConfirm)
         advanceUntilIdle()
         assertEquals(ItemStatus.DONADO, repository.findItem("fi-paraguas")?.status)
-        assertEquals("\"Calculadora Casio\" quedó como donado.", vm.state.value.message)
+        assertEquals("\"Calculadora Casio\" quedó como donado.", messages.last?.text)
         assertNull(vm.state.value.pending)
         assertEquals(emptyList(), vm.state.value.overview.expired)
         assertEquals(listOf("fi-termo"), vm.state.value.overview.expiring.map { it.id.value })
@@ -82,6 +85,6 @@ class RetentionViewModelTest {
         val vm = viewModel()
         vm.handleEvent(RetentionEvent.OnCheckNow)
         advanceUntilIdle()
-        assertEquals("Se avisó a 2 personas del staff: 1 vencido y 1 por vencer.", vm.state.value.message)
+        assertEquals("Se avisó a 2 personas del staff: 1 vencido y 1 por vencer.", messages.last?.text)
     }
 }
