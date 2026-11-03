@@ -94,7 +94,8 @@ private fun RetentionContent(state: RetentionState, onEvent: (RetentionEvent) ->
         Column(Modifier.fillMaxSize()) {
             CurvedHeader(
                 title = "Retención",
-                subtitle = "${overview.expired.size} vencidos · ${overview.expiring.size} por vencer",
+                subtitle = (if (overview.expired.size == 1) "1 vencido" else "${overview.expired.size} vencidos") +
+                    " · ${overview.expiring.size} por vencer",
                 navigationIcon = DsIcons.ArrowBack,
                 navigationContentDescription = "Volver",
                 onNavigationClick = { onEvent(RetentionEvent.OnBack) },
@@ -154,7 +155,8 @@ private fun ItemSummary(item: FoundItem, chip: String, tone: StatusTone, line: S
         ItemPhoto(item, Modifier.size(56.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.small)) {
             AppTitle(item.title)
-            AppLabel("${item.code} · ${item.custodyPlace.label}${item.custodyDetail.takeIf { it.isNotBlank() }?.let { " $it" } ?: ""}", color = colors.onSurfaceVariant)
+            // Dónde está guardado: el detalle de custodia ya nombra el lugar ("Oficina de Objetos Perdidos · Bloque A").
+            AppLabel("${item.code} · ${item.custodyDetail.ifBlank { item.custodyPlace.label }}", color = colors.onSurfaceVariant)
             AppLabel(line, color = colors.onSurfaceVariant)
         }
         StatusChip(text = chip, tone = tone)
