@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,6 +21,7 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.presentation.LocalNotificationsEffect
+import bo.edu.ucb.encuentra.feature.alerts.domain.usecase.ObserveUnreadAlertsCountUseCase
 import bo.edu.ucb.encuentra.feature.alerts.presentation.screen.AlertsScreen
 import bo.edu.ucb.encuentra.feature.audit.presentation.screen.AuditScreen
 import bo.edu.ucb.encuentra.feature.claims.presentation.screen.ClaimDetailScreen
@@ -48,7 +50,8 @@ import org.koin.compose.koinInject
  */
 @Composable
 fun AppNavHost(
-    getCurrentUser: GetCurrentUserUseCase = koinInject()
+    getCurrentUser: GetCurrentUserUseCase = koinInject(),
+    observeUnreadAlerts: ObserveUnreadAlertsCountUseCase = koinInject()
 ) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -61,9 +64,12 @@ fun AppNavHost(
     // N01: al entrar un usuario se pide el permiso de notificaciones y se muestran sus avisos pendientes.
     LocalNotificationsEffect(userId = user?.id)
 
+    // N04: badge de la pestaña Alertas con las no leídas del usuario actual.
+    val unreadAlerts by remember(user?.id) { observeUnreadAlerts(user?.id) }.collectAsState(initial = 0)
+
     // Deep links que llegan con la app abierta (notificaciones).
     DisposableEffect(navController) {
-        ExternalUriHandler.listener = { uri -> navController.navigate(NavUri(uri)) }
+        ExternalUriHandler.listener = { uri -> navController.openDeepLink(uri) }
         onDispose { ExternalUriHandler.listener = null }
     }
 
@@ -75,7 +81,8 @@ fun AppNavHost(
         tabs = if (showBottomBar) tabs else emptyList(),
         centerAction = user?.let { RoleTabs.centerActionFor(it.role) },
         currentDestination = currentDestination,
-        onTabClick = { route -> navController.navigateToTab(route, user?.role?.let(RouteGuard::homeFor)) }
+        onTabClick = { route -> navController.navigateToTab(route, user?.role?.let(RouteGuard::homeFor)) },
+        badges = mapOf(NavRoute.Alerts to unreadAlerts)
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -191,13 +198,15 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
     guarded<NavRoute.Audit>(navController, getCurrentUser) { AuditScreen(onNavigateBack = back) }
 
     // Comunes
-    guarded<NavRoute.Alerts>(navController, getCurrentUser) { AlertsScreen(onNavigateBack = back) }
+    // N04: tocar una alerta abre su deep link (match o reclamo), igual que la notificación del sistema.
+    guarded<NavRoute.Alerts>(navController, getCurrentUser) { AlertsScreen(onOpenLink = { navController.openDeepLink(it) }) }
     guarded<NavRoute.Profile>(navController, getCurrentUser) {
         ProfileScreen(
             onNavigateToLogin = {
                 navController.navigate(NavRoute.Login) {
                     popUpTo(navController.graph.id) { inclusive = true }
                 }
+                navController.clearSavedTabs()
             },
             onOpenDevMenu = { navController.navigate(NavRoute.DevMenu) },
             onOpenUserRoles = { navController.navigate(NavRoute.UserRoles) },
@@ -248,4 +257,18 @@ private fun NavHostController.navigateToTab(route: NavRoute, home: NavRoute?) {
         launchSingleTop = true
         restoreState = route != NavRoute.ReportWizard // el wizard siempre empieza de cero
     }
+}
+
+/**
+ * Al cerrar sesión se borra el estado guardado de las pestañas (`saveState`/`restoreState` de [navigateToTab]).
+ * Si no, el siguiente usuario recupera las pantallas (y sus ViewModels) del anterior: p. ej. veía las Alertas de otra
+ * persona en el mismo teléfono.
+ */
+private fun NavHostController.clearSavedTabs() {
+    (RoleTabs.student + RoleTabs.staff).map { it.route }.distinct().forEach { clearBackStack(it) }
+}
+
+/** Abre un deep link de la app (`ucbencuentra://...`). Si ninguna ruta lo reconoce, no hace nada en vez de cerrar la app. */
+private fun NavHostController.openDeepLink(uri: String) {
+    runCatching { navigate(NavUri(uri)) }
 }
