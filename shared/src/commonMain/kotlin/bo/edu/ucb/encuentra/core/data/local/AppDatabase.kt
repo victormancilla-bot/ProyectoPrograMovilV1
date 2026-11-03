@@ -72,4 +72,6 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
 fun getRoomDatabase(builder: RoomDatabase.Builder<AppDatabase>): AppDatabase =
     builder
         .setDriver(BundledSQLiteDriver())
+        // S05: la tabla de auditoría no acepta UPDATE ni DELETE.
+        .addCallback(AuditAppendOnly)
         .build()
