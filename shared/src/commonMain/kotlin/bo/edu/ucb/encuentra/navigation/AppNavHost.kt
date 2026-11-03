@@ -223,8 +223,7 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
                 navController.clearSavedTabs()
             },
             onOpenDevMenu = { navController.navigate(NavRoute.DevMenu) },
-            onOpenUserRoles = { navController.navigate(NavRoute.UserRoles) },
-            onNavigateBack = back
+            onOpenUserRoles = { navController.navigate(NavRoute.UserRoles) }
         )
     }
     // S03: solo ADMIN (RouteGuard redirige al resto).
