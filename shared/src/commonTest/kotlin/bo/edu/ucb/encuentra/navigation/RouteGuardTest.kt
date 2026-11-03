@@ -40,6 +40,14 @@ class RouteGuardTest {
     }
 
     @Test
+    fun onlyAdminEntersTheRolesPanel() {
+        assertNull(RouteGuard.redirect(NavRoute.UserRoles, admin))
+        assertEquals(NavRoute.Dashboard, RouteGuard.redirect(NavRoute.UserRoles, staff))
+        assertEquals(NavRoute.Home, RouteGuard.redirect(NavRoute.UserRoles, student))
+        assertEquals(NavRoute.Login, RouteGuard.redirect(NavRoute.UserRoles, null))
+    }
+
+    @Test
     fun loggedUserOnLoginGoesToItsHome() {
         assertEquals(NavRoute.Home, RouteGuard.redirect(NavRoute.Login, student))
         assertEquals(NavRoute.Dashboard, RouteGuard.redirect(NavRoute.Login, admin))
