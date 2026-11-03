@@ -154,6 +154,19 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Splash, permisos y estados offline (F11)
+
+Pantallas que el PDF no tiene pero toda app real necesita (clases "Permisos en Android" y "Toast, SnackBar").
+
+- **Splash:** en Android 12+ el splash del sistema usa el azul UCB (`Theme.UcbEncuentra`, `res/values-v31/themes.xml`); después, mientras se cargan los datos y la sesión, `SplashScreen` (Compose) con el escudo, el nombre y un indicador.
+- **Justificación de permisos:** `AppPermission` (Avisos, Cámara, Ubicación) con para qué se usa y la alternativa si se niega; `rememberPermissionRequester` (expect/actual) y un único `PermissionRationaleDialog` ("Permitir" o "Abrir ajustes" si ya se negó para siempre).
+  - Avisos: al entrar, si el teléfono no dio el permiso, se explica una sola vez y recién se pide; con "Ahora no" no se insiste (los avisos siguen en la bandeja).
+  - Cámara (H01) usa el mismo diálogo.
+  - **Perfil > Permisos:** estado de cada permiso que usa el rol (staff: avisos, cámara, ubicación; estudiante: avisos, ubicación) y botón "Activar"; se relee al volver de Ajustes.
+- **Banner sin conexión + Reintentar:** `ConnectivityMonitor` (Android: `ConnectivityManager`, permiso ACCESS_NETWORK_STATE; iOS: siempre conectado por ahora). El banner va sobre la barra inferior; la app sigue funcionando con Room. "Reintentar" vuelve a consultar y, si hay red, refresca Remote Config.
+- **Mensajes unificados:** `UserMessages` (core) + un solo `SnackbarHost` en `MainScaffold` con colores del DS (éxito verde, error rojo, información azul). Lo usan Roles (S03), Retención (D04) y Perfil (S07), que antes tenían cada uno su propio aviso.
+- Permisos de ubicación declarados para H04 (mapa).
+
 ## Perfil y Ajustes (S07)
 
 Pestaña **Perfil** de ambos roles (no está en el PDF; se armó con el DS siguiendo el UserState de ucbp1).
