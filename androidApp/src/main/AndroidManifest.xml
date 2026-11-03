@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- H01: fotos de los objetos encontrados. La cámara es opcional (sin cámara se usa la galería). -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <!-- N01: notificaciones locales (Android 13+ pide permiso en tiempo de ejecución). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-feature
         android:name="android.hardware.camera.any"
         android:required="false" />
