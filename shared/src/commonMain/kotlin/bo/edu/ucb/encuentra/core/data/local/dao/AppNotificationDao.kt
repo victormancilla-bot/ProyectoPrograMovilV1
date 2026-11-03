@@ -25,6 +25,10 @@ interface AppNotificationDao {
     @Upsert
     suspend fun upsertAll(notifications: List<AppNotificationEntity>)
 
+    /** N01: no leídas creadas después de [since] (las que todavía no se mostraron en el sistema). */
+    @Query("SELECT * FROM notifications WHERE user_id = :userId AND read = 0 AND created_at > :since ORDER BY created_at")
+    suspend fun getUnreadSince(userId: String, since: Long): List<AppNotificationEntity>
+
     @Query("UPDATE notifications SET read = 1 WHERE id = :id")
     suspend fun markAsRead(id: String)
 }

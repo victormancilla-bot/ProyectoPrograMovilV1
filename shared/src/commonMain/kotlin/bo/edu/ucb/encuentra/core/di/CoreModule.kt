@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.core.di
 
 import bo.edu.ucb.encuentra.core.data.FoundItemLifecycleRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.RoomAuditRecorder
+import bo.edu.ucb.encuentra.core.data.RoomNotificationRepository
 import bo.edu.ucb.encuentra.core.data.RoomTransactionRunner
 import bo.edu.ucb.encuentra.core.data.SessionRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.UserRepositoryImpl
@@ -11,6 +12,7 @@ import bo.edu.ucb.encuentra.core.data.remoteconfig.FirebaseRemoteConfigDataSourc
 import bo.edu.ucb.encuentra.core.data.remoteconfig.RemoteConfigDataSource
 import bo.edu.ucb.encuentra.core.domain.repository.AppConfigRepository
 import bo.edu.ucb.encuentra.core.domain.repository.CapturedPhotosStore
+import bo.edu.ucb.encuentra.core.domain.repository.NotificationRepository
 import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.ObserveAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.RefreshAppConfigUseCase
@@ -21,6 +23,7 @@ import bo.edu.ucb.encuentra.core.domain.repository.SessionRepository
 import bo.edu.ucb.encuentra.core.domain.repository.TransactionRunner
 import bo.edu.ucb.encuentra.core.domain.repository.UserRepository
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.NotificationCenter
 import bo.edu.ucb.encuentra.core.domain.usecase.RestoreSessionUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.item.ChangeItemStatusUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.item.ClaimItemUseCase
@@ -48,6 +51,10 @@ val coreModule = module {
     singleOf(::GetAppConfigUseCase)
     singleOf(::ObserveAppConfigUseCase)
     singleOf(::RefreshAppConfigUseCase)
+
+    // Notificaciones internas (N01): Room + sistema (LocalNotifier viene de platformModule).
+    single<NotificationRepository> { RoomNotificationRepository(get(), get()) }
+    singleOf(::NotificationCenter)
 
     // Fotos del objeto que se está registrando (H01 → H03).
     singleOf(::CapturedPhotosStore)

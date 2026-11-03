@@ -1,12 +1,11 @@
 package bo.edu.ucb.encuentra.feature.claims.data
 
-import bo.edu.ucb.encuentra.core.data.local.dao.AppNotificationDao
-import bo.edu.ucb.encuentra.core.data.local.mapper.toEntity
 import bo.edu.ucb.encuentra.core.domain.model.AppNotification
 import bo.edu.ucb.encuentra.core.domain.model.Claim
 import bo.edu.ucb.encuentra.core.domain.model.ClaimStatus
 import bo.edu.ucb.encuentra.core.domain.model.NotificationType
 import bo.edu.ucb.encuentra.core.domain.repository.ClaimNotifier
+import bo.edu.ucb.encuentra.core.domain.usecase.NotificationCenter
 import bo.edu.ucb.encuentra.core.domain.vo.ItemId
 import bo.edu.ucb.encuentra.core.presentation.formatHm
 import bo.edu.ucb.encuentra.core.presentation.formatShort
@@ -15,11 +14,13 @@ import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 /**
- * Implementación del hook de N01: una notificación interna (tipo "Reclamos") para quien reclamó.
+ * Implementación del hook de N01: una notificación (canal "Reclamos") para quien reclamó, publicada en el
+ * [NotificationCenter] (Room + sistema).
  * El deep link abre el Detalle de match, donde el estudiante ve en qué quedó su reclamo (F05).
  */
 class RoomClaimNotifier(
-    private val notificationDao: AppNotificationDao,
+    /** N01: guarda en Room y avisa en el sistema (si quien reclamó es quien usa la app). */
+    private val notifications: NotificationCenter,
     private val clock: Clock,
     private val timeZone: TimeZone
 ) : ClaimNotifier {
@@ -27,7 +28,7 @@ class RoomClaimNotifier(
     override suspend fun onDeliveryScheduled(claim: Claim, itemTitle: String) {
         val at = claim.scheduledDeliveryAt ?: return
         val local = at.toLocalDateTime(timeZone)
-        notificationDao.upsert(
+        notifications.publish(
             AppNotification(
                 // Una por reclamo: si se reprograma, se reemplaza y vuelve a quedar sin leer.
                 id = ItemId("n-claim-${claim.id.value}-entrega"),
@@ -39,13 +40,13 @@ class RoomClaimNotifier(
                 deepLink = claim.matchId?.let { "ucbencuentra://match/${it.value}" },
                 read = false,
                 createdAt = clock.now()
-            ).toEntity()
+            )
         )
     }
 
     override suspend fun onClaimUpdated(claim: Claim, itemTitle: String) {
         val (title, body) = messageFor(claim, itemTitle) ?: return
-        notificationDao.upsert(
+        notifications.publish(
             AppNotification(
                 // Una por reclamo y estado: repetir la llamada no duplica la notificación.
                 id = ItemId("n-claim-${claim.id.value}-${claim.status.name.lowercase()}"),
@@ -56,7 +57,7 @@ class RoomClaimNotifier(
                 deepLink = claim.matchId?.let { "ucbencuentra://match/${it.value}" },
                 read = false,
                 createdAt = clock.now()
-            ).toEntity()
+            )
         )
     }
 
