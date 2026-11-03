@@ -152,19 +152,23 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
     // Staff / Admin
     guarded<NavRoute.Dashboard>(navController, getCurrentUser) {
         DashboardScreen(
-            onRegisterFound = { navController.navigate(NavRoute.FoundForm) },
+            onRegisterFound = { navController.navigate(NavRoute.FoundCapture) },
             onOpenClaims = { navController.navigate(NavRoute.Claims) },
             onOpenClaim = { claimId -> navController.navigate(NavRoute.ClaimDetail(claimId)) },
             onOpenInventory = { navController.navigate(NavRoute.Inventory) }
         )
     }
-    guarded<NavRoute.FoundCapture>(navController, getCurrentUser) { FoundCaptureScreen(onNavigateBack = back) }
+    // H01: el registro de un hallazgo empieza por las fotos (paso 1) y sigue con el formulario (pasos 2 y 3).
+    guarded<NavRoute.FoundCapture>(navController, getCurrentUser) {
+        FoundCaptureScreen(onNavigateBack = back, onContinue = { navController.navigate(NavRoute.FoundForm) })
+    }
     // Al registrar vuelve a donde se abrió (Inventario); H07 lista el objeto nuevo.
     guarded<NavRoute.FoundForm>(navController, getCurrentUser) {
-        FoundFormScreen(onNavigateBack = back, onRegistered = back)
+        // Al registrar se sale de todo el flujo (captura incluida) y se vuelve a donde empezó.
+        FoundFormScreen(onNavigateBack = back, onRegistered = { navController.popBackStack<NavRoute.FoundCapture>(inclusive = true) })
     }
     guarded<NavRoute.Inventory>(navController, getCurrentUser) {
-        InventoryScreen(onRegisterFound = { navController.navigate(NavRoute.FoundForm) })
+        InventoryScreen(onRegisterFound = { navController.navigate(NavRoute.FoundCapture) })
     }
     guarded<NavRoute.Claims>(navController, getCurrentUser) {
         ClaimsScreen(onOpenClaim = { claimId -> navController.navigate(NavRoute.ClaimDetail(claimId)) })
