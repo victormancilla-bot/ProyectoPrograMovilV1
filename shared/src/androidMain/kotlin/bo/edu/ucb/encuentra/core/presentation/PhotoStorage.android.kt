@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
+import android.util.Log
 import bo.edu.ucb.encuentra.core.util.PhotoCompression
 import bo.edu.ucb.encuentra.core.util.PhotoFolder
 import kotlinx.coroutines.Dispatchers
@@ -25,14 +26,16 @@ internal suspend fun compressToAppStorage(context: Context, source: Uri, folder:
         runCatching {
             val resolver = context.contentResolver
             val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            resolver.openInputStream(source)?.use { BitmapFactory.decodeStream(it, null, bounds) } ?: return@runCatching null
-            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@runCatching null
+            // Con inJustDecodeBounds, decodeStream devuelve null a propósito: solo llena outWidth/outHeight.
+            val stream = resolver.openInputStream(source) ?: error("No se pudo abrir $source")
+            stream.use { BitmapFactory.decodeStream(it, null, bounds) }
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) error("No es una imagen válida: $source")
 
             val options = BitmapFactory.Options().apply {
                 inSampleSize = PhotoCompression.sampleSize(bounds.outWidth, bounds.outHeight)
             }
             val decoded = resolver.openInputStream(source)?.use { BitmapFactory.decodeStream(it, null, options) }
-                ?: return@runCatching null
+                ?: error("No se pudo decodificar $source")
             val rotation = resolver.openInputStream(source)?.use { exifRotation(ExifInterface(it)) } ?: 0f
             val (width, height) = PhotoCompression.targetSize(decoded.width, decoded.height)
             val scaled = Bitmap.createScaledBitmap(decoded, width, height, true)
@@ -47,8 +50,10 @@ internal suspend fun compressToAppStorage(context: Context, source: Uri, folder:
             file.outputStream().use { upright.compress(Bitmap.CompressFormat.JPEG, PhotoCompression.JPEG_QUALITY, it) }
             listOf(decoded, scaled, upright).distinct().forEach { it.recycle() }
             Uri.fromFile(file).toString()
-        }.getOrNull()
+        }.onFailure { Log.w(TAG, "No se pudo comprimir la foto $source", it) }.getOrNull()
     }
+
+internal const val TAG = "UcbPhotos"
 
 /** Las cámaras guardan la foto "acostada" y anotan la rotación en el EXIF. */
 private fun exifRotation(exif: ExifInterface): Float = when (

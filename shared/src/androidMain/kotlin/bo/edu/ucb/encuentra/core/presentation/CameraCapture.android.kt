@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -48,6 +49,7 @@ actual fun rememberCamera(
     val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
         val file = pending
         pending = null
+        Log.d(TAG, "Cámara: guardada=$saved archivo=${file?.path} bytes=${file?.length()}")
         if (saved && file != null) {
             scope.launch {
                 compressToAppStorage(context, Uri.fromFile(file), folder)?.let { currentOnCaptured(it) }
