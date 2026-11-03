@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.core.di
 
 import bo.edu.ucb.encuentra.core.data.FoundItemLifecycleRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.RoomAuditRecorder
+import bo.edu.ucb.encuentra.core.data.DataStorePreferencesRepository
 import bo.edu.ucb.encuentra.core.data.RoomNotificationRepository
 import bo.edu.ucb.encuentra.core.data.RoomTransactionRunner
 import bo.edu.ucb.encuentra.core.data.SessionRepositoryImpl
@@ -12,7 +13,10 @@ import bo.edu.ucb.encuentra.core.data.remoteconfig.FirebaseRemoteConfigDataSourc
 import bo.edu.ucb.encuentra.core.data.remoteconfig.RemoteConfigDataSource
 import bo.edu.ucb.encuentra.core.domain.repository.AppConfigRepository
 import bo.edu.ucb.encuentra.core.domain.repository.CapturedPhotosStore
+import bo.edu.ucb.encuentra.core.domain.repository.NoPushToken
 import bo.edu.ucb.encuentra.core.domain.repository.NotificationRepository
+import bo.edu.ucb.encuentra.core.domain.repository.PreferencesRepository
+import bo.edu.ucb.encuentra.core.domain.repository.PushTokenRegistry
 import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.ObserveAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.RefreshAppConfigUseCase
@@ -23,7 +27,14 @@ import bo.edu.ucb.encuentra.core.domain.repository.SessionRepository
 import bo.edu.ucb.encuentra.core.domain.repository.TransactionRunner
 import bo.edu.ucb.encuentra.core.domain.repository.UserRepository
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.GetContactPhoneUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.NotificationCenter
+import bo.edu.ucb.encuentra.core.domain.usecase.ObserveDevicePreferencesUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.ObserveUserPreferencesUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.SaveContactPhoneUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.SetLanguageUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.SetNotificationPreferenceUseCase
+import bo.edu.ucb.encuentra.core.domain.usecase.SetThemeUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.RestoreSessionUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.item.ChangeItemStatusUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.item.ClaimItemUseCase
@@ -54,7 +65,18 @@ val coreModule = module {
 
     // Notificaciones internas (N01): Room + sistema (LocalNotifier viene de platformModule).
     single<NotificationRepository> { RoomNotificationRepository(get(), get()) }
-    singleOf(::NotificationCenter)
+    single { NotificationCenter(get(), get(), get(), get()) }
+
+    // Perfil y Ajustes (S07): preferencias en la DataStore de la sesión; el token push lo reemplaza N02.
+    single<PreferencesRepository> { DataStorePreferencesRepository(get()) }
+    single<PushTokenRegistry> { NoPushToken }
+    singleOf(::ObserveDevicePreferencesUseCase)
+    singleOf(::SetThemeUseCase)
+    singleOf(::SetLanguageUseCase)
+    singleOf(::ObserveUserPreferencesUseCase)
+    singleOf(::SetNotificationPreferenceUseCase)
+    singleOf(::SaveContactPhoneUseCase)
+    singleOf(::GetContactPhoneUseCase)
 
     // Fotos del objeto que se está registrando (H01 → H03).
     singleOf(::CapturedPhotosStore)

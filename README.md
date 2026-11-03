@@ -154,6 +154,18 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Perfil y Ajustes (S07)
+
+Pestaña **Perfil** de ambos roles (no está en el PDF; se armó con el DS siguiendo el UserState de ucbp1).
+
+- **Datos del usuario:** iniciales, nombre, correo, facultad • sede y chip del rol.
+- **Preferencias en DataStore** (la misma de la sesión): del **teléfono** — tema (Sistema/Claro/Oscuro, se aplica en vivo en `App.kt`) e idioma (Español/English; los textos en inglés llegan con F09) —; y por **usuario** (varios comparten el teléfono en la demo) — qué avisos mostrar en el sistema (estudiante: Coincidencias y Reclamos; staff: Retención) y el WhatsApp de contacto.
+- **Avisos apagados:** el `NotificationCenter` (N01) ya no los muestra en la barra, pero siguen llegando a la bandeja de Alertas (N04).
+- **WhatsApp de contacto:** celular boliviano (8 dígitos, +591 opcional); se prellena en el paso 3 del wizard de reporte.
+- **Cerrar sesión** con confirmación: borra el token push (`PushTokenRegistry`, hoy `NoPushToken`; N02 lo implementa) y la sesión.
+- El admin ve además **Roles y permisos** (S03). "Menú de desarrollo" sigue al final mientras haya pantallas de prueba.
+- Tests: `PreferencesTest` y `ReportWizardViewModelTest` (prellenado del WhatsApp).
+
 ## Registro de auditoría (S05)
 
 Quién reclamó, cuándo, quién aprobó y quién entregó: sin esto el sistema es indefendible ante un reclamo falso.

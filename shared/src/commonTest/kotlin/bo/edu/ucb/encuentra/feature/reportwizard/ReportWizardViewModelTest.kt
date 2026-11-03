@@ -1,5 +1,7 @@
 package bo.edu.ucb.encuentra.feature.reportwizard
 
+import bo.edu.ucb.encuentra.core.InMemoryPreferences
+import bo.edu.ucb.encuentra.core.domain.usecase.GetContactPhoneUseCase
 import bo.edu.ucb.encuentra.core.domain.model.Category
 import bo.edu.ucb.encuentra.core.domain.model.Subcategory
 import bo.edu.ucb.encuentra.core.domain.model.CampusZone
@@ -51,7 +53,8 @@ class ReportWizardViewModelTest {
         viewModel = ReportWizardViewModel(
             validate,
             SubmitLostReportUseCase(validate, repository, matching, session, FixedClock),
-            session
+            session,
+            GetContactPhoneUseCase(InMemoryPreferences(), session)
         )
     }
 
@@ -60,6 +63,22 @@ class ReportWizardViewModelTest {
 
     private fun send(vararg events: ReportWizardEvent) = events.forEach(viewModel::handleEvent)
     private val state get() = viewModel.state.value
+
+    @Test
+    fun contactPhoneSavedInTheProfileIsPrefilled() = runTest(dispatcher) {
+        val session = GetCurrentUserUseCase(FakeSession(demoUser(Role.ESTUDIANTE)))
+        val prefs = InMemoryPreferences()
+        prefs.setContactPhone(demoUser(Role.ESTUDIANTE).id, "71234567")
+        val validate = ValidateReportStepUseCase(FixedClock, BoliviaTime)
+        val vm = ReportWizardViewModel(
+            validate,
+            SubmitLostReportUseCase(validate, repository, matching, session, FixedClock),
+            session,
+            GetContactPhoneUseCase(prefs, session)
+        )
+        advanceUntilIdle()
+        assertEquals("71234567", vm.state.value.draft.contactPhone)
+    }
 
     @Test
     fun nextIsDisabledUntilCategoryAndSubcategoryAreChosen() {

@@ -3,6 +3,8 @@ package bo.edu.ucb.encuentra.core.domain.usecase
 import bo.edu.ucb.encuentra.core.domain.model.AppNotification
 import bo.edu.ucb.encuentra.core.domain.repository.LocalNotifier
 import bo.edu.ucb.encuentra.core.domain.repository.NotificationRepository
+import bo.edu.ucb.encuentra.core.domain.repository.PreferencesRepository
+import kotlinx.coroutines.flow.first
 
 /**
  * Centro de notificaciones internas (N01). Todas las features publican aquí (matching: coincidencias nuevas;
@@ -15,14 +17,21 @@ import bo.edu.ucb.encuentra.core.domain.repository.NotificationRepository
 class NotificationCenter(
     private val repository: NotificationRepository,
     private val notifier: LocalNotifier,
-    private val getCurrentUser: GetCurrentUserUseCase
+    private val getCurrentUser: GetCurrentUserUseCase,
+    /** S07: tipos de aviso que el usuario apagó en su Perfil (no salen en el sistema, sí en la bandeja). */
+    private val preferences: PreferencesRepository? = null
 ) {
+    private suspend fun showable(userId: String, notifications: List<AppNotification>): List<AppNotification> {
+        val prefs = preferences?.observeUser(userId)?.first() ?: return notifications
+        return notifications.filter { prefs.notifies(it.type) }
+    }
+
     suspend fun publish(notifications: List<AppNotification>) {
         if (notifications.isEmpty()) return
         repository.save(notifications)
         val user = getCurrentUser() ?: return
         val mine = notifications.filter { it.userId == user.id }
-        mine.forEach(notifier::show)
+        showable(user.id, mine).forEach(notifier::show)
         mine.maxOfOrNull { it.createdAt.toEpochMilliseconds() }?.let { latest ->
             if (latest > repository.shownUntil(user.id)) repository.setShownUntil(user.id, latest)
         }
@@ -38,7 +47,7 @@ class NotificationCenter(
         val user = getCurrentUser() ?: return 0
         val pending = repository.unreadSince(user.id, repository.shownUntil(user.id))
         if (pending.isEmpty()) return 0
-        pending.takeLast(MAX_PENDING).forEach(notifier::show)
+        showable(user.id, pending).takeLast(MAX_PENDING).forEach(notifier::show)
         repository.setShownUntil(user.id, pending.maxOf { it.createdAt.toEpochMilliseconds() })
         return pending.size.coerceAtMost(MAX_PENDING)
     }

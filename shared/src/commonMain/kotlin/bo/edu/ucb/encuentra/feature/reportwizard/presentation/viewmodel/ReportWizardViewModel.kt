@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.feature.reportwizard.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import bo.edu.ucb.encuentra.core.domain.usecase.GetContactPhoneUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.model.ReportDraft
 import bo.edu.ucb.encuentra.feature.reportwizard.domain.usecase.SubmitLostReportUseCase
@@ -12,13 +13,15 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** ViewModel compartido por los 4 pasos del wizard (L02-L04). Cada cambio revalida el paso actual. */
 class ReportWizardViewModel(
     private val validateStep: ValidateReportStepUseCase,
     private val submitReport: SubmitLostReportUseCase,
-    getCurrentUser: GetCurrentUserUseCase
+    getCurrentUser: GetCurrentUserUseCase,
+    getContactPhone: GetContactPhoneUseCase
 ) : ViewModel() {
 
     // Fechas en "hoy" y contacto prellenado con el correo del perfil (L03).
@@ -36,6 +39,18 @@ class ReportWizardViewModel(
 
     private val _effects = MutableSharedFlow<ReportWizardEffect>()
     val effects: SharedFlow<ReportWizardEffect> = _effects.asSharedFlow()
+
+    init {
+        // S07: el WhatsApp guardado en el Perfil se prellena (si el usuario todavía no escribió otro).
+        viewModelScope.launch {
+            val phone = getContactPhone()
+            if (phone.isNotEmpty()) {
+                _state.update { state ->
+                    if (state.draft.contactPhone.isNotEmpty()) state else state.copy(draft = state.draft.copy(contactPhone = phone))
+                }
+            }
+        }
+    }
 
     fun handleEvent(event: ReportWizardEvent) {
         val draft = state.value.draft
