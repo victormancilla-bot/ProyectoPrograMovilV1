@@ -42,6 +42,7 @@ import bo.edu.ucb.encuentra.core.presentation.formatHm
 import bo.edu.ucb.encuentra.core.presentation.formatShort
 import bo.edu.ucb.encuentra.feature.audit.domain.model.AuditEntry
 import bo.edu.ucb.encuentra.feature.audit.domain.model.AuditPeriod
+import bo.edu.ucb.encuentra.feature.audit.domain.model.AuditTargetKind
 import bo.edu.ucb.encuentra.feature.audit.presentation.viewmodel.AuditEffect
 import bo.edu.ucb.encuentra.feature.audit.presentation.viewmodel.AuditEvent
 import bo.edu.ucb.encuentra.feature.audit.presentation.viewmodel.AuditState
@@ -189,7 +190,12 @@ private fun AuditRow(entry: AuditEntry, state: AuditState) {
                     AppTitle(entry.action.label, modifier = Modifier.weight(1f))
                     AppLabel(time, color = colors.onSurfaceVariant)
                 }
-                AppLabel("${entry.targetKind.label}: ${entry.targetLabel}", color = colors.tertiary)
+                // "Reclamo #1024 · ..." y "Reporte: ..." ya dicen qué son; el resto lleva el tipo delante.
+                val target = when (entry.targetKind) {
+                    AuditTargetKind.OBJETO, AuditTargetKind.PERSONA -> "${entry.targetKind.label}: ${entry.targetLabel}"
+                    else -> entry.targetLabel
+                }
+                AppLabel(target, color = colors.tertiary)
                 AppBody("Por ${entry.actorName}")
                 if (entry.detail.isNotBlank()) AppLabel(entry.detail, color = colors.onSurfaceVariant)
             }
