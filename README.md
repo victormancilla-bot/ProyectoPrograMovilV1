@@ -154,6 +154,17 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Bandeja de Alertas (N04)
+
+Pestaña **Alertas** de la barra inferior (el PDF no tiene esta pantalla: se armó con el DS). Muestra las `AppNotification` que guarda el centro de notificaciones de N01.
+
+- **Lista** de alertas del usuario con sesión: **Nuevas** (no leídas, con fondo y punto rojo) y **Anteriores** (leídas); filtro *Todas / No leídas* con contador; tipo (Coincidencias, Reclamos, Retención), título, texto y hace cuánto llegó.
+- **Badge** rojo con las no leídas en la pestaña Alertas (`BottomNavItem.badgeCount`, nuevo en el Design System; más de 9 muestra "9+").
+- **Marcar como leída** (una o todas, desde el header) y **Limpiar** leídas con confirmación; las no leídas nunca se borran sin verlas.
+- **Tocar una alerta** la marca como leída y abre su deep link de F05 (`ucbencuentra://match/{id}` → Detalle de match), igual que la notificación del sistema. Si no tiene deep link, solo se marca como leída.
+- Solo se tocan las alertas del usuario con sesión. Al cerrar sesión se borra el estado guardado de las pestañas, para que el siguiente usuario no vea las pantallas del anterior.
+- Código: `feature/alerts` (`AlertsRepository`, use cases en `AlertsUseCases.kt`, `AlertsViewModel`, `AlertsScreen`). Tests: `AlertsTest`.
+
 ## Roles ESTUDIANTE / STAFF / ADMIN (S03)
 
 El rol decide qué ve y qué puede hacer cada quien. **Nadie se asigna staff a sí mismo.**
