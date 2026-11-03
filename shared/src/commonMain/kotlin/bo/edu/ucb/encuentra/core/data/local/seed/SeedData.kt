@@ -114,6 +114,19 @@ object SeedData {
             "Cuaderno anillado con apuntes de Física II.", CampusZone.BLOQUE_B, "Aula 305",
             "2026-10-28T09:20:00-04:00", ItemStatus.RECLAMADO,
             listOf("¿Cuál es el nombre del docente en la primera hoja?" to "Roberto Pérez")
+        ),
+        // D04: retención vencida (90 días) para la demo de Donar / Descartar.
+        foundItem(
+            "fi-paraguas", "Paraguas Negro Plegable", Category.OTROS, Subcategory.PARAGUAS, "Negro", null,
+            "Paraguas plegable negro con mango de madera.", CampusZone.AUDITORIO, null,
+            "2026-07-10T17:30:00-04:00", ItemStatus.DISPONIBLE,
+            listOf("¿De qué material es el mango?" to "Madera")
+        ),
+        foundItem(
+            "fi-chamarra", "Chamarra Deportiva Azul", Category.ROPA_ACCESORIOS, Subcategory.CHAMARRA, "Azul", "Adidas",
+            "Chamarra deportiva azul talla M.", CampusZone.CANCHAS_DEPORTIVAS, null,
+            "2026-07-25T19:00:00-04:00", ItemStatus.DISPONIBLE,
+            listOf("¿Qué talla es?" to "M")
         )
     )
 

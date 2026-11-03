@@ -91,7 +91,7 @@ class InventoryViewModelTest {
         val vm = viewModel()
         advanceUntilIdle()
         assertEquals("Sede La Paz", vm.state.value.campus)
-        assertEquals(6, vm.state.value.visible.size)
+        assertEquals(8, vm.state.value.visible.size)
 
         vm.handleEvent(InventoryEvent.OnFilterSelected(InventoryFilter.RECLAMADO))
         assertEquals(3, vm.state.value.visible.size)
