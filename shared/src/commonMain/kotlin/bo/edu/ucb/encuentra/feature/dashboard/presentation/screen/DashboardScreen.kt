@@ -40,6 +40,8 @@ import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.DashboardVi
 import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.StatTarget
 import edu.ucb.ds.components.buttons.AppButtonSize
 import edu.ucb.ds.components.buttons.PrimaryButton
+import androidx.compose.material.icons.outlined.History
+import edu.ucb.ds.components.buttons.SecondaryButton
 import edu.ucb.ds.components.cards.AppCard
 import edu.ucb.ds.components.cards.StatCard
 import edu.ucb.ds.components.header.CurvedHeader
@@ -63,7 +65,8 @@ fun DashboardScreen(
     onOpenClaims: () -> Unit,
     onOpenClaim: (claimId: String) -> Unit,
     onOpenInventory: () -> Unit,
-    onOpenRetention: () -> Unit = {}
+    onOpenRetention: () -> Unit = {},
+    onOpenAudit: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -74,6 +77,7 @@ fun DashboardScreen(
                 DashboardEffect.NavigateToClaims -> onOpenClaims()
                 DashboardEffect.NavigateToInventory -> onOpenInventory()
                 DashboardEffect.NavigateToRetention -> onOpenRetention()
+                DashboardEffect.NavigateToAudit -> onOpenAudit()
                 is DashboardEffect.NavigateToClaimDetail -> onOpenClaim(effect.claimId)
             }
         }
@@ -142,6 +146,13 @@ private fun DashboardBody(stats: DashboardStats, state: DashboardState, onEvent:
             onClick = { onEvent(DashboardEvent.OnRegisterFound) },
             size = AppButtonSize.Large,
             leadingIcon = DsIcons.Add,
+            modifier = Modifier.fillMaxWidth()
+        )
+        // S05: quién hizo qué y cuándo (reclamos, entregas, donaciones, roles).
+        SecondaryButton(
+            text = "Registro de auditoría",
+            onClick = { onEvent(DashboardEvent.OnOpenAudit) },
+            leadingIcon = Icons.Outlined.History,
             modifier = Modifier.fillMaxWidth()
         )
 

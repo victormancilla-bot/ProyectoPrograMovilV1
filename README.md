@@ -154,6 +154,16 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Registro de auditoría (S05)
+
+Quién reclamó, cuándo, quién aprobó y quién entregó: sin esto el sistema es indefendible ante un reclamo falso.
+
+- **Append-only de verdad:** el DAO solo tiene `@Insert`, y además dos triggers SQLite (`AuditAppendOnly`, `RoomDatabase.Callback.onOpen`) rechazan cualquier `UPDATE` o `DELETE` sobre `audit_logs` ("audit_logs es append-only"). Se crean con `IF NOT EXISTS` al abrir la base, así aplican también a bases existentes sin migración.
+- **Firestore:** reglas en `firebase/firestore.rules` para `audit_logs`: lee solo el staff; cada quien crea registros de SUS acciones (`actorId == auth.uid`, hora del servidor); `update` y `delete` prohibidos para todos.
+- **Eventos:** se escriben con `AuditRecorder` desde los use cases: objeto registrado, custodia, reclamo creado, respuestas (también los intentos fallidos), aprobado, rechazado, entrega programada, entregado, donado, descartado, rol cambiado, reporte cerrado.
+- **Visor para staff:** botón **Registro de auditoría** en el Panel. Lista por día con nombres legibles (persona, objeto con su código, "Reclamo #1024 · Billetera"). Filtros por **objeto** (texto: nombre, código o n.º de reclamo; los reclamos se encuentran también por el código de su objeto), **persona** (solo quienes hicieron algo) y **fecha** (Hoy, 7 días, 30 días, Todo). Solo lectura.
+- Tests: `AuditTrailTest` (cada use case sensible escribe su evento con el actor correcto) y `AuditViewerTest`.
+
 ## Objetos encontrados y Cómo funciona (L07)
 
 Pestaña **Buscar** del estudiante y accesos rápidos del Inicio (el PDF no tiene estas pantallas: se armaron con el DS).

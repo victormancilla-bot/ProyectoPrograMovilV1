@@ -24,6 +24,7 @@ enum class StatTarget { INVENTORY, CLAIMS, RETENTION }
 sealed class DashboardEvent {
     data object OnRegisterFound : DashboardEvent()
     data object OnSeeAllClaims : DashboardEvent()
+    data object OnOpenAudit : DashboardEvent()
     data class OnClaimClicked(val claimId: String) : DashboardEvent()
     data class OnStatClicked(val target: StatTarget) : DashboardEvent()
     data object OnRetry : DashboardEvent()
@@ -34,5 +35,6 @@ sealed class DashboardEffect {
     data object NavigateToClaims : DashboardEffect()
     data object NavigateToInventory : DashboardEffect()
     data object NavigateToRetention : DashboardEffect()
+    data object NavigateToAudit : DashboardEffect()
     data class NavigateToClaimDetail(val claimId: String) : DashboardEffect()
 }

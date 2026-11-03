@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// S03 · Roles ESTUDIANTE / STAFF / ADMIN.
+// S03 · Roles ESTUDIANTE / STAFF / ADMIN · S05 · Auditoría append-only.
 // El campo `role` de users/{uid} solo lo cambia un ADMIN, y nadie cambia su propio rol.
 // Se despliegan cuando exista el proyecto de Firebase (S02): `firebase deploy --only firestore:rules`.
 service cloud.firestore {
@@ -40,6 +40,24 @@ service cloud.firestore {
                     && request.resource.data.role in ['ESTUDIANTE', 'STAFF'];
 
       allow delete: if false;
+    }
+
+    function isStaff() {
+      return signedIn() && roleOf(request.auth.uid) in ['STAFF', 'ADMIN'];
+    }
+
+    // S05 · Auditoría append-only: se agrega, nunca se cambia ni se borra (ni siquiera un admin).
+    match /audit_logs/{logId} {
+      // Solo el staff la consulta (visor de auditoría).
+      allow read: if isStaff();
+
+      // Cada quien registra SUS acciones: el actor es quien está autenticado y la hora la pone el servidor.
+      allow create: if signedIn()
+                    && request.resource.data.actorId == request.auth.uid
+                    && request.resource.data.at == request.time
+                    && request.resource.data.keys().hasOnly(['action', 'actorId', 'targetId', 'detail', 'at']);
+
+      allow update, delete: if false;
     }
   }
 }

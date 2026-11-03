@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ClaimDao {
+    /** S05: para mostrar el reclamo y su objeto en el visor de auditoría. */
+    @Query("SELECT * FROM claims")
+    fun observeAll(): Flow<List<ClaimEntity>>
+
     @Query("SELECT * FROM claims WHERE status = :status ORDER BY created_at DESC")
     fun observeByStatus(status: ClaimStatus): Flow<List<ClaimEntity>>
 

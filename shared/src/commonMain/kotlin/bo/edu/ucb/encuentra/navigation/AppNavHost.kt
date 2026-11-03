@@ -174,7 +174,8 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
             onOpenClaims = { navController.navigate(NavRoute.Claims) },
             onOpenClaim = { claimId -> navController.navigate(NavRoute.ClaimDetail(claimId)) },
             onOpenInventory = { navController.navigate(NavRoute.Inventory) },
-            onOpenRetention = { navController.navigate(NavRoute.Retention) }
+            onOpenRetention = { navController.navigate(NavRoute.Retention) },
+            onOpenAudit = { navController.navigate(NavRoute.Audit) }
         )
     }
     // H01: el registro de un hallazgo empieza por las fotos (paso 1) y sigue con el formulario (pasos 2 y 3).
