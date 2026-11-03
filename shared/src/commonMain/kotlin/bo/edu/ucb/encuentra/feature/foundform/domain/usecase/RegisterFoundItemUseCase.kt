@@ -46,7 +46,7 @@ class RegisterFoundItemUseCase(
             custodyPlace = requireNotNull(draft.custodyPlace),
             custodyDetail = draft.custodyDetail.trim(),
             status = ItemStatus.DISPONIBLE,
-            photoUrls = emptyList(),
+            photoUrls = draft.photos,
             controlQuestions = draft.questionsWithAnswers.map { it.first },
             expectedAnswers = draft.questionsWithAnswers.map { it.second },
             registeredBy = user.id,

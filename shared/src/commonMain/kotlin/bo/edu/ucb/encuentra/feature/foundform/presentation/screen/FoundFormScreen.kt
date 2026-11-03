@@ -2,7 +2,10 @@ package bo.edu.ucb.encuentra.feature.foundform.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,16 +22,21 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import bo.edu.ucb.encuentra.core.domain.model.CampusZone
+import bo.edu.ucb.encuentra.core.presentation.RegisterStepper
 import bo.edu.ucb.encuentra.core.domain.model.CustodyPlace
 import bo.edu.ucb.encuentra.feature.foundform.domain.usecase.FoundFieldError
 import bo.edu.ucb.encuentra.feature.foundform.presentation.viewmodel.FoundFormEffect
 import bo.edu.ucb.encuentra.feature.foundform.presentation.viewmodel.FoundFormEvent
 import bo.edu.ucb.encuentra.feature.foundform.presentation.viewmodel.FoundFormState
 import bo.edu.ucb.encuentra.feature.foundform.presentation.viewmodel.FoundFormViewModel
+import coil3.compose.AsyncImage
 import edu.ucb.ds.components.buttons.AppButtonSize
+import edu.ucb.ds.components.label.AppOverline
 import edu.ucb.ds.components.buttons.PrimaryButton
 import edu.ucb.ds.components.header.CurvedHeader
 import edu.ucb.ds.components.label.AppBody
@@ -85,7 +93,9 @@ private fun FoundFormContent(
                     .padding(horizontal = spacing.screenPadding, vertical = spacing.large),
                 verticalArrangement = Arrangement.spacedBy(spacing.large)
             ) {
+                RegisterStepper(activeSteps = setOf(2, 3))
                 AppBody("Ingresa los detalles del hallazgo.")
+                CapturedPhotosRow(state.draft.photos, state.errorFor(FoundFieldError.PHOTO_REQUIRED))
 
                 DetectedDataCard(state = state, onEvent = onEvent)
 
@@ -167,5 +177,25 @@ private fun FoundFormContent(
                 )
             }
         }
+    }
+}
+
+/** Fotos del paso 1 (H01). Para cambiarlas se vuelve atrás: la captura conserva las fotos. */
+@Composable
+private fun CapturedPhotosRow(photos: List<String>, error: String?) {
+    Column(verticalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.medium)) {
+        AppOverline("Fotos (${photos.size})", color = UcbEncuentraTheme.colors.onSurface)
+        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(UcbEncuentraTheme.spacing.medium)) {
+            photos.forEach { photo ->
+                AsyncImage(
+                    model = photo,
+                    contentDescription = "Foto del objeto",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(72.dp).clip(UcbEncuentraTheme.shapes.small)
+                )
+            }
+        }
+        if (photos.isEmpty()) AppBody("Vuelve al paso 1 para tomar al menos una foto.")
+        FieldError(error)
     }
 }

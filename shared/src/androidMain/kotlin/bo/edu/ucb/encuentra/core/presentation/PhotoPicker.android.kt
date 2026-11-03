@@ -1,7 +1,5 @@
 package bo.edu.ucb.encuentra.core.presentation
 
-import android.content.Context
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,26 +9,22 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.Dispatchers
+import bo.edu.ucb.encuentra.core.util.PhotoFolder
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Photo Picker del sistema: no necesita permisos de almacenamiento (el usuario elige la foto y la app solo
- * recibe esa). En Android < 13 lo provee Google Play services. La foto se copia a `filesDir/report_photos`
- * porque el permiso de lectura del URI del picker se pierde al cerrar la app.
+ * recibe esa). En Android < 13 lo provee Google Play services. La foto se comprime y se copia a la carpeta de la
+ * app ([compressToAppStorage]).
  */
 @Composable
-actual fun rememberPhotoPicker(onPicked: (String) -> Unit): PhotoPickerLauncher {
+actual fun rememberPhotoPicker(folder: PhotoFolder, onPicked: (String) -> Unit): PhotoPickerLauncher {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val currentOnPicked by rememberUpdatedState(onPicked)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            scope.launch { copyToAppStorage(context, uri)?.let { currentOnPicked(it) } }
+            scope.launch { compressToAppStorage(context, uri, folder)?.let { currentOnPicked(it) } }
         }
     }
     return remember(launcher) {
@@ -39,16 +33,3 @@ actual fun rememberPhotoPicker(onPicked: (String) -> Unit): PhotoPickerLauncher 
         }
     }
 }
-
-@OptIn(ExperimentalUuidApi::class)
-private suspend fun copyToAppStorage(context: Context, uri: Uri): String? = withContext(Dispatchers.IO) {
-    runCatching {
-        val dir = File(context.filesDir, PHOTOS_DIR).apply { mkdirs() }
-        val file = File(dir, "${Uuid.random()}.jpg")
-        val input = context.contentResolver.openInputStream(uri) ?: return@runCatching null
-        input.use { source -> file.outputStream().use { source.copyTo(it) } }
-        Uri.fromFile(file).toString()
-    }.getOrNull()
-}
-
-private const val PHOTOS_DIR = "report_photos"

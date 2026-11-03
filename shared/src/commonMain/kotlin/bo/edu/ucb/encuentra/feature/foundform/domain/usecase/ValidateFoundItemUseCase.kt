@@ -7,6 +7,7 @@ import kotlinx.datetime.toInstant
 import kotlin.time.Clock
 
 enum class FoundFieldError(val message: String) {
+    PHOTO_REQUIRED("Toma o sube al menos una foto del objeto"),
     CATEGORY_REQUIRED("Elige la categoría"),
     SUBCATEGORY_REQUIRED("Elige la subcategoría"),
     COLOR_REQUIRED("Elige el color predominante"),
@@ -31,6 +32,8 @@ class ValidateFoundItemUseCase(
     private val timeZone: TimeZone
 ) {
     operator fun invoke(draft: FoundItemDraft): Set<FoundFieldError> = buildSet {
+        // H01: mínimo una foto (se toma en el paso 1, Captura).
+        if (draft.photos.isEmpty()) add(FoundFieldError.PHOTO_REQUIRED)
         if (draft.category == null) add(FoundFieldError.CATEGORY_REQUIRED)
         val sub = draft.subcategory
         if (sub == null || sub.category != draft.category) add(FoundFieldError.SUBCATEGORY_REQUIRED)

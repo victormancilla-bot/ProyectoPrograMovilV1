@@ -154,6 +154,17 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Captura de foto (H01)
+
+El registro de un objeto encontrado empieza ahora por las fotos: **Inventario o Dashboard → "Registrar objeto encontrado" → Captura (paso 1) → Formulario (pasos 2 y 3)**. Al registrar se vuelve a la pantalla de origen.
+
+- **Spike: expect/actual propio** en lugar de FileKit/Peekaboo: mismo patrón que el `PhotoPicker` de L03, sin dependencias nuevas (`libs.versions.toml` congelado). `core/presentation/CameraCapture.kt` (`rememberCamera`, `CameraLauncher`, `CameraPermissionResult`); en Android usa `TakePicture` del sistema con un temporal compartido por `FileProvider` (`res/xml/file_paths.xml`); en iOS queda `isAvailable = false` (no se compila desde Windows).
+- **Permiso CAMERA** (manifest, con `uses-feature camera.any` opcional): si ya está, abre la cámara; la primera vez lo pide; si el usuario lo negó, muestra "Sin acceso a la cámara" con **Permitir** (vuelve a pedirlo) o la galería; si lo negó con "No volver a preguntar", ofrece **Abrir ajustes**.
+- **Pantalla "Registrar – Captura de Foto"** (título corregido de "Reportar" a "Registrar"): stepper **1. Captura · 2. Detalles · 3. Ubicación** (`RegisterStepper`), Tomar foto / Subir galería, "Fotos capturadas (N)" con miniaturas y **X para eliminar**, "+ Agregar", **mínimo 1 foto** para Continuar (máximo 6).
+- **Compresión antes de guardar** (`PhotoCompression` + `compressToAppStorage`): lado mayor 1600 px, JPEG 80, girada según el EXIF, en `filesDir/found_photos` (las de los reportes en `report_photos`, también comprimidas). En el emulador una foto de 63 KB quedó en 23 KB; una de cámara real de 3-8 MB queda en ~300 KB.
+- Las fotos pasan al formulario por `CapturedPhotosStore` (core, en memoria; `NavRoute.FoundForm` no lleva parámetros). El formulario las muestra, exige al menos una (`PHOTO_REQUIRED`) y el objeto se guarda con `photoUrls`. Volver atrás desde el formulario no pierde las fotos; cancelar la captura las descarta.
+- Tests: `PhotoCompressionTest`, `FoundCaptureViewModelTest` y los de H03 actualizados (foto requerida, fotos guardadas, borrador limpio al registrar).
+
 ## Inventario de objetos (H07)
 
 Pantalla del Figma "Inventario" (pestaña **Inventario** del staff), en vivo desde Room:

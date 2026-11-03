@@ -71,7 +71,8 @@ class RegisterFoundItemUseCaseTest {
             brand = " ",
             custodyPlace = CustodyPlace.LOCKER,
             controlQuestions = listOf(" ¿Qué fondo de pantalla tiene? ", ""),
-            expectedAnswers = listOf(" Un perro ", "")
+            expectedAnswers = listOf(" Un perro ", ""),
+            photos = listOf("file:///a.jpg", "file:///b.jpg")
         )
         val item = register(demoUser(Role.STAFF))(draft).getOrThrow()
 
@@ -83,6 +84,7 @@ class RegisterFoundItemUseCaseTest {
         assertEquals(CustodyPlace.LOCKER, item.custodyPlace)
         assertEquals(listOf("¿Qué fondo de pantalla tiene?"), item.controlQuestions)
         assertEquals(listOf("Un perro"), item.expectedAnswers)
+        assertEquals(listOf("file:///a.jpg", "file:///b.jpg"), item.photoUrls)
         assertEquals("u-ana-staff", item.registeredBy)
         assertEquals(Campus.LA_PAZ, item.campus)
         assertEquals(FixedClock.now() + 90.days, item.retentionUntil)
