@@ -65,6 +65,22 @@ class ReportWizardViewModelTest {
     private val state get() = viewModel.state.value
 
     @Test
+    fun contactPhoneSavedInTheProfileIsPrefilled() = runTest(dispatcher) {
+        val session = GetCurrentUserUseCase(FakeSession(demoUser(Role.ESTUDIANTE)))
+        val prefs = InMemoryPreferences()
+        prefs.setContactPhone(demoUser(Role.ESTUDIANTE).id, "71234567")
+        val validate = ValidateReportStepUseCase(FixedClock, BoliviaTime)
+        val vm = ReportWizardViewModel(
+            validate,
+            SubmitLostReportUseCase(validate, repository, matching, session, FixedClock),
+            session,
+            GetContactPhoneUseCase(prefs, session)
+        )
+        advanceUntilIdle()
+        assertEquals("71234567", vm.state.value.draft.contactPhone)
+    }
+
+    @Test
     fun nextIsDisabledUntilCategoryAndSubcategoryAreChosen() {
         assertFalse(state.canContinue)
         send(ReportWizardEvent.OnNext)
