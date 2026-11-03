@@ -35,6 +35,7 @@ import bo.edu.ucb.encuentra.feature.foundcatalog.presentation.screen.HowItWorksS
 import bo.edu.ucb.encuentra.feature.foundform.presentation.screen.FoundFormScreen
 import bo.edu.ucb.encuentra.feature.home.presentation.screen.HomeScreen
 import bo.edu.ucb.encuentra.feature.inventory.presentation.screen.InventoryScreen
+import bo.edu.ucb.encuentra.feature.inventory.presentation.screen.RetentionScreen
 import bo.edu.ucb.encuentra.feature.login.presentation.screen.LoginScreen
 import bo.edu.ucb.encuentra.feature.matching.presentation.screen.MatchDetailScreen
 import bo.edu.ucb.encuentra.feature.matching.presentation.screen.MatchListScreen
@@ -167,7 +168,8 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
             onRegisterFound = { navController.navigate(NavRoute.FoundCapture) },
             onOpenClaims = { navController.navigate(NavRoute.Claims) },
             onOpenClaim = { claimId -> navController.navigate(NavRoute.ClaimDetail(claimId)) },
-            onOpenInventory = { navController.navigate(NavRoute.Inventory) }
+            onOpenInventory = { navController.navigate(NavRoute.Inventory) },
+            onOpenRetention = { navController.navigate(NavRoute.Retention) }
         )
     }
     // H01: el registro de un hallazgo empieza por las fotos (paso 1) y sigue con el formulario (pasos 2 y 3).
@@ -196,6 +198,12 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
         DeliveryScreen(claimId = route.claimId, onNavigateBack = back)
     }
     guarded<NavRoute.Audit>(navController, getCurrentUser) { AuditScreen(onNavigateBack = back) }
+    // D04: también la abre la notificación diaria de retención (ucbencuentra://retention).
+    guarded<NavRoute.Retention>(
+        navController,
+        getCurrentUser,
+        deepLinks = listOf(navDeepLink<NavRoute.Retention>(basePath = DeepLinks.RETENTION))
+    ) { RetentionScreen(onNavigateBack = back) }
 
     // Comunes
     // N04: tocar una alerta abre su deep link (match o reclamo), igual que la notificación del sistema.

@@ -110,7 +110,11 @@ class RetentionViewModel(
             val message = runCatching { checkRetention() }.fold(
                 onSuccess = { check ->
                     if (check.notifiedStaff == 0) "No hay objetos vencidos ni por vencer."
-                    else "Se avisó a ${check.notifiedStaff} del staff: ${check.expired} vencidos, ${check.expiring} por vencer."
+                    else {
+                        val who = if (check.notifiedStaff == 1) "1 persona" else "${check.notifiedStaff} personas"
+                        val expired = if (check.expired == 1) "1 vencido" else "${check.expired} vencidos"
+                        "Se avisó a $who del staff: $expired y ${check.expiring} por vencer."
+                    }
                 },
                 onFailure = { e -> e.message ?: "No se pudo revisar" }
             )

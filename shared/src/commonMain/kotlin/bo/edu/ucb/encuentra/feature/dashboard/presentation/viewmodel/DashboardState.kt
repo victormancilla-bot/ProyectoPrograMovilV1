@@ -19,7 +19,7 @@ data class DashboardState(
 )
 
 /** A qué parte lleva cada tarjeta de contador. */
-enum class StatTarget { INVENTORY, CLAIMS }
+enum class StatTarget { INVENTORY, CLAIMS, RETENTION }
 
 sealed class DashboardEvent {
     data object OnRegisterFound : DashboardEvent()
@@ -33,5 +33,6 @@ sealed class DashboardEffect {
     data object NavigateToFoundForm : DashboardEffect()
     data object NavigateToClaims : DashboardEffect()
     data object NavigateToInventory : DashboardEffect()
+    data object NavigateToRetention : DashboardEffect()
     data class NavigateToClaimDetail(val claimId: String) : DashboardEffect()
 }

@@ -47,6 +47,7 @@ class DashboardViewModel(
                 when (event.target) {
                     StatTarget.INVENTORY -> DashboardEffect.NavigateToInventory
                     StatTarget.CLAIMS -> DashboardEffect.NavigateToClaims
+                    StatTarget.RETENTION -> DashboardEffect.NavigateToRetention
                 }
             )
             DashboardEvent.OnRetry -> load()

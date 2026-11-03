@@ -62,7 +62,8 @@ fun DashboardScreen(
     onRegisterFound: () -> Unit,
     onOpenClaims: () -> Unit,
     onOpenClaim: (claimId: String) -> Unit,
-    onOpenInventory: () -> Unit
+    onOpenInventory: () -> Unit,
+    onOpenRetention: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -72,6 +73,7 @@ fun DashboardScreen(
                 DashboardEffect.NavigateToFoundForm -> onRegisterFound()
                 DashboardEffect.NavigateToClaims -> onOpenClaims()
                 DashboardEffect.NavigateToInventory -> onOpenInventory()
+                DashboardEffect.NavigateToRetention -> onOpenRetention()
                 is DashboardEffect.NavigateToClaimDetail -> onOpenClaim(effect.claimId)
             }
         }
@@ -129,7 +131,8 @@ private fun DashboardBody(stats: DashboardStats, state: DashboardState, onEvent:
             StatCard(
                 value = stats.expiringSoon.toString(), label = "Por vencer", icon = Icons.Outlined.EventBusy,
                 valueColor = colors.error, modifier = Modifier.weight(1f),
-                onClick = { onEvent(DashboardEvent.OnStatClicked(StatTarget.INVENTORY)) }
+                // D04: abre la pantalla de Retención (vencidos y por vencer).
+                onClick = { onEvent(DashboardEvent.OnStatClicked(StatTarget.RETENTION)) }
             )
         }
 

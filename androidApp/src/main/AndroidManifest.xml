@@ -40,6 +40,10 @@
                 <data
                     android:scheme="ucbencuentra"
                     android:host="match" />
+                <!-- D04: aviso diario de retención al staff (ucbencuentra://retention) -->
+                <data
+                    android:scheme="ucbencuentra"
+                    android:host="retention" />
             </intent-filter>
         </activity>
         <!-- H01: comparte con la cámara del sistema el archivo temporal donde escribe la foto. -->

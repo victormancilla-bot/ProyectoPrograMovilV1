@@ -59,6 +59,10 @@ sealed class NavRoute {
     @Serializable
     data object Audit : NavRoute()
 
+    /** D04: vencidos (Donar / Descartar) y por vencer. Deep link `ucbencuentra://retention`. */
+    @Serializable
+    data object Retention : NavRoute()
+
     // ----- Solo ADMIN (S03) -----
     /** Panel de roles: asignar o quitar staff. Se abre desde Perfil. */
     @Serializable
