@@ -30,7 +30,8 @@ class FoundCaptureViewModel(private val store: CapturedPhotosStore) : ViewModel(
 
     fun handleEvent(event: FoundCaptureEvent) {
         when (event) {
-            is FoundCaptureEvent.OnPhotoAdded -> if (state.value.canAddPhoto) store.add(event.path)
+            // El límite se mira en el borrador (el estado de la pantalla se actualiza con un poco de retraso).
+            is FoundCaptureEvent.OnPhotoAdded -> if (store.photos.value.size < FoundCaptureState.MAX_PHOTOS) store.add(event.path)
             is FoundCaptureEvent.OnRemovePhoto -> store.remove(event.path)
             is FoundCaptureEvent.OnPermissionResult -> _state.value = state.value.copy(permission = event.result)
             FoundCaptureEvent.OnDismissPermission -> _state.value = state.value.copy(permission = null)
