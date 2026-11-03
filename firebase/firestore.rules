@@ -1,0 +1,45 @@
+rules_version = '2';
+
+// S03 · Roles ESTUDIANTE / STAFF / ADMIN.
+// El campo `role` de users/{uid} solo lo cambia un ADMIN, y nadie cambia su propio rol.
+// Se despliegan cuando exista el proyecto de Firebase (S02): `firebase deploy --only firestore:rules`.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function roleOf(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.role;
+    }
+
+    function isAdmin() {
+      return signedIn() && roleOf(request.auth.uid) == 'ADMIN';
+    }
+
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    match /users/{uid} {
+      // Cada quien lee su cuenta; el admin lee todas (panel de roles).
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      // Al primer ingreso la cuenta se crea siempre como ESTUDIANTE: nadie se registra como staff.
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.role == 'ESTUDIANTE';
+
+      // El dueño puede editar sus datos, pero no su rol.
+      allow update: if signedIn() && request.auth.uid == uid
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+
+      // El admin solo cambia el rol de OTRAS cuentas, entre ESTUDIANTE y STAFF, y nunca el de otro admin.
+      allow update: if isAdmin() && request.auth.uid != uid
+                    && onlyChanges(['role'])
+                    && resource.data.role != 'ADMIN'
+                    && request.resource.data.role in ['ESTUDIANTE', 'STAFF'];
+
+      allow delete: if false;
+    }
+  }
+}

@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.feature.login
 
+import bo.edu.ucb.encuentra.core.InMemoryUsers
 import bo.edu.ucb.encuentra.core.FixedAppConfig
 import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
 import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
@@ -42,10 +43,7 @@ class LoginViewModelTest {
         override suspend fun restore() = Unit
     }
 
-    private val users = object : UserRepository {
-        override suspend fun findByEmail(email: Email) =
-            SeedData.users.firstOrNull { it.email.value == email.value.trim().lowercase() }
-    }
+    private val users = InMemoryUsers()
 
     private lateinit var viewModel: LoginViewModel
 

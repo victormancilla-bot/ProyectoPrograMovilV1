@@ -1,5 +1,6 @@
 package bo.edu.ucb.encuentra.feature.login
 
+import bo.edu.ucb.encuentra.core.InMemoryUsers
 import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
@@ -26,11 +27,11 @@ class AuthenticateUseCaseTest {
     }
 
     /** Usuarios del seed; cuenta las búsquedas para comprobar que un correo no institucional no consulta la base. */
-    private class FakeUsers : UserRepository {
+    private class FakeUsers : InMemoryUsers() {
         var lookups = 0
         override suspend fun findByEmail(email: Email): UserModel? {
             lookups++
-            return SeedData.users.firstOrNull { it.email.value == email.value.trim().lowercase() }
+            return super.findByEmail(email)
         }
     }
 
