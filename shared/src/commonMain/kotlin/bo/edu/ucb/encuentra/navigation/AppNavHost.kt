@@ -206,6 +206,7 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
                 navController.navigate(NavRoute.Login) {
                     popUpTo(navController.graph.id) { inclusive = true }
                 }
+                navController.clearSavedTabs()
             },
             onOpenDevMenu = { navController.navigate(NavRoute.DevMenu) },
             onOpenUserRoles = { navController.navigate(NavRoute.UserRoles) },
@@ -256,6 +257,15 @@ private fun NavHostController.navigateToTab(route: NavRoute, home: NavRoute?) {
         launchSingleTop = true
         restoreState = route != NavRoute.ReportWizard // el wizard siempre empieza de cero
     }
+}
+
+/**
+ * Al cerrar sesión se borra el estado guardado de las pestañas (`saveState`/`restoreState` de [navigateToTab]).
+ * Si no, el siguiente usuario recupera las pantallas (y sus ViewModels) del anterior: p. ej. veía las Alertas de otra
+ * persona en el mismo teléfono.
+ */
+private fun NavHostController.clearSavedTabs() {
+    (RoleTabs.student + RoleTabs.staff).map { it.route }.distinct().forEach { clearBackStack(it) }
 }
 
 /** Abre un deep link de la app (`ucbencuentra://...`). Si ninguna ruta lo reconoce, no hace nada en vez de cerrar la app. */
