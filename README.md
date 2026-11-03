@@ -154,6 +154,19 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Política de retención automática (D04)
+
+Los objetos encontrados se guardan `retention_days` (Remote Config, 90 por defecto). Al vencer, el staff decide si se **donan** o se **descartan**.
+
+- **Por vencer / Vencido:** se calculan con la fecha de retención (`FoundItem.retentionState`, H07): vencido = ya pasó; por vencer = vence en los próximos 7 días. Solo aplica a objetos DISPONIBLES.
+- **WorkManager** (patrón de la clase: expect/actual): `RetentionScheduler` programa un `PeriodicWorkRequest` **diario** (`ExistingPeriodicWorkPolicy.KEEP`, batería no baja) desde `MainApplication`; `RetentionCheckWorker` (`CoroutineWorker` + `KoinComponent`) recupera la sesión y corre `CheckRetentionUseCase`. En iOS queda pendiente (BGTaskScheduler).
+- **Aviso al staff (N01):** si hay vencidos o por vencer, cada persona del staff recibe una alerta del canal **Retención** ("2 objetos vencidos"), una por día. Tocarla abre la pantalla de Retención (deep link `ucbencuentra://retention`).
+- **Pantalla Retención** (staff): se abre desde la tarjeta **Por vencer** del Panel o desde la notificación. Lista de vencidos con **Donar / Descartar** (confirmación + nota opcional) y por vencer como aviso. El botón de la campana corre el chequeo al momento (sin esperar un día).
+- **Cambia estado (H05) y audita (S05):** usa `DonateItemUseCase` / `DiscardItemUseCase` (máquina de estados + auditoría en la misma transacción) y además exige que el objeto haya vencido.
+- Datos de demo: el seed trae 2 objetos vencidos (paraguas y chamarra).
+- Probar el Worker sin esperar: `adb shell cmd jobscheduler run -f bo.edu.ucb.encuentra.dev <jobId>` (el id sale en `adb shell dumpsys jobscheduler`), o cambiar `scheduleDaily()` por `runOnce()` en `MainApplication`. Log: `adb logcat -s UcbRetention`.
+- Tests: `RetentionUseCasesTest`, `RetentionViewModelTest`.
+
 ## Bandeja de Alertas (N04)
 
 Pestaña **Alertas** de la barra inferior (el PDF no tiene esta pantalla: se armó con el DS). Muestra las `AppNotification` que guarda el centro de notificaciones de N01.
