@@ -9,6 +9,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LostReportDao {
+    /** S05: nombre del reporte en el visor de auditoría. */
+    @Query("SELECT * FROM lost_reports")
+    fun observeAll(): Flow<List<LostReportEntity>>
+
     @Query("SELECT * FROM lost_reports WHERE owner_id = :ownerId ORDER BY created_at DESC")
     fun observeByOwner(ownerId: String): Flow<List<LostReportEntity>>
 
