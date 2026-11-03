@@ -31,4 +31,12 @@ interface AppNotificationDao {
 
     @Query("UPDATE notifications SET read = 1 WHERE id = :id")
     suspend fun markAsRead(id: String)
+
+    /** N04: "Marcar todas como leídas" de la Bandeja de Alertas. */
+    @Query("UPDATE notifications SET read = 1 WHERE user_id = :userId AND read = 0")
+    suspend fun markAllAsRead(userId: String)
+
+    /** N04: "Limpiar" borra solo las ya leídas (las no leídas nunca se pierden sin verlas). */
+    @Query("DELETE FROM notifications WHERE user_id = :userId AND read = 1")
+    suspend fun deleteRead(userId: String)
 }
