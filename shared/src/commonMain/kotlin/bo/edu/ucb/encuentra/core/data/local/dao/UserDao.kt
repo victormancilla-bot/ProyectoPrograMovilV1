@@ -18,6 +18,10 @@ interface UserDao {
     @Query("SELECT * FROM users ORDER BY full_name")
     fun observeAll(): Flow<List<UserEntity>>
 
+    /** D04: a quiénes avisar (staff y admin). */
+    @Query("SELECT * FROM users WHERE role IN ('STAFF', 'ADMIN')")
+    suspend fun getStaff(): List<UserEntity>
+
     @Query("SELECT COUNT(*) FROM users")
     suspend fun count(): Int
 
