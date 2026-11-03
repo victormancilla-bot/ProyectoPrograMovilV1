@@ -40,6 +40,13 @@ class RouteGuardTest {
     }
 
     @Test
+    fun retentionIsForStaffAndItsDeepLinkMatchesTheNotification() {
+        assertNull(RouteGuard.redirect(NavRoute.Retention, staff))
+        assertEquals(NavRoute.Home, RouteGuard.redirect(NavRoute.Retention, student))
+        assertEquals(bo.edu.ucb.encuentra.feature.inventory.domain.usecase.RETENTION_DEEP_LINK, DeepLinks.RETENTION)
+    }
+
+    @Test
     fun onlyAdminEntersTheRolesPanel() {
         assertNull(RouteGuard.redirect(NavRoute.UserRoles, admin))
         assertEquals(NavRoute.Dashboard, RouteGuard.redirect(NavRoute.UserRoles, staff))

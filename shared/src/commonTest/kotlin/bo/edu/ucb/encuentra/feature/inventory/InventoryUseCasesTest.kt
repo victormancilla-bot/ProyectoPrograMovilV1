@@ -68,9 +68,10 @@ class InventoryUseCasesTest {
         repository.set("fi-termo") { it.copy(retentionUntil = now - 1.days) }
         val all = entries()
 
-        assertEquals(6, InventorySearch.apply(all, InventoryFilter.TODOS, "").size)
+        assertEquals(8, InventorySearch.apply(all, InventoryFilter.TODOS, "").size)
         assertEquals(setOf("fi-calculadora", "fi-billetera", "fi-apuntes-fisica"), ids(InventorySearch.apply(all, InventoryFilter.RECLAMADO, "")))
-        assertEquals(setOf("fi-termo"), ids(InventorySearch.apply(all, InventoryFilter.VENCIDO, "")))
+        // El termo + los 2 vencidos del seed (D04).
+        assertEquals(setOf("fi-termo", "fi-paraguas", "fi-chamarra"), ids(InventorySearch.apply(all, InventoryFilter.VENCIDO, "")))
         // Disponible = esperando a su dueño y sin vencer (el termo vencido no entra).
         assertEquals(setOf("fi-llavero", "fi-cuaderno-tapa-dura"), ids(InventorySearch.apply(all, InventoryFilter.DISPONIBLE, "")))
     }
@@ -82,7 +83,10 @@ class InventoryUseCasesTest {
         val ordered = InventorySearch.apply(entries(), InventoryFilter.TODOS, "")
 
         // Vencido, luego por vencer, luego el resto del más reciente al más antiguo.
-        assertEquals(listOf("fi-termo", "fi-llavero", "fi-cuaderno-tapa-dura"), ordered.take(3).map { it.item.id.value })
+        assertEquals(
+            listOf("fi-termo", "fi-chamarra", "fi-paraguas", "fi-llavero", "fi-cuaderno-tapa-dura"),
+            ordered.take(5).map { it.item.id.value }
+        )
     }
 
     @Test
