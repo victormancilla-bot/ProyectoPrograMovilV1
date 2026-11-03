@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.feature.profile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import bo.edu.ucb.encuentra.core.presentation.UserMessages
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.ObserveDevicePreferencesUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.ObserveUserPreferencesUseCase
@@ -28,7 +29,9 @@ class ProfileViewModel(
     private val setTheme: SetThemeUseCase,
     private val setLanguage: SetLanguageUseCase,
     private val setNotification: SetNotificationPreferenceUseCase,
-    private val saveContactPhone: SaveContactPhoneUseCase
+    private val saveContactPhone: SaveContactPhoneUseCase,
+    /** F11: avisos unificados (snackbar). */
+    private val messages: UserMessages
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileState(user = getCurrentUser()))
@@ -54,7 +57,6 @@ class ProfileViewModel(
             is ProfileEvent.OnNotificationToggled -> viewModelScope.launch { setNotification(event.type, event.enabled) }
             is ProfileEvent.OnPhoneChanged -> _state.update { it.copy(phone = event.value, phoneError = null) }
             ProfileEvent.OnSavePhone -> savePhone()
-            ProfileEvent.OnMessageShown -> _state.update { it.copy(message = null) }
             ProfileEvent.OnRequestLogout -> _state.update { it.copy(confirmLogout = true) }
             ProfileEvent.OnDismissLogout -> _state.update { it.copy(confirmLogout = false) }
             ProfileEvent.OnLogout -> logout()
@@ -65,13 +67,8 @@ class ProfileViewModel(
         viewModelScope.launch {
             saveContactPhone(_state.value.phone)
                 .onSuccess { saved ->
-                    _state.update {
-                        it.copy(
-                            phone = saved,
-                            phoneError = null,
-                            message = if (saved.isEmpty()) "Se quitó tu WhatsApp de contacto." else "WhatsApp guardado: se usará en tus reportes."
-                        )
-                    }
+                    _state.update { it.copy(phone = saved, phoneError = null) }
+                    messages.success(if (saved.isEmpty()) "Se quitó tu WhatsApp de contacto." else "WhatsApp guardado: se usará en tus reportes.")
                 }
                 .onFailure { e -> _state.update { it.copy(phoneError = e.message) } }
         }

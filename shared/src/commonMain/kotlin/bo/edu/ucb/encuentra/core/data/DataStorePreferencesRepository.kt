@@ -25,7 +25,8 @@ class DataStorePreferencesRepository(private val dataStore: DataStore<Preference
     override fun observeDevice(): Flow<DevicePreferences> = dataStore.data.map { prefs ->
         DevicePreferences(
             theme = prefs[THEME]?.let { name -> ThemeMode.entries.firstOrNull { it.name == name } } ?: ThemeMode.SISTEMA,
-            language = prefs[LANGUAGE]?.let { tag -> AppLanguage.entries.firstOrNull { it.tag == tag } } ?: AppLanguage.ES
+            language = prefs[LANGUAGE]?.let { tag -> AppLanguage.entries.firstOrNull { it.tag == tag } } ?: AppLanguage.ES,
+            notificationsRationaleShown = prefs[RATIONALE_SHOWN] == true
         )
     }.distinctUntilChanged()
 
@@ -35,6 +36,10 @@ class DataStorePreferencesRepository(private val dataStore: DataStore<Preference
 
     override suspend fun setLanguage(language: AppLanguage) {
         dataStore.edit { it[LANGUAGE] = language.tag }
+    }
+
+    override suspend fun markNotificationsRationaleShown() {
+        dataStore.edit { it[RATIONALE_SHOWN] = true }
     }
 
     override fun observeUser(userId: String): Flow<UserPreferences> = dataStore.data.map { prefs ->
@@ -60,5 +65,6 @@ class DataStorePreferencesRepository(private val dataStore: DataStore<Preference
     private companion object {
         val THEME = stringPreferencesKey("theme_mode")
         val LANGUAGE = stringPreferencesKey("app_language")
+        val RATIONALE_SHOWN = booleanPreferencesKey("notifications_rationale_shown")
     }
 }

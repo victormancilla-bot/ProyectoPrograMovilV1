@@ -15,6 +15,8 @@ interface PreferencesRepository {
 
     suspend fun setLanguage(language: AppLanguage)
 
+    suspend fun markNotificationsRationaleShown()
+
     fun observeUser(userId: String): Flow<UserPreferences>
 
     suspend fun setNotification(userId: String, type: NotificationType, enabled: Boolean)

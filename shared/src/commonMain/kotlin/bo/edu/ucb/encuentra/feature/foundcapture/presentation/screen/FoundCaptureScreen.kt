@@ -33,7 +33,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import bo.edu.ucb.encuentra.core.presentation.AppPermission
 import bo.edu.ucb.encuentra.core.presentation.CameraLauncher
+import bo.edu.ucb.encuentra.core.presentation.PermissionRationaleDialog
 import bo.edu.ucb.encuentra.core.presentation.CameraPermissionResult
 import bo.edu.ucb.encuentra.core.presentation.PhotoPickerLauncher
 import bo.edu.ucb.encuentra.core.presentation.RegisterStepper
@@ -219,35 +221,18 @@ private fun AddTile(onClick: () -> Unit) {
     }
 }
 
-/** Permiso CAMERA: justificación antes de volver a pedirlo y qué hacer si se niega. */
+/** Permiso CAMERA: el diálogo de justificación común (F11) antes de volver a pedirlo o de mandar a Ajustes. */
 @Composable
 private fun PermissionDialog(result: CameraPermissionResult, camera: CameraLauncher, onEvent: (FoundCaptureEvent) -> Unit) {
-    val colors = UcbEncuentraTheme.colors
     val dismiss = { onEvent(FoundCaptureEvent.OnDismissPermission) }
-    val (title, text) = when (result) {
-        CameraPermissionResult.NEEDS_RATIONALE -> "Permiso de cámara" to
-            "Usamos la cámara solo para fotografiar el objeto encontrado, así su dueño puede reconocerlo. Las fotos se guardan en la app."
-        CameraPermissionResult.DENIED -> "Sin acceso a la cámara" to
-            "No se dio permiso para usar la cámara. Puedes intentarlo de nuevo o subir las fotos desde la galería."
-        CameraPermissionResult.PERMANENTLY_DENIED -> "Cámara desactivada" to
-            "El permiso de cámara está desactivado para UCB Encuentra. Actívalo en Ajustes > Permisos, o sube las fotos desde la galería."
-    }
-    AlertDialog(
-        onDismissRequest = dismiss,
-        title = { AppTitle(title) },
-        text = { AppBody(text) },
-        confirmButton = {
-            when (result) {
-                CameraPermissionResult.NEEDS_RATIONALE, CameraPermissionResult.DENIED -> TextButton(onClick = {
-                    dismiss()
-                    camera.requestPermission()
-                }) { AppLabel("Permitir", color = colors.primary) }
-                CameraPermissionResult.PERMANENTLY_DENIED -> TextButton(onClick = {
-                    dismiss()
-                    camera.openSettings()
-                }) { AppLabel("Abrir ajustes", color = colors.primary) }
-            }
+    val permanentlyDenied = result == CameraPermissionResult.PERMANENTLY_DENIED
+    PermissionRationaleDialog(
+        permission = AppPermission.CAMERA,
+        permanentlyDenied = permanentlyDenied,
+        onContinue = {
+            dismiss()
+            if (permanentlyDenied) camera.openSettings() else camera.requestPermission()
         },
-        dismissButton = { TextButton(onClick = dismiss) { AppLabel("Ahora no", color = colors.primary) } }
+        onDismiss = dismiss
     )
 }

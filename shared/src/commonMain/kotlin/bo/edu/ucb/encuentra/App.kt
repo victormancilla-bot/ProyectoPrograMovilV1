@@ -17,6 +17,7 @@ import bo.edu.ucb.encuentra.core.domain.usecase.ObserveDevicePreferencesUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.RefreshAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.RestoreSessionUseCase
 import bo.edu.ucb.encuentra.core.presentation.MaintenanceScreen
+import bo.edu.ucb.encuentra.core.presentation.SplashScreen
 import bo.edu.ucb.encuentra.navigation.AppNavHost
 import edu.ucb.ds.components.states.LoadingState
 import edu.ucb.ds.components.surfaces.AppSurface
@@ -71,7 +72,8 @@ fun App(
             )
             // La navegación arranca recién con la sesión restaurada: así el guard decide Login u home del rol.
             ready -> AppNavHost()
-            else -> AppSurface { LoadingState() }
+            // F11: splash mientras se cargan los datos y la sesión.
+            else -> SplashScreen()
         }
     }
 }

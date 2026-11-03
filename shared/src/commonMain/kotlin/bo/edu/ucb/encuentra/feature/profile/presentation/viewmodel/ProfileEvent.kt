@@ -10,7 +10,6 @@ sealed class ProfileEvent {
     data class OnNotificationToggled(val type: NotificationType, val enabled: Boolean) : ProfileEvent()
     data class OnPhoneChanged(val value: String) : ProfileEvent()
     data object OnSavePhone : ProfileEvent()
-    data object OnMessageShown : ProfileEvent()
     data object OnRequestLogout : ProfileEvent()
     data object OnDismissLogout : ProfileEvent()
     data object OnLogout : ProfileEvent()

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- F11: azul UCB de fondo mientras arranca la app (igual que el SplashScreen de Compose). -->
+    <color name="ucb_primary">#002341</color>
+
+    <style name="Theme.UcbEncuentra" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/ucb_primary</item>
+    </style>
+</resources>

@@ -28,6 +28,8 @@ import bo.edu.ucb.encuentra.core.domain.repository.TransactionRunner
 import bo.edu.ucb.encuentra.core.domain.repository.UserRepository
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.GetContactPhoneUseCase
+import bo.edu.ucb.encuentra.core.presentation.UserMessages
+import bo.edu.ucb.encuentra.core.presentation.UserMessenger
 import bo.edu.ucb.encuentra.core.domain.usecase.NotificationCenter
 import bo.edu.ucb.encuentra.core.domain.usecase.ObserveDevicePreferencesUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.ObserveUserPreferencesUseCase
@@ -70,6 +72,9 @@ val coreModule = module {
     // Perfil y Ajustes (S07): preferencias en la DataStore de la sesión; el token push lo reemplaza N02.
     single<PreferencesRepository> { DataStorePreferencesRepository(get()) }
     single<PushTokenRegistry> { NoPushToken }
+
+    // F11: mensajes unificados (snackbar).
+    single<UserMessages> { UserMessenger() }
     singleOf(::ObserveDevicePreferencesUseCase)
     singleOf(::SetThemeUseCase)
     singleOf(::SetLanguageUseCase)

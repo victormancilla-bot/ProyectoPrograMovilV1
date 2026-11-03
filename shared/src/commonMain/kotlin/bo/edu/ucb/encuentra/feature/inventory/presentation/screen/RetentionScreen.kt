@@ -56,8 +56,6 @@ import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.Instant
 
-private const val MESSAGE_MILLIS = 4_000L
-
 /**
  * D04 · Retención (staff). No hay mockup: se arma con el DS como el Inventario. Vencidos con Donar / Descartar
  * (con confirmación y nota opcional) y por vencer como aviso. Se abre desde "Por vencer" del Panel y desde la
@@ -75,12 +73,6 @@ fun RetentionScreen(
             when (effect) {
                 RetentionEffect.NavigateBack -> onNavigateBack()
             }
-        }
-    }
-    LaunchedEffect(state.message) {
-        if (state.message != null) {
-            delay(MESSAGE_MILLIS)
-            viewModel.handleEvent(RetentionEvent.OnMessageShown)
         }
     }
 
@@ -126,7 +118,6 @@ private fun RetentionList(state: RetentionState, onEvent: (RetentionEvent) -> Un
         contentPadding = PaddingValues(spacing.screenPadding),
         verticalArrangement = Arrangement.spacedBy(spacing.itemGap)
     ) {
-        state.message?.let { item { AppCard(Modifier.fillMaxWidth()) { AppBody(it, modifier = Modifier.padding(spacing.large)) } } }
         if (overview.isEmpty) {
             item {
                 EmptyState(

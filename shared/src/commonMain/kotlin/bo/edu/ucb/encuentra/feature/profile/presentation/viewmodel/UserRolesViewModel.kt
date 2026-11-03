@@ -2,6 +2,7 @@ package bo.edu.ucb.encuentra.feature.profile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import bo.edu.ucb.encuentra.core.presentation.UserMessages
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
@@ -39,8 +40,7 @@ data class UserRolesState(
     val email: String = "",
     val emailError: String? = null,
     val working: Boolean = false,
-    val pending: PendingRoleChange? = null,
-    val message: String? = null
+    val pending: PendingRoleChange? = null
 ) {
     val visibleUsers: List<UserModel>
         get() = users.filter { filter.role == null || it.role == filter.role }
@@ -61,7 +61,6 @@ sealed class UserRolesEvent {
     data class OnRequestChange(val user: UserModel, val newRole: Role) : UserRolesEvent()
     data object OnConfirmChange : UserRolesEvent()
     data object OnDismissChange : UserRolesEvent()
-    data object OnMessageShown : UserRolesEvent()
     data object OnBack : UserRolesEvent()
 }
 
@@ -74,7 +73,9 @@ class UserRolesViewModel(
     private val observeUsers: ObserveUsersUseCase,
     private val assignStaff: AssignStaffByEmailUseCase,
     private val changeRole: ChangeUserRoleUseCase,
-    getCurrentUser: GetCurrentUserUseCase
+    getCurrentUser: GetCurrentUserUseCase,
+    /** F11: avisos unificados (snackbar). */
+    private val messages: UserMessages
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UserRolesState(currentUserId = getCurrentUser()?.id))
@@ -102,7 +103,6 @@ class UserRolesViewModel(
                 else _state.update { it.copy(pending = PendingRoleChange(event.user, event.newRole)) }
             UserRolesEvent.OnConfirmChange -> _state.value.pending?.let { apply(it.user, it.newRole) }
             UserRolesEvent.OnDismissChange -> _state.update { it.copy(pending = null) }
-            UserRolesEvent.OnMessageShown -> _state.update { it.copy(message = null) }
             UserRolesEvent.OnBack -> viewModelScope.launch { _effects.emit(UserRolesEffect.NavigateBack) }
         }
     }
@@ -112,7 +112,10 @@ class UserRolesViewModel(
         _state.update { it.copy(working = true, emailError = null) }
         viewModelScope.launch {
             assignStaff(_state.value.email)
-                .onSuccess { user -> _state.update { it.copy(working = false, email = "", message = successFor(user)) } }
+                .onSuccess { user ->
+                    _state.update { it.copy(working = false, email = "") }
+                    messages.success(successFor(user))
+                }
                 .onFailure { e -> _state.update { it.copy(working = false, emailError = e.message) } }
         }
     }
@@ -122,8 +125,14 @@ class UserRolesViewModel(
         _state.update { it.copy(working = true, pending = null) }
         viewModelScope.launch {
             changeRole(user.id, role)
-                .onSuccess { updated -> _state.update { it.copy(working = false, message = successFor(updated)) } }
-                .onFailure { e -> _state.update { it.copy(working = false, message = e.message) } }
+                .onSuccess { updated ->
+                    _state.update { it.copy(working = false) }
+                    messages.success(successFor(updated))
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(working = false) }
+                    messages.error(e.message ?: "No se pudo cambiar el rol")
+                }
         }
     }
 

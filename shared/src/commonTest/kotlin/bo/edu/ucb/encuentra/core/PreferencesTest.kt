@@ -56,6 +56,7 @@ internal class InMemoryPreferences : PreferencesRepository {
     override fun observeDevice() = device
     override suspend fun setTheme(theme: ThemeMode) = device.update { it.copy(theme = theme) }
     override suspend fun setLanguage(language: AppLanguage) = device.update { it.copy(language = language) }
+    override suspend fun markNotificationsRationaleShown() = device.update { it.copy(notificationsRationaleShown = true) }
     override fun observeUser(userId: String) = users.map { it[userId] ?: UserPreferences() }
     override suspend fun setNotification(userId: String, type: NotificationType, enabled: Boolean) = users.update { map ->
         val prefs = map[userId] ?: UserPreferences()
@@ -79,6 +80,7 @@ class PreferencesTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val prefs = InMemoryPreferences()
+    private val messages = RecordingMessages()
     private val session = FakeSession(mateo)
     private val user = GetCurrentUserUseCase(session)
 
@@ -144,7 +146,8 @@ class PreferencesTest {
         SetThemeUseCase(prefs),
         SetLanguageUseCase(prefs),
         SetNotificationPreferenceUseCase(prefs, user),
-        SaveContactPhoneUseCase(prefs, user)
+        SaveContactPhoneUseCase(prefs, user),
+        messages
     )
 
     @Test
@@ -173,6 +176,7 @@ class PreferencesTest {
         advanceUntilIdle()
         assertEquals("71234567", vm.state.value.prefs.contactPhone)
         assertFalse(vm.state.value.phoneChanged)
+        assertEquals("WhatsApp guardado: se usará en tus reportes.", messages.last?.text)
     }
 
     @Test
