@@ -5,6 +5,7 @@ import bo.edu.ucb.encuentra.feature.profile.domain.usecase.ChangeUserRoleUseCase
 import bo.edu.ucb.encuentra.feature.profile.domain.usecase.LogoutUseCase
 import bo.edu.ucb.encuentra.feature.profile.domain.usecase.ObserveUsersUseCase
 import bo.edu.ucb.encuentra.feature.profile.presentation.viewmodel.ProfileViewModel
+import bo.edu.ucb.encuentra.feature.profile.presentation.viewmodel.UserRolesViewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -17,4 +18,5 @@ val profileModule = module {
     singleOf(::ChangeUserRoleUseCase)
     singleOf(::AssignStaffByEmailUseCase)
     viewModelOf(::ProfileViewModel)
+    viewModelOf(::UserRolesViewModel)
 }

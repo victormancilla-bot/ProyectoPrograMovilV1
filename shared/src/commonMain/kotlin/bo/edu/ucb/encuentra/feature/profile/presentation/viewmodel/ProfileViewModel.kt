@@ -2,6 +2,8 @@ package bo.edu.ucb.encuentra.feature.profile.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import bo.edu.ucb.encuentra.core.domain.model.Role
+import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.feature.profile.domain.usecase.LogoutUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,10 +15,11 @@ import kotlinx.coroutines.launch
 
 // Stub de F01 + logout (F05). El dueño agrega el resto de Perfil y Ajustes (S07).
 class ProfileViewModel(
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    getCurrentUser: GetCurrentUserUseCase
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(ProfileState())
+    private val _state = MutableStateFlow(ProfileState(canManageRoles = getCurrentUser()?.role == Role.ADMIN))
     val state: StateFlow<ProfileState> = _state.asStateFlow()
 
     private val _effects = MutableSharedFlow<ProfileEffect>()

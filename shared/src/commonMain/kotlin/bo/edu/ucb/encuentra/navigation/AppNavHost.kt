@@ -38,6 +38,7 @@ import bo.edu.ucb.encuentra.feature.matching.presentation.screen.MatchDetailScre
 import bo.edu.ucb.encuentra.feature.matching.presentation.screen.MatchListScreen
 import bo.edu.ucb.encuentra.feature.myreports.presentation.screen.MyReportsScreen
 import bo.edu.ucb.encuentra.feature.profile.presentation.screen.ProfileScreen
+import bo.edu.ucb.encuentra.feature.profile.presentation.screen.UserRolesScreen
 import bo.edu.ucb.encuentra.feature.reportwizard.presentation.screen.ReportWizardScreen
 import bo.edu.ucb.encuentra.feature.verify.presentation.screen.VerifyScreen
 import org.koin.compose.koinInject
@@ -199,9 +200,12 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
                 }
             },
             onOpenDevMenu = { navController.navigate(NavRoute.DevMenu) },
+            onOpenUserRoles = { navController.navigate(NavRoute.UserRoles) },
             onNavigateBack = back
         )
     }
+    // S03: solo ADMIN (RouteGuard redirige al resto).
+    guarded<NavRoute.UserRoles>(navController, getCurrentUser) { UserRolesScreen(onNavigateBack = back) }
 
     // Desarrollo
     guarded<NavRoute.DevMenu>(navController, getCurrentUser) {
