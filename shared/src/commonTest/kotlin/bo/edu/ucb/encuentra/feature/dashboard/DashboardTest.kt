@@ -180,6 +180,7 @@ class DashboardViewModelTest {
         assertEquals(DashboardEffect.NavigateToClaimDetail("c-1027"), effectOf(DashboardEvent.OnClaimClicked("c-1027")))
         assertEquals(DashboardEffect.NavigateToInventory, effectOf(DashboardEvent.OnStatClicked(StatTarget.INVENTORY)))
         assertEquals(DashboardEffect.NavigateToRetention, effectOf(DashboardEvent.OnStatClicked(StatTarget.RETENTION)))
+        assertEquals(DashboardEffect.NavigateToAudit, effectOf(DashboardEvent.OnOpenAudit))
     }
 }
 

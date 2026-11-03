@@ -42,6 +42,7 @@ class DashboardViewModel(
         when (event) {
             DashboardEvent.OnRegisterFound -> emit(DashboardEffect.NavigateToFoundForm)
             DashboardEvent.OnSeeAllClaims -> emit(DashboardEffect.NavigateToClaims)
+            DashboardEvent.OnOpenAudit -> emit(DashboardEffect.NavigateToAudit)
             is DashboardEvent.OnClaimClicked -> emit(DashboardEffect.NavigateToClaimDetail(event.claimId))
             is DashboardEvent.OnStatClicked -> emit(
                 when (event.target) {
