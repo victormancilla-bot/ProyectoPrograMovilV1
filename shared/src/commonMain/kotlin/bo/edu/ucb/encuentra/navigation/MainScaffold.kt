@@ -21,6 +21,8 @@ fun MainScaffold(
     centerAction: RoleTab?,
     currentDestination: NavDestination?,
     onTabClick: (NavRoute) -> Unit,
+    /** N04: contador rojo por pestaña (Alertas sin leer). */
+    badges: Map<NavRoute, Int> = emptyMap(),
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -35,7 +37,8 @@ fun MainScaffold(
                             label = tab.label,
                             icon = tab.icon,
                             selected = currentDestination.isOn(tab.route),
-                            onClick = { onTabClick(tab.route) }
+                            onClick = { onTabClick(tab.route) },
+                            badgeCount = badges[tab.route] ?: 0
                         )
                     },
                     centerAction = centerAction?.let { action ->
