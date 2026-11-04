@@ -40,6 +40,7 @@ import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.DashboardVi
 import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.StatTarget
 import edu.ucb.ds.components.buttons.AppButtonSize
 import edu.ucb.ds.components.buttons.PrimaryButton
+import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.History
 import edu.ucb.ds.components.buttons.SecondaryButton
 import edu.ucb.ds.components.cards.AppCard
@@ -66,7 +67,8 @@ fun DashboardScreen(
     onOpenClaim: (claimId: String) -> Unit,
     onOpenInventory: () -> Unit,
     onOpenRetention: () -> Unit = {},
-    onOpenAudit: () -> Unit = {}
+    onOpenAudit: () -> Unit = {},
+    onOpenMetrics: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -78,6 +80,7 @@ fun DashboardScreen(
                 DashboardEffect.NavigateToInventory -> onOpenInventory()
                 DashboardEffect.NavigateToRetention -> onOpenRetention()
                 DashboardEffect.NavigateToAudit -> onOpenAudit()
+                DashboardEffect.NavigateToMetrics -> onOpenMetrics()
                 is DashboardEffect.NavigateToClaimDetail -> onOpenClaim(effect.claimId)
             }
         }
@@ -153,6 +156,13 @@ private fun DashboardBody(stats: DashboardStats, state: DashboardState, onEvent:
             text = "Registro de auditoría",
             onClick = { onEvent(DashboardEvent.OnOpenAudit) },
             leadingIcon = Icons.Outlined.History,
+            modifier = Modifier.fillMaxWidth()
+        )
+        // D02: retención promedio y recuperación por categoría.
+        SecondaryButton(
+            text = "Estadísticas",
+            onClick = { onEvent(DashboardEvent.OnOpenMetrics) },
+            leadingIcon = Icons.Outlined.BarChart,
             modifier = Modifier.fillMaxWidth()
         )
 

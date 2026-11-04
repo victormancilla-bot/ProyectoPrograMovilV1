@@ -25,6 +25,7 @@ sealed class DashboardEvent {
     data object OnRegisterFound : DashboardEvent()
     data object OnSeeAllClaims : DashboardEvent()
     data object OnOpenAudit : DashboardEvent()
+    data object OnOpenMetrics : DashboardEvent()
     data class OnClaimClicked(val claimId: String) : DashboardEvent()
     data class OnStatClicked(val target: StatTarget) : DashboardEvent()
     data object OnRetry : DashboardEvent()
@@ -36,5 +37,6 @@ sealed class DashboardEffect {
     data object NavigateToInventory : DashboardEffect()
     data object NavigateToRetention : DashboardEffect()
     data object NavigateToAudit : DashboardEffect()
+    data object NavigateToMetrics : DashboardEffect()
     data class NavigateToClaimDetail(val claimId: String) : DashboardEffect()
 }
