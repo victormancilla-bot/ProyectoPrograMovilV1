@@ -9,6 +9,10 @@ import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.DashboardVi
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+import bo.edu.ucb.encuentra.feature.dashboard.data.MetricsRepositoryImpl
+import bo.edu.ucb.encuentra.feature.dashboard.domain.repository.MetricsRepository
+import bo.edu.ucb.encuentra.feature.dashboard.domain.usecase.ObserveMetricsUseCase
+import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.MetricsViewModel
 
 // Dueño: Integrante A. Aquí van los repositorios, use cases y ViewModels de esta feature.
 val dashboardModule = module {
@@ -18,4 +22,9 @@ val dashboardModule = module {
     single { ObserveDashboardStatsUseCase(get(), get<kotlin.time.Clock>()) }
     singleOf(::ObserveLatestPendingClaimsUseCase)
     viewModelOf(::DashboardViewModel)
+
+    // D02: estadísticas (retención y recuperación por categoría).
+    single<MetricsRepository> { MetricsRepositoryImpl(get(), get(), get()) }
+    singleOf(::ObserveMetricsUseCase)
+    viewModelOf(::MetricsViewModel)
 }

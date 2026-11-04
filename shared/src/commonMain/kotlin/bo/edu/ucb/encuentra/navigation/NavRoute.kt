@@ -63,6 +63,10 @@ sealed class NavRoute {
     @Serializable
     data object Retention : NavRoute()
 
+    /** D02: estadísticas de retención y recuperación. Se abre desde el Panel. */
+    @Serializable
+    data object Metrics : NavRoute()
+
     // ----- Solo ADMIN (S03) -----
     /** Panel de roles: asignar o quitar staff. Se abre desde Perfil. */
     @Serializable

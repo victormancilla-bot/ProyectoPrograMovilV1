@@ -42,6 +42,8 @@ class RouteGuardTest {
     @Test
     fun retentionIsForStaffAndItsDeepLinkMatchesTheNotification() {
         assertNull(RouteGuard.redirect(NavRoute.Retention, staff))
+        assertNull(RouteGuard.redirect(NavRoute.Metrics, staff))
+        assertEquals(NavRoute.Home, RouteGuard.redirect(NavRoute.Metrics, student))
         assertEquals(NavRoute.Home, RouteGuard.redirect(NavRoute.Retention, student))
         assertEquals(bo.edu.ucb.encuentra.feature.inventory.domain.usecase.RETENTION_DEEP_LINK, DeepLinks.RETENTION)
     }

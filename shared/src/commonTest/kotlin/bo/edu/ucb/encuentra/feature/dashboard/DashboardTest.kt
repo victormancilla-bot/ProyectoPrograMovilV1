@@ -181,6 +181,7 @@ class DashboardViewModelTest {
         assertEquals(DashboardEffect.NavigateToInventory, effectOf(DashboardEvent.OnStatClicked(StatTarget.INVENTORY)))
         assertEquals(DashboardEffect.NavigateToRetention, effectOf(DashboardEvent.OnStatClicked(StatTarget.RETENTION)))
         assertEquals(DashboardEffect.NavigateToAudit, effectOf(DashboardEvent.OnOpenAudit))
+        assertEquals(DashboardEffect.NavigateToMetrics, effectOf(DashboardEvent.OnOpenMetrics))
     }
 }
 
