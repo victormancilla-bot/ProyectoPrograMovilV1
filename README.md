@@ -154,6 +154,16 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Estadísticas (D02)
+
+Datos para la oficina de Objetos Perdidos: botón **Estadísticas** en el Panel (solo staff).
+
+- **Tiempo promedio de retención:** de "encontrado" a que salió de custodia (entregado, donado o descartado). Aparte: promedio hasta la entrega a su dueño y cuántos días llevan los que siguen en custodia.
+- **Tasa de recuperación por categoría:** de los objetos encontrados, qué porcentaje volvió a su dueño.
+- **Gráfico simple:** barras horizontales de una sola serie (color primario del DS, extremos redondeados, pista recesiva) con el dato escrito en cada fila ("1 de 3 devueltos"), que sirve también como tabla y para lectores de pantalla.
+- **Filtro por rango de fechas** (fecha en que se encontró): 30 días, 90 días, este año, todo o un rango con calendario ("desde" y "hasta" inclusivos; si se invierten, se ordenan solos).
+- La salida de custodia sale del reclamo entregado (V04) o de la auditoría (donado/descartado, D04). Cálculo puro en `MetricsCalculator` (`feature/dashboard`). Tests: `MetricsTest`.
+
 ## Splash, permisos y estados offline (F11)
 
 Pantallas que el PDF no tiene pero toda app real necesita (clases "Permisos en Android" y "Toast, SnackBar").
