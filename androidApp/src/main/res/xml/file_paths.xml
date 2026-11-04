@@ -2,4 +2,6 @@
 <!-- H01: carpeta temporal donde la cámara del sistema escribe la foto (ver CameraCapture.android.kt). -->
 <paths>
     <cache-path name="camera" path="camera/" />
+    <!-- D03: CSV exportados que se comparten con otra app (ver FileShare.android.kt). -->
+    <cache-path name="exports" path="exports/" />
 </paths>

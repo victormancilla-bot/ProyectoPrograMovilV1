@@ -67,6 +67,10 @@ sealed class NavRoute {
     @Serializable
     data object Metrics : NavRoute()
 
+    /** D03: exportar inventario o auditoría a CSV. Se abre desde Estadísticas. */
+    @Serializable
+    data object Export : NavRoute()
+
     // ----- Solo ADMIN (S03) -----
     /** Panel de roles: asignar o quitar staff. Se abre desde Perfil. */
     @Serializable

@@ -154,6 +154,16 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Exportar a CSV (D03)
+
+Reportes de cumplimiento para la oficina: en **Estadísticas**, el ícono de descarga abre **Exportar datos** (solo staff).
+
+- **Inventario** (código, objeto, categoría, tipo, color, marca, zona, lugar exacto, encontrado, estado, retención, vence, custodia, registrado por) o **Auditoría** (fecha, hora, acción, persona, sobre qué, detalle; con los nombres legibles del visor de S05).
+- **Filtros:** fecha (30 días, 90 días, este año, todo o rango) y, en el inventario, estado del objeto. La pantalla muestra cuántas filas saldrán.
+- **CSV pensado para Excel en español** (`core/util/Csv`): separador `;`, BOM UTF-8 (acentos y ñ), comillas RFC 4180 y protección contra inyección de fórmulas (un `'` delante de lo que empieza con `= + - @`).
+- **Compartir (expect/actual):** Android escribe en `cache/exports` (se limpia en cada exportación) y abre "Compartir" con el FileProvider de la app (`res/xml/file_paths.xml`); iOS pendiente.
+- Cada exportación queda en la auditoría (`DATA_EXPORTED`). Tests: `ExportTest`.
+
 ## Estadísticas (D02)
 
 Datos para la oficina de Objetos Perdidos: botón **Estadísticas** en el Panel (solo staff).

@@ -9,7 +9,12 @@ import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.DashboardVi
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
+import bo.edu.ucb.encuentra.feature.dashboard.data.ExportRepositoryImpl
 import bo.edu.ucb.encuentra.feature.dashboard.data.MetricsRepositoryImpl
+import bo.edu.ucb.encuentra.feature.dashboard.domain.repository.ExportRepository
+import bo.edu.ucb.encuentra.feature.dashboard.domain.usecase.BuildExportUseCase
+import bo.edu.ucb.encuentra.feature.dashboard.domain.usecase.ObserveExportDataUseCase
+import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.ExportViewModel
 import bo.edu.ucb.encuentra.feature.dashboard.domain.repository.MetricsRepository
 import bo.edu.ucb.encuentra.feature.dashboard.domain.usecase.ObserveMetricsUseCase
 import bo.edu.ucb.encuentra.feature.dashboard.presentation.viewmodel.MetricsViewModel
@@ -27,4 +32,10 @@ val dashboardModule = module {
     single<MetricsRepository> { MetricsRepositoryImpl(get(), get(), get()) }
     singleOf(::ObserveMetricsUseCase)
     viewModelOf(::MetricsViewModel)
+
+    // D03: exportar a CSV (la auditoría legible viene de AuditTrailRepository, auditModule).
+    single<ExportRepository> { ExportRepositoryImpl(get(), get(), get()) }
+    singleOf(::ObserveExportDataUseCase)
+    singleOf(::BuildExportUseCase)
+    viewModelOf(::ExportViewModel)
 }
