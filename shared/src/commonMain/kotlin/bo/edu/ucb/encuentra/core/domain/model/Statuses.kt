@@ -59,7 +59,8 @@ enum class AuditAction(val label: String) {
     ITEM_DONATED("Objeto donado"),
     ROLE_CHANGED("Rol cambiado"),
     REPORT_CLOSED("Reporte cerrado"),
-    DELIVERY_SCHEDULED("Entrega programada")
+    DELIVERY_SCHEDULED("Entrega programada"),
+    DATA_EXPORTED("Datos exportados")
 }
 
 /** Tipo de notificación interna = canal de N01 (coincidencias, reclamos, retención). */

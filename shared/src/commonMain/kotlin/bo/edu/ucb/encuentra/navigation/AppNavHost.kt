@@ -34,6 +34,7 @@ import bo.edu.ucb.encuentra.feature.audit.presentation.screen.AuditScreen
 import bo.edu.ucb.encuentra.feature.claims.presentation.screen.ClaimDetailScreen
 import bo.edu.ucb.encuentra.feature.claims.presentation.screen.ClaimsScreen
 import bo.edu.ucb.encuentra.feature.dashboard.presentation.screen.DashboardScreen
+import bo.edu.ucb.encuentra.feature.dashboard.presentation.screen.ExportScreen
 import bo.edu.ucb.encuentra.feature.dashboard.presentation.screen.MetricsScreen
 import bo.edu.ucb.encuentra.feature.delivery.presentation.screen.DeliveryScreen
 import bo.edu.ucb.encuentra.feature.designsystem.presentation.screen.DesignSystemDemoScreen
@@ -238,7 +239,10 @@ private fun NavGraphBuilder.appRoutes(navController: NavHostController, getCurre
         DeliveryScreen(claimId = route.claimId, onNavigateBack = back)
     }
     guarded<NavRoute.Audit>(navController, getCurrentUser) { AuditScreen(onNavigateBack = back) }
-    guarded<NavRoute.Metrics>(navController, getCurrentUser) { MetricsScreen(onNavigateBack = back) }
+    guarded<NavRoute.Metrics>(navController, getCurrentUser) {
+        MetricsScreen(onOpenExport = { navController.navigate(NavRoute.Export) }, onNavigateBack = back)
+    }
+    guarded<NavRoute.Export>(navController, getCurrentUser) { ExportScreen(onNavigateBack = back) }
     // D04: también la abre la notificación diaria de retención (ucbencuentra://retention).
     guarded<NavRoute.Retention>(
         navController,

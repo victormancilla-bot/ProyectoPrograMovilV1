@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Gavel
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Inventory2
@@ -216,4 +217,5 @@ private fun AuditAction.icon(): ImageVector = when (this) {
     AuditAction.ROLE_CHANGED -> Icons.Outlined.AdminPanelSettings
     AuditAction.REPORT_CLOSED -> Icons.Outlined.History
     AuditAction.DELIVERY_SCHEDULED -> Icons.Outlined.Event
+    AuditAction.DATA_EXPORTED -> Icons.Outlined.FileDownload
 }

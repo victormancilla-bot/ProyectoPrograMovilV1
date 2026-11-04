@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.TaskAlt
@@ -45,6 +46,7 @@ import edu.ucb.ds.components.cards.AppCard
 import edu.ucb.ds.components.cards.StatCard
 import edu.ucb.ds.components.chips.AppChipGroup
 import edu.ucb.ds.components.header.CurvedHeader
+import edu.ucb.ds.components.header.HeaderAction
 import edu.ucb.ds.components.label.AppBody
 import edu.ucb.ds.components.label.AppLabel
 import edu.ucb.ds.components.label.AppOverline
@@ -65,6 +67,7 @@ import kotlin.math.roundToInt
 @Composable
 fun MetricsScreen(
     viewModel: MetricsViewModel = koinViewModel(),
+    onOpenExport: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
@@ -84,7 +87,9 @@ fun MetricsScreen(
                 subtitle = "Objetos encontrados y su destino",
                 navigationIcon = DsIcons.ArrowBack,
                 navigationContentDescription = "Volver",
-                onNavigationClick = { viewModel.handleEvent(MetricsEvent.OnBack) }
+                onNavigationClick = { viewModel.handleEvent(MetricsEvent.OnBack) },
+                // D03: exportar inventario o auditoría a CSV.
+                actions = { HeaderAction(Icons.Outlined.FileDownload, "Exportar a CSV", onClick = onOpenExport) }
             )
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when {

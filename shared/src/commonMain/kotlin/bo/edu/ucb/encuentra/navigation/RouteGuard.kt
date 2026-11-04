@@ -56,7 +56,8 @@ object RouteGuard {
         is NavRoute.Delivery,
         NavRoute.Audit,
         NavRoute.Retention,
-        NavRoute.Metrics -> Access.STAFF
+        NavRoute.Metrics,
+        NavRoute.Export -> Access.STAFF
 
         NavRoute.UserRoles -> Access.ADMIN
 
