@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import bo.edu.ucb.encuentra.core.domain.vo.Email
 import bo.edu.ucb.encuentra.core.domain.vo.Password
+import bo.edu.ucb.encuentra.core.presentation.GoogleSignInResult
 import bo.edu.ucb.encuentra.feature.login.domain.usecase.AuthenticateUseCase
+import bo.edu.ucb.encuentra.feature.login.domain.usecase.SignInWithGoogleUseCase
 import bo.edu.ucb.encuentra.feature.login.domain.usecase.ValidateInstitutionalEmailUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +22,9 @@ class LoginViewModel(
     private val validateEmail: ValidateInstitutionalEmailUseCase,
     private val authenticate: AuthenticateUseCase,
     /** F08: el correo de soporte lo define la oficina en Remote Config (`support_contact`). */
-    private val getAppConfig: GetAppConfigUseCase
+    private val getAppConfig: GetAppConfigUseCase,
+    /** S02: cuenta Google de la UCB (Firebase Auth). */
+    private val signInWithGoogle: SignInWithGoogleUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(LoginState())
@@ -42,6 +46,25 @@ class LoginViewModel(
             }
             LoginEvent.OnContactSupport -> viewModelScope.launch {
                 _effects.emit(LoginEffect.OpenSupport(supportUri(getAppConfig().supportContact)))
+            }
+            LoginEvent.OnGoogleStarted -> _state.update { it.copy(googleLoading = true, googleError = null) }
+            is LoginEvent.OnGoogleResult -> onGoogleResult(event.result)
+        }
+    }
+
+    private fun onGoogleResult(result: GoogleSignInResult) {
+        when (result) {
+            GoogleSignInResult.Cancelled -> _state.update { it.copy(googleLoading = false) }
+            is GoogleSignInResult.Failed -> _state.update { it.copy(googleLoading = false, googleError = result.message) }
+            is GoogleSignInResult.Token -> viewModelScope.launch {
+                _state.update { it.copy(googleLoading = true, googleError = null) }
+                signInWithGoogle(result.idToken).fold(
+                    onSuccess = {
+                        _state.update { it.copy(googleLoading = false) }
+                        _effects.emit(LoginEffect.NavigateToHome)
+                    },
+                    onFailure = { error -> _state.update { it.copy(googleLoading = false, googleError = error.message) } }
+                )
             }
         }
     }

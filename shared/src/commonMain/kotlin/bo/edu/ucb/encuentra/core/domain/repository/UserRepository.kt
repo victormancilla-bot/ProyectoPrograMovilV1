@@ -11,6 +11,9 @@ interface UserRepository {
 
     suspend fun findById(id: String): UserModel?
 
+    /** S02: guarda (o actualiza) la cuenta que llegó de Firebase `users/{uid}`. */
+    suspend fun save(user: UserModel)
+
     /** S03: todas las cuentas, para el panel de roles del admin. */
     fun observeAll(): Flow<List<UserModel>>
 

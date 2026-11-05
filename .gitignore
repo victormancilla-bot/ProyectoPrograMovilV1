@@ -27,3 +27,7 @@ Secrets.kt
 # Contexto local de Claude Code
 CLAUDE.md
 .claude/
+
+# Firebase (S02): configuración del proyecto, fuera de git. Cada integrante la descarga de la consola.
+androidApp/google-services.json
+firebase-debug.log

@@ -7,6 +7,7 @@ import bo.edu.ucb.encuentra.core.domain.model.NotificationType
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.ThemeMode
 import bo.edu.ucb.encuentra.core.domain.model.UserPreferences
+import bo.edu.ucb.encuentra.core.domain.repository.NoRemoteAuth
 import bo.edu.ucb.encuentra.core.domain.repository.PreferencesRepository
 import bo.edu.ucb.encuentra.core.domain.repository.PushTokenRegistry
 import bo.edu.ucb.encuentra.core.domain.usecase.GetContactPhoneUseCase
@@ -133,13 +134,13 @@ class PreferencesTest {
     @Test
     fun logoutUnregistersThePushTokenAndClearsTheSession() = runTest(dispatcher) {
         val tokens = RecordingPushTokens()
-        LogoutUseCase(session, tokens)()
+        LogoutUseCase(session, tokens, NoRemoteAuth)()
         assertEquals(1, tokens.unregistered)
         assertNull(session.getCurrentUser())
     }
 
     private fun profile() = ProfileViewModel(
-        LogoutUseCase(session, RecordingPushTokens()),
+        LogoutUseCase(session, RecordingPushTokens(), NoRemoteAuth),
         user,
         ObserveDevicePreferencesUseCase(prefs),
         ObserveUserPreferencesUseCase(prefs, user),

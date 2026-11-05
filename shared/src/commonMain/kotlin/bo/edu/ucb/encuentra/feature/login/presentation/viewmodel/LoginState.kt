@@ -9,5 +9,8 @@ data class LoginState(
     val password: String = "",
     val emailError: String? = null,
     val passwordError: String? = null,
-    val loading: Boolean = false
+    val loading: Boolean = false,
+    /** S02: esperando a Google/Firebase. */
+    val googleLoading: Boolean = false,
+    val googleError: String? = null
 )
