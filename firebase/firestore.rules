@@ -59,5 +59,32 @@ service cloud.firestore {
 
       allow update, delete: if false;
     }
+
+    function isUcb() {
+      return signedIn() && request.auth.token.email.matches('.*@ucb[.]edu[.]bo$');
+    }
+
+    // L06 · Reportes de pérdida: cada estudiante ve y escribe los suyos; el staff ve todos (matching, reclamos)
+    // y actualiza su estado. El dueño de un reporte no se cambia nunca. No se borran (cambian de estado).
+    match /lost_reports/{reportId} {
+      allow read: if isUcb() && (resource.data.ownerId == request.auth.uid || isStaff());
+      allow create: if isUcb() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isUcb() && request.resource.data.ownerId == resource.data.ownerId
+                    && (resource.data.ownerId == request.auth.uid || isStaff());
+      allow delete: if false;
+    }
+
+    // L06 · Objetos encontrados: cualquier cuenta UCB los lee (catálogo y matching; las respuestas esperadas NO
+    // están en este documento). Solo el staff los registra y edita. El estudiante solo puede marcarlo como
+    // RECLAMADO al reclamarlo, o devolverlo a DISPONIBLE si su reclamo se rechaza (V01/V02).
+    match /found_items/{itemId} {
+      allow read: if isUcb();
+      allow create: if isStaff() && request.resource.data.registeredBy == request.auth.uid;
+      allow update: if isStaff() && request.resource.data.registeredBy == resource.data.registeredBy;
+      allow update: if isUcb() && onlyChanges(['status'])
+                    && ((resource.data.status == 'DISPONIBLE' && request.resource.data.status == 'RECLAMADO')
+                        || (resource.data.status == 'RECLAMADO' && request.resource.data.status == 'DISPONIBLE'));
+      allow delete: if false;
+    }
   }
 }
