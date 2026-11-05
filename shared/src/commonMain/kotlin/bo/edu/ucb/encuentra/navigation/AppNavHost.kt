@@ -24,6 +24,7 @@ import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import bo.edu.ucb.encuentra.core.domain.usecase.GetCurrentUserUseCase
 import bo.edu.ucb.encuentra.core.domain.repository.ConnectivityMonitor
+import bo.edu.ucb.encuentra.core.domain.repository.RemoteSync
 import bo.edu.ucb.encuentra.core.domain.usecase.RefreshAppConfigUseCase
 import bo.edu.ucb.encuentra.core.presentation.AppSnackbarVisuals
 import bo.edu.ucb.encuentra.core.presentation.LocalNotificationsEffect
@@ -64,7 +65,8 @@ fun AppNavHost(
     observeUnreadAlerts: ObserveUnreadAlertsCountUseCase = koinInject(),
     messages: UserMessages = koinInject(),
     connectivity: ConnectivityMonitor = koinInject(),
-    refreshConfig: RefreshAppConfigUseCase = koinInject()
+    refreshConfig: RefreshAppConfigUseCase = koinInject(),
+    remoteSync: RemoteSync = koinInject()
 ) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -76,6 +78,9 @@ fun AppNavHost(
 
     // N01: al entrar un usuario se pide el permiso de notificaciones y se muestran sus avisos pendientes.
     LocalNotificationsEffect(userId = user?.id)
+
+    // L06: mientras haya sesión con Google, Room se sincroniza con Firestore (se cancela al cambiar de usuario).
+    LaunchedEffect(user?.id, user?.role) { remoteSync.syncWhileSignedIn(user) }
 
     // F11: mensajes unificados (un solo SnackbarHost) y estado de la conexión.
     val snackbarHostState = remember { SnackbarHostState() }

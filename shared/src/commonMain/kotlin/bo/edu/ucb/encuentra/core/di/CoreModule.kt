@@ -4,6 +4,14 @@ import bo.edu.ucb.encuentra.core.data.FoundItemLifecycleRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.RoomAuditRecorder
 import bo.edu.ucb.encuentra.core.data.DataStorePreferencesRepository
 import bo.edu.ucb.encuentra.core.data.remote.FirebaseRemoteAuth
+import bo.edu.ucb.encuentra.core.data.remote.FirestoreCollection
+import bo.edu.ucb.encuentra.core.data.remote.dto.FoundItemDto
+import bo.edu.ucb.encuentra.core.data.remote.dto.LostReportDto
+import bo.edu.ucb.encuentra.core.data.local.dao.FoundItemDao
+import bo.edu.ucb.encuentra.core.data.local.dao.LostReportDao
+import bo.edu.ucb.encuentra.core.data.sync.FirestoreRemoteSync
+import bo.edu.ucb.encuentra.core.data.sync.LocalTable
+import bo.edu.ucb.encuentra.core.domain.repository.RemoteSync
 import bo.edu.ucb.encuentra.core.data.remote.FirestoreUserStore
 import bo.edu.ucb.encuentra.core.data.RoomNotificationRepository
 import bo.edu.ucb.encuentra.core.data.RoomTransactionRunner
@@ -80,6 +88,17 @@ val coreModule = module {
     // S02: Firebase Auth + users/{uid} en Firestore.
     single<RemoteAuth> { FirebaseRemoteAuth() }
     single<RemoteUserStore> { FirestoreUserStore() }
+
+    // L06: reportes y objetos encontrados offline-first (Room + listeners de Firestore).
+    single<RemoteSync> {
+        FirestoreRemoteSync(
+            lostReportTable = get<LostReportDao>().let { LocalTable(it.observeAll(), it::upsertAll) },
+            foundItemTable = get<FoundItemDao>().let { LocalTable(it.observeAll(), it::upsertAll) },
+            remoteAuth = get(),
+            lostReports = FirestoreCollection(FirestoreCollection.LOST_REPORTS, LostReportDto.serializer()),
+            foundItems = FirestoreCollection(FirestoreCollection.FOUND_ITEMS, FoundItemDto.serializer())
+        )
+    }
 
     // F11: mensajes unificados (snackbar).
     single<UserMessages> { UserMessenger() }
