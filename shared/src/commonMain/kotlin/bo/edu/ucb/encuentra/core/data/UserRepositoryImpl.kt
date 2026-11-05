@@ -1,6 +1,7 @@
 package bo.edu.ucb.encuentra.core.data
 
 import bo.edu.ucb.encuentra.core.data.local.dao.UserDao
+import bo.edu.ucb.encuentra.core.data.local.mapper.toEntity
 import bo.edu.ucb.encuentra.core.data.local.mapper.toModel
 import bo.edu.ucb.encuentra.core.domain.model.Role
 import bo.edu.ucb.encuentra.core.domain.model.UserModel
@@ -15,6 +16,8 @@ class UserRepositoryImpl(private val userDao: UserDao) : UserRepository {
         userDao.getByEmail(email.value.trim().lowercase())?.toModel()
 
     override suspend fun findById(id: String): UserModel? = userDao.getById(id)?.toModel()
+
+    override suspend fun save(user: UserModel) = userDao.upsert(user.toEntity())
 
     override fun observeAll(): Flow<List<UserModel>> = userDao.observeAll().map { list -> list.map { it.toModel() } }
 

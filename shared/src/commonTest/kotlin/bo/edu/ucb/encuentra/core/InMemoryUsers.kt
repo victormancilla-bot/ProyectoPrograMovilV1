@@ -20,6 +20,8 @@ internal open class InMemoryUsers(initial: List<UserModel> = SeedData.users) : U
 
     override fun observeAll(): Flow<List<UserModel>> = users
 
+    override suspend fun save(user: UserModel) = users.update { list -> list.filterNot { it.id == user.id } + user }
+
     override suspend fun updateRole(id: String, role: Role) =
         users.update { list -> list.map { if (it.id == id) it.copy(role = role) else it } }
 }

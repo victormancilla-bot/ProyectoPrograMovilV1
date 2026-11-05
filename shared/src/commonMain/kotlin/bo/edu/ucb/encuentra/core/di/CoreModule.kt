@@ -3,6 +3,8 @@ package bo.edu.ucb.encuentra.core.di
 import bo.edu.ucb.encuentra.core.data.FoundItemLifecycleRepositoryImpl
 import bo.edu.ucb.encuentra.core.data.RoomAuditRecorder
 import bo.edu.ucb.encuentra.core.data.DataStorePreferencesRepository
+import bo.edu.ucb.encuentra.core.data.remote.FirebaseRemoteAuth
+import bo.edu.ucb.encuentra.core.data.remote.FirestoreUserStore
 import bo.edu.ucb.encuentra.core.data.RoomNotificationRepository
 import bo.edu.ucb.encuentra.core.data.RoomTransactionRunner
 import bo.edu.ucb.encuentra.core.data.SessionRepositoryImpl
@@ -17,6 +19,8 @@ import bo.edu.ucb.encuentra.core.domain.repository.NoPushToken
 import bo.edu.ucb.encuentra.core.domain.repository.NotificationRepository
 import bo.edu.ucb.encuentra.core.domain.repository.PreferencesRepository
 import bo.edu.ucb.encuentra.core.domain.repository.PushTokenRegistry
+import bo.edu.ucb.encuentra.core.domain.repository.RemoteAuth
+import bo.edu.ucb.encuentra.core.domain.repository.RemoteUserStore
 import bo.edu.ucb.encuentra.core.domain.usecase.GetAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.ObserveAppConfigUseCase
 import bo.edu.ucb.encuentra.core.domain.usecase.RefreshAppConfigUseCase
@@ -72,6 +76,10 @@ val coreModule = module {
     // Perfil y Ajustes (S07): preferencias en la DataStore de la sesión; el token push lo reemplaza N02.
     single<PreferencesRepository> { DataStorePreferencesRepository(get()) }
     single<PushTokenRegistry> { NoPushToken }
+
+    // S02: Firebase Auth + users/{uid} en Firestore.
+    single<RemoteAuth> { FirebaseRemoteAuth() }
+    single<RemoteUserStore> { FirestoreUserStore() }
 
     // F11: mensajes unificados (snackbar).
     single<UserMessages> { UserMessenger() }

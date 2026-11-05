@@ -1,5 +1,8 @@
 package bo.edu.ucb.encuentra.feature.login
 
+import kotlin.test.assertFalse
+import bo.edu.ucb.encuentra.core.presentation.GoogleSignInResult
+import bo.edu.ucb.encuentra.feature.login.domain.usecase.SignInWithGoogleUseCase
 import bo.edu.ucb.encuentra.core.InMemoryUsers
 import bo.edu.ucb.encuentra.core.FixedAppConfig
 import bo.edu.ucb.encuentra.core.data.local.seed.SeedData
@@ -44,13 +47,18 @@ class LoginViewModelTest {
     }
 
     private val users = InMemoryUsers()
+    private val google = FakeRemoteAuth(mapOf("token-ana" to anaGoogle))
+    private val remoteUsers = FakeRemoteUsers()
 
     private lateinit var viewModel: LoginViewModel
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        viewModel = LoginViewModel(ValidateInstitutionalEmailUseCase(), AuthenticateUseCase(users, session), GetAppConfigUseCase(config))
+        viewModel = LoginViewModel(
+            ValidateInstitutionalEmailUseCase(), AuthenticateUseCase(users, session), GetAppConfigUseCase(config),
+            SignInWithGoogleUseCase(google, remoteUsers, users, session)
+        )
     }
 
     @AfterTest
@@ -109,5 +117,21 @@ class LoginViewModelTest {
         advanceUntilIdle()
 
         assertEquals(LoginEffect.OpenSupport(LoginViewModel.supportUri("objetosperdidos@ucb.edu.bo")), effect.await())
+    }
+
+    @Test
+    fun googleSignInNavigatesHomeAndCancelDoesNothing() = runTest(dispatcher) {
+        val effect = async { viewModel.effects.first() }
+        viewModel.handleEvent(LoginEvent.OnGoogleStarted)
+        viewModel.handleEvent(LoginEvent.OnGoogleResult(GoogleSignInResult.Cancelled))
+        assertFalse(viewModel.state.value.googleLoading)
+
+        viewModel.handleEvent(LoginEvent.OnGoogleResult(GoogleSignInResult.Failed("Sin cuentas")))
+        assertEquals("Sin cuentas", viewModel.state.value.googleError)
+
+        viewModel.handleEvent(LoginEvent.OnGoogleResult(GoogleSignInResult.Token("token-ana")))
+        advanceUntilIdle()
+        assertEquals(LoginEffect.NavigateToHome, effect.await())
+        assertEquals("uid-ana", session.getCurrentUser()?.id)
     }
 }
