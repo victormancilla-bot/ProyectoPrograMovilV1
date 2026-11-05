@@ -41,6 +41,10 @@ import bo.edu.ucb.encuentra.feature.login.presentation.viewmodel.LoginViewModel
 import bo.edu.ucb.encuentra.resources.Res
 import bo.edu.ucb.encuentra.resources.ucb_escudo
 import edu.ucb.ds.components.buttons.PrimaryButton
+import bo.edu.ucb.encuentra.core.presentation.rememberGoogleSignIn
+import edu.ucb.ds.components.label.AppLabel
+import edu.ucb.ds.components.buttons.SecondaryButton
+import androidx.compose.material.icons.outlined.AccountCircle
 import edu.ucb.ds.components.cards.AppCard
 import edu.ucb.ds.components.header.CurvedHeaderContainer
 import edu.ucb.ds.components.label.AppBody
@@ -60,6 +64,8 @@ fun LoginScreen(
     onOpenSupport: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    // S02: selector de cuentas de Google (Credential Manager).
+    val googleSignIn = rememberGoogleSignIn { viewModel.handleEvent(LoginEvent.OnGoogleResult(it)) }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -82,6 +88,10 @@ fun LoginScreen(
             LoginCard(
                 state = state,
                 onEvent = viewModel::handleEvent,
+                onGoogle = {
+                    viewModel.handleEvent(LoginEvent.OnGoogleStarted)
+                    googleSignIn()
+                },
                 modifier = Modifier
                     .offset(y = (-32).dp)
                     .padding(horizontal = UcbEncuentraTheme.spacing.screenPadding)
@@ -121,9 +131,11 @@ private fun InstitutionalHeader() {
 private fun LoginCard(
     state: LoginState,
     onEvent: (LoginEvent) -> Unit,
+    onGoogle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val spacing = UcbEncuentraTheme.spacing
+    val busy = state.loading || state.googleLoading
     AppCard(modifier = modifier) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(bottom = spacing.large),
@@ -132,6 +144,24 @@ private fun LoginCard(
         ) {
             AppHeading("Iniciar Sesión", textAlign = TextAlign.Center)
             AppBody("Ingresa con tu correo institucional\n@ucb.edu.bo", textAlign = TextAlign.Center)
+        }
+
+        // S02: la cuenta Google de la UCB es el ingreso principal.
+        if (state.step == LoginStep.EMAIL) {
+            PrimaryButton(
+                text = if (state.googleLoading) "Conectando con Google…" else "Continuar con Google",
+                onClick = onGoogle,
+                enabled = !busy,
+                leadingIcon = Icons.Outlined.AccountCircle,
+                modifier = Modifier.fillMaxWidth()
+            )
+            state.googleError?.let { AppLabel(it, color = UcbEncuentraTheme.colors.error, textAlign = TextAlign.Center) }
+            AppLabel(
+                "o con una cuenta de prueba",
+                color = UcbEncuentraTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(vertical = spacing.small)
+            )
         }
 
         when (state.step) {
@@ -147,10 +177,10 @@ private fun LoginCard(
             LoginStep.PASSWORD -> PasswordStep(state = state, onEvent = onEvent)
         }
 
-        PrimaryButton(
+        SecondaryButton(
             text = if (state.loading) "Ingresando…" else "Continuar",
             onClick = { onEvent(LoginEvent.OnContinue) },
-            enabled = !state.loading,
+            enabled = !busy,
             trailingIcon = if (state.loading) null else DsIcons.ArrowForward,
             modifier = Modifier.fillMaxWidth()
         )
