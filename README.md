@@ -167,19 +167,6 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 - **Cuentas de prueba** (`estudiante@`, `staff@`, `admin@ucb.edu.bo` / `password`) siguen debajo del botón de Google para las demos de staff y admin.
 - Requiere **JVM target 17** (las funciones inline de GitLive Firestore vienen compiladas para 17). Tests: `SignInWithGoogleTest`, `LoginViewModelTest`.
 
-## Firebase e inicio de sesión con Google (S02)
-
-**Proyecto Firebase:** `ucb-encuentra-2026` (apps `bo.edu.ucb.encuentra.dev` y `bo.edu.ucb.encuentra.app`, Firestore en `southamerica-east1`).
-
-- **Configurar en tu PC:** descarga `google-services.json` de la consola (Configuración del proyecto → Tus apps) y guárdalo en `androidApp/` (está en `.gitignore`, no se sube). Si no lo tienes, la app compila igual y el botón de Google avisa que falta la configuración.
-- **Huellas SHA:** para que Google Sign-In funcione en tu PC, agrega la SHA-1 de tu llave debug (`./gradlew :androidApp:signingReport`) a las dos apps en la consola.
-- **Reglas de Firestore:** `firebase/firestore.rules` (se publican con `firebase deploy --only firestore:rules`; `firebase.json` y `.firebaserc` ya apuntan al proyecto).
-- **Continuar con Google** (Credential Manager, solo cuentas `ucb.edu.bo`) → Firebase Auth → `users/{uid}`: se crea con rol **ESTUDIANTE** al primer ingreso (las reglas no permiten otro rol al crear) o se respeta el rol que dio un admin. Se guarda en Room y queda la sesión persistente.
-- **Solo @ucb.edu.bo:** cualquier otra cuenta se rechaza y se cierra en Firebase.
-- **Token expirado y logout:** al abrir la app, si la cuenta es de Google y Firebase ya no tiene sesión, se vuelve al Login; cerrar sesión también cierra Firebase.
-- **Cuentas de prueba** (`estudiante@`, `staff@`, `admin@ucb.edu.bo` / `password`) siguen debajo del botón de Google para las demos de staff y admin.
-- Requiere **JVM target 17** (las funciones inline de GitLive Firestore vienen compiladas para 17). Tests: `SignInWithGoogleTest`, `LoginViewModelTest`.
-
 ## Exportar a CSV (D03)
 
 Reportes de cumplimiento para la oficina: en **Estadísticas**, el ícono de descarga abre **Exportar datos** (solo staff).
