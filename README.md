@@ -154,6 +154,16 @@ Nodo a crear en la consola (F08), con números enteros; lo puede mantener N03 de
 
 - Tests: `ObserveDashboardStatsUseCaseTest` (sin Firebase → Room, Firebase reemplaza a Room al llegar, nodo faltante, actualización en vivo), `DashboardViewModelTest` (sede, contadores, reclamo nuevo sin refrescar, navegación) y `FormatRelativeTest`.
 
+## Reportes y objetos en Firestore, offline-first (L06)
+
+- **Room es la verdad local:** las pantallas leen y escriben solo Room; la app funciona igual sin internet.
+- **Firestore como remoto** (`lost_reports/{id}`, `found_items/{id}`, mismo id que en Room): `OfflineFirstSync` sube cada cambio local y un **listener en tiempo real** guarda en Room lo que cambia en otros teléfonos. Sin conexión, las escrituras quedan en la cola de Firestore y se envían al reconectar.
+- **Al abrir la app gana el remoto** (primera foto de Firestore, sale de su caché); después se suben las filas que solo están en el teléfono. Sin bucles: se recuerda lo último conocido de cada documento y se ignoran los avisos viejos de Room.
+- **Mappers DTO ↔ Entity** en `core/data/remote/dto/SyncDtos.kt`. Las respuestas esperadas de las preguntas de control **no** se suben (el estudiante puede leer `found_items`).
+- **Quién ve qué:** el estudiante sincroniza solo sus reportes; el staff, todos. Todos leen los objetos encontrados; solo el staff los registra. Las reglas están en `firebase/firestore.rules`.
+- Solo con **cuenta de Google**: las cuentas de prueba y los datos del seed (`u-...`) se quedan en el teléfono.
+- Tests: `OfflineFirstSyncTest` (repositorios fake de Room y Firestore). Reclamos, matches y auditoría: L06b.
+
 ## Firebase e inicio de sesión con Google (S02)
 
 **Proyecto Firebase:** `ucb-encuentra-2026` (apps `bo.edu.ucb.encuentra.dev` y `bo.edu.ucb.encuentra.app`, Firestore en `southamerica-east1`).
